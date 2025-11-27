@@ -1,0 +1,44 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: yamipick
+
+  # 1. JDBC(+HikariCP) 설정 //아직 오라클 클라우드 설정을 안 해놧음 설정후 변경 예정
+  datasource:
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: jdbc:oracle:thin:@localhost:1521/xe 
+    username: springboot 
+    password: java1234   
+
+  # 2. JPA 설정 (가져오신 고급 설정 적용)
+  jpa:
+    database: oracle
+    hibernate:
+      ddl-auto: none # [중요] 테이블을 자동으로 안 만듭니다. DB에 직접 create table 해야 함!
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true # 콘솔 로그에 SQL 출력
+    properties:
+      hibernate:
+        format_sql: true # SQL 포맷 이쁘게 줄바꿈
+        highlight_sql: true # SQL 색깔 추가
+
+  # 3. Thymeleaf 설정
+  thymeleaf:
+    cache: false
+
+# 4. MyBatis 설정
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+# 5. 로깅 설정
+logging:
+  level:
+    root: info
+    com.test: debug # 본인 패키지명
+    org.hibernate.SQL: debug # 하이버네이트 쿼리 로그
+    org.hibernate.type.descriptor.sql.BasicBinder: trace # 바인딩 변수(값) 확인용
