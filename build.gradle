@@ -25,10 +25,15 @@ repositories {
 }
 
 dependencies {
-	//DB 설정이 안되어 있어서 잠시 주석처리
-	//implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	//implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.5'
-	//runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
+	//DB 설정
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.5'
+	runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
+	
+	//DB 지갑 읽기
+	implementation 'com.oracle.database.security:oraclepki'
+    implementation 'com.oracle.database.security:osdt_cert'
+    implementation 'com.oracle.database.security:osdt_core'
 	
 	//2. 시큐리티 (일반 로그인용)
 	implementation 'org.springframework.boot:spring-boot-starter-security'

@@ -8,9 +8,9 @@ spring:
   # 1. JDBC(+HikariCP) 설정 //아직 오라클 클라우드 설정을 안 해놧음 설정후 변경 예정
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver
-    url: jdbc:oracle:thin:@localhost:1521/xe 
-    username: springboot 
-    password: java1234   
+    url: jdbc:oracle:thin:@llgabbhp32n2794c_medium?TNS_ADMIN=C:/dev/Wallet_Yamipick 
+    username: yamipick 
+    password: Java123456789   
 
   # 2. JPA 설정 (가져오신 고급 설정 적용)
   jpa:
