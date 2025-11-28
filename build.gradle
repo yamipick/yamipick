@@ -30,10 +30,10 @@ dependencies {
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.5'
 	runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
 	
-	//DB 지갑 읽기
-	implementation 'com.oracle.database.security:oraclepki'
-    implementation 'com.oracle.database.security:osdt_cert'
-    implementation 'com.oracle.database.security:osdt_core'
+	// DB 지갑 읽기 (버전 수정: 21.9.0.0은 무조건 됩니다!)
+	implementation 'com.oracle.database.security:oraclepki:21.9.0.0'
+	implementation 'com.oracle.database.security:osdt_cert:21.9.0.0'
+	implementation 'com.oracle.database.security:osdt_core:21.9.0.0'
 	
 	//2. 시큐리티 (일반 로그인용)
 	implementation 'org.springframework.boot:spring-boot-starter-security'
