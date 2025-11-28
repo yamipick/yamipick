@@ -6,16 +6,16 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "BUSINESS_LOG") // ★ 테이블 이름 변경
+@Table(name = "BUSINESS_LOG")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class BusinessLog { // ★ 클래스 이름 변경
+public class BusinessLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "seqLog")
+    @Column(name = "seqLog") // 카멜케이스 컬럼명
     private Long seqLog;
 
     @Column(name = "actionType", length = 1000)
@@ -30,7 +30,7 @@ public class BusinessLog { // ★ 클래스 이름 변경
     @Column(name = "userId", length = 1000)
     private String userId;
 
-    @Lob
+    @Lob // CLOB 타입 (대용량 텍스트)
     @Column(name = "message")
     private String message;
 
