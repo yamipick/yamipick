@@ -31,6 +31,7 @@ public class SecurityConfig {
             .requestMatchers("/css/**", "/js/**", "/img/**", "/upload/**").permitAll()
             // 메인, 회원가입, 로그인 페이지는 모두 허용
             .requestMatchers("/", "/login", "/join", "/joinok").permitAll()
+            .requestMatchers("/waiting/**", "/ws/waiting/**", "/user", "/store").permitAll()
             // 관리자 페이지는 ADMIN 권한만 허용
             .requestMatchers("/admin/**").hasRole("ADMIN")
          // .anyRequest().authenticated() // (주석 처리) 나중에 개발 다 끝나면 이거 푸세요!

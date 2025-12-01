@@ -5,25 +5,46 @@ spring:
   application:
     name: yamipick
 
-  # 1. JDBC(+HikariCP) 설정 //아직 오라클 클라우드 설정을 안 해놧음 설정후 변경 예정
-  datasource:
-    driver-class-name: oracle.jdbc.OracleDriver
-    url: jdbc:oracle:thin:@llgabbhp32n2794c_medium?TNS_ADMIN=C:/dev/Wallet_Yamipick 
-    username: yamipick 
-    password: Java123456789   
 
-  # 2. JPA 설정 (가져오신 고급 설정 적용)
+# ▼▼▼ [수정] Oracle 설정을 주석 처리하고 H2 설정을 활성화 (테스트용)▼▼▼
+  
+  # 1. H2 데이터베이스 설정 (메모리 모드 - 테스트용)
+  datasource:
+    url: jdbc:h2:mem:yamipick;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # 2. JPA 설정
   jpa:
-    database: oracle
+    database: h2 # (oracle -> h2 로 변경)
     hibernate:
-      ddl-auto: none # [중요] 테이블을 자동으로 안 만듭니다. DB에 직접 create table 해야 함!
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-    show-sql: true # 콘솔 로그에 SQL 출력
+      ddl-auto: update # (none -> update 로 변경: 테이블 자동 생성)
+    show-sql: true
     properties:
       hibernate:
-        format_sql: true # SQL 포맷 이쁘게 줄바꿈
-        highlight_sql: true # SQL 색깔 추가
+        format_sql: true
+            
+## 1. JDBC(+HikariCP) 설정 //아직 오라클 클라우드 설정을 안 해놧음 설정후 변경 예정
+#  datasource:
+#    driver-class-name: oracle.jdbc.OracleDriver
+#    url: jdbc:oracle:thin:@llgabbhp32n2794c_medium?TNS_ADMIN=C:/dev/Wallet_Yamipick 
+#    username: yamipick 
+#    password: Java123456789   
+#
+#  # 2. JPA 설정 (가져오신 고급 설정 적용)
+#  jpa:
+#    database: oracle
+#    hibernate:
+#      ddl-auto: none # [중요] 테이블을 자동으로 안 만듭니다. DB에 직접 create table 해야 함!
+#      naming:
+#        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+#    show-sql: true # 콘솔 로그에 SQL 출력
+#    properties:
+#      hibernate:
+#        format_sql: true # SQL 포맷 이쁘게 줄바꿈
+#        highlight_sql: true # SQL 색깔 추가
+
 
   # 3. Thymeleaf 설정
   thymeleaf:
