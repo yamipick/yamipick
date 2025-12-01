@@ -1,727 +1,453 @@
 @charset "UTF-8";
 
-/* 세련된 민트색 포인트 컬러 정의 */
-:root {
-    --mint-color: #00c7ae;       /* 메인 민트색 */
-    --mint-light: #ebfcf9;       /* 아주 연한 민트 배경 (선택 시) */
-    --dark-gray: #333333;        /* 기본 텍스트 */
-    --medium-gray: #666666;      /* 보조 텍스트 */
-    --light-gray: #dddddd;       /* 테두리 등 */
-}
+/* -------------------------------------------------------
+   Layout
+------------------------------------------------------- */
+.container { display: flex; height: calc(100vh - 60px); }
 
-body { margin: 0; padding: 0; font-family: 'Malgun Gothic', dotum, sans-serif; color: var(--dark-gray); }
-
-/* 레이아웃 */
-.container { display: flex; height: 100vh; }
-.sidebar { width: 360px; overflow-y: auto; padding: 20px; border-right: 1px solid var(--light-gray); background: #fff; z-index: 10; }
-.map-area { flex: 1; }
-
-/* 검색창 */
-.search-box { display: flex; gap: 5px; margin-bottom: 15px; }
-.search-box input { flex: 1; padding: 10px; border: 1px solid var(--light-gray); border-radius: 4px; }
-.search-box button { 
-    padding: 10px 15px; 
-    background: var(--mint-color); /* 민트색 적용 */
-    color: white; 
-    border: none; 
-    border-radius: 4px; 
-    cursor: pointer; 
-    font-weight: bold; 
-    transition: background 0.2s;
-}
-.search-box button:hover { background-color: #00a38f; /* 호버 시 약간 진하게 */ }
-
-/* 필터 버튼 */
-.filter-group { display: flex; gap: 5px; margin-bottom: 15px; }
-.filter-btn { flex: 1; padding: 8px; background: #f1f1f1; border: none; border-radius: 20px; cursor: pointer; font-size: 13px; color: var(--medium-gray); transition: 0.2s; }
-.filter-btn.active { 
-    background: var(--mint-color); /* 활성 상태 민트색 */
-    color: white; 
-    font-weight: bold; 
-}
-
-/* 리스트 아이템 */
-.item { padding: 15px 0; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s; }
-.item:hover { background-color: #f9f9f9; }
-
-/* HOT 배지 */
-.badge { 
-    background-color: var(--mint-color); /* 민트색 적용 */
-    color: white; 
-    font-size: 11px; 
-    padding: 2px 6px; 
-    border-radius: 4px; 
-    margin-left: 5px; 
-    font-weight: bold;
-}
-
-/* 별점 및 평점 */
-.info-rating { 
-    color: var(--mint-color); /* 민트색 적용 */
-    font-weight: bold; 
-}
-
-/* 사이드바 선택 강조 스타일 (민트 버전) */
-.item.selected {
-    background-color: var(--mint-light); /* 연한 민트 배경 */
-    border-left: 5px solid var(--mint-color); /* 왼쪽 민트색 굵은 선 */
-}
-
-/* ★ 지도 위 오버레이 (민트 알약 태그) ★ */
-.overlay-box {
-    background-color: var(--mint-color); /* 민트색 적용 */
-    color: white;
-    padding: 8px 15px;
-    border-radius: 25px; 
-    font-size: 13px;
-    font-weight: bold;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.2); /* 그림자 살짝 부드럽게 */
-    white-space: nowrap; 
-    margin-bottom: 38px;   
-    position: relative; 
-    cursor: pointer;
-}
-
-/* 태그 밑 꼬리 (민트색 화살표) */
-.overlay-box::after {
-    content: '';
-    position: absolute;
-    bottom: -6px; 
-    left: 50%;
-    transform: translateX(-50%);
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 8px solid var(--mint-color); /* 민트색 적용 */
-}
-
-/* map.css 맨 아래에 추가하세요 */
-
-/* ★ 모바일 반응형 (화면이 768px보다 작을 때 발동) */
-@media screen and (max-width: 768px) {
-    
-    /* 1. 전체 레이아웃을 세로로 변경 */
-    .container {
-        flex-direction: column; /* 가로 -> 세로 */
-    }
-
-    /* 2. 지도 영역 (화면 상단 차지) */
-    .map-area {
-        width: 100%;
-        height: 55vh; /* 화면 높이의 55% 사용 */
-        order: 1; /* 순서: 지도를 맨 위로 올림 */
-    }
-
-    /* 3. 사이드바 영역 (화면 하단 차지) */
-    .sidebar {
-        width: 100%;
-        height: 45vh; /* 화면 높이의 45% 사용 */
-        order: 2; /* 순서: 리스트를 지도 아래로 내림 */
-        border-right: none;
-        border-top: 1px solid #ddd; /* 위쪽에 경계선 추가 */
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.1); /* 그림자 추가해서 위로 붕 뜬 느낌 */
-        padding: 15px; /* 패딩 살짝 줄임 */
-        box-sizing: border-box; /* 패딩 포함 크기 계산 */
-    }
-
-    /* 4. 검색창 & 필터 버튼 크기 최적화 */
-    .search-box input {
-        font-size: 14px; /* 모바일에서 글자 너무 작지 않게 */
-    }
-    
-    .filter-btn {
-        padding: 6px 10px; /* 버튼 여백 살짝 줄임 */
-        font-size: 12px;
-    }
-
-    /* 5. 지도 위 알약 태그 위치 미세 조정 */
-    .overlay-box {
-        font-size: 12px; /* 태그 글씨 살짝 줄임 */
-        padding: 6px 12px;
-        margin-bottom: 32px; /* 핀 높이 고려 미세 조정 */
-    }
-}
-
-/* map.css 맨 아래 추가 */
-
-/* 이 지역에서 다시 검색 버튼 */
-.retry-btn {
-    position: absolute;
-    bottom: 30px; /* 바닥에서 30px 띄움 */
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 20; /* 지도보다 위에 떠야 함 */
-    
-    background-color: white;
-    color: var(--mint-color); /* 글자는 민트색 */
-    border: 1px solid var(--mint-color);
-    border-radius: 20px;
-    padding: 10px 20px;
-    font-size: 14px;
-    font-weight: bold;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    cursor: pointer;
-    
-    display: none; /* 평소엔 숨겨둠 */
-    align-items: center;
-    gap: 5px;
-}
-
-.retry-btn:hover {
-    background-color: var(--mint-light); /* 마우스 올리면 연한 민트 배경 */
-}
-
-/* 회전하는 아이콘 (새로고침 느낌) */
-.retry-icon {
-    font-size: 16px;
-}
-
-/* map.css 맨 아래 추가 */
-
-/* ★ 상세정보 모달 (팝업) 배경 */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.5); /* 반투명 검은 배경 */
-    z-index: 1000; /* 지도보다 훨씬 위에 */
-    display: none; /* 평소엔 숨김 */
-    justify-content: center;
-    align-items: center;
-}
-
-/* 모달 본문 (카드) */
-.modal-content {
-    background: white;
-    width: 90%;
-    max-width: 400px; /* 너무 크지 않게 */
-    border-radius: 15px;
-    padding: 25px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    position: relative;
-    animation: slideUp 0.3s ease-out;
-}
-
-/* 모달 등장 애니메이션 */
-@keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-/* 닫기 버튼 (X) */
-.close-btn {
-    position: absolute;
-    top: 15px; right: 20px;
-    font-size: 24px;
-    color: #999;
-    cursor: pointer;
-    background: none; border: none;
-}
-.close-btn:hover { color: var(--dark-gray); }
-
-/* 모달 내부 타이틀 */
-.modal-title {
-    font-size: 20px;
-    font-weight: bold;
-    color: var(--mint-color);
-    margin-bottom: 10px;
-    padding-right: 20px; /* X버튼 자리 확보 */
-}
-
-/* 모달 내부 정보 행 */
-.modal-row {
+.sidebar {
+    width: 360px;
+    overflow-y: auto;
+    padding: 20px;
+    background: var(--white);
+    border-right: 1px solid var(--border);
     display: flex;
-    margin-bottom: 8px;
-    font-size: 14px;
-    color: var(--dark-gray);
+    flex-direction: column;
+    z-index: 10;
+    box-shadow: 4px 0 12px rgba(74,46,36,0.05);
 }
-.modal-icon { width: 20px; color: var(--mint-color); margin-right: 5px; }
 
-/* 하단 버튼 그룹 */
-.modal-actions {
-    margin-top: 20px;
-    display: flex;
-    gap: 10px;
-}
-.modal-actions button {
+.map-area { flex: 1; width: 100%; }
+
+/* -------------------------------------------------------
+   Search Box
+------------------------------------------------------- */
+.search-box { display: flex; gap: 8px; margin-bottom: 20px; }
+
+.search-box input {
     flex: 1;
     padding: 12px;
-    border-radius: 8px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 14px;
+    background-color: var(--bg-cream);
+    color: var(--text-main);
+    transition: 0.25s;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background-color: var(--white);
+    box-shadow: 0 0 0 3px rgba(74,46,36,0.1);
+}
+
+.search-box button {
+    padding: 0 20px;
+    border-radius: 12px;
+    background: var(--primary);
     border: none;
-    font-weight: bold;
+    color: var(--white);
+    font-weight: 700;
     cursor: pointer;
-}
-.btn-kakao { background: #fee500; color: #3c1e1e; } /* 카카오맵 보기 */
-.btn-call { background: var(--mint-color); color: white; } /* 전화걸기 */
-
-/* map.css 수정 */
-
-.category-container {
-    display: flex;
-    gap: 6px; /* 간격 살짝 좁힘 */
-    overflow-x: auto; 
-    white-space: nowrap; 
-    padding: 0 5px 10px 0; /* 아래 여백 확보 */
-    margin-bottom: 5px;
-    
-    /* 스크롤바 숨기기 (깔끔하게) */
-    -ms-overflow-style: none; 
-    scrollbar-width: none; 
+    transition: 0.25s;
 }
 
-.category-container::-webkit-scrollbar {
-    display: none; 
+.search-box button:hover {
+    background: var(--primary-hover);
 }
 
-.cat-btn {
-    padding: 7px 14px; /* 크기 살짝 조정 */
-    border: 1px solid #e0e0e0; /* 테두리 연하게 */
-    border-radius: 18px; 
-    background: white;
-    color: #555;
-    font-size: 13px;
+/* -------------------------------------------------------
+   List & Items
+------------------------------------------------------- */
+.item {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--border);
     cursor: pointer;
-    flex-shrink: 0; /* 버튼이 찌그러지지 않게 고정 */
-    transition: 0.2s;
+    transition: 0.25s;
 }
 
-.cat-btn:hover {
-    background-color: #f5f5f5;
-    color: #333;
+.item:hover {
+    background-color: #F4EAD6;
 }
 
-/* 선택된 상태 (민트색) */
-.cat-btn.active {
-    background: var(--mint-color);
-    color: white;
-    border-color: var(--mint-color);
-    font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0, 199, 174, 0.3); /* 살짝 그림자 */
+.item.selected {
+    background-color: #F4EAD6;
+    border-left: 5px solid var(--primary);
+    padding-left: 12px;
+    border-radius: 4px;
 }
 
-/* map.css 추가 */
-
-/* 화살표를 감싸는 영역 (기준점) */
-.category-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
+.badge {
+    background-color: var(--secondary);
+    color: var(--white);
+    padding: 4px 7px;
+    border-radius: 6px;
+    font-size: 10px;
 }
 
-/* 기존 컨테이너 수정 (스크롤 동작 부드럽게) */
-.category-container {
-    display: flex;
-    gap: 6px;
-    overflow-x: auto;
-    white-space: nowrap;
-    padding: 2px 5px 10px 5px; /* 그림자 잘리지 않게 여백 */
-    
-    scroll-behavior: smooth; /* ★ 부드러운 스크롤 핵심 */
-    
-    /* 스크롤바 숨기기 */
-    -ms-overflow-style: none; 
-    scrollbar-width: none; 
-}
-.category-container::-webkit-scrollbar { display: none; }
-
-/* 양옆 화살표 버튼 */
-.nav-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-60%); /* 수직 중앙 정렬 */
-    width: 28px;
-    height: 28px;
-    border-radius: 50%; /* 동그랗게 */
-    background: white;
-    border: 1px solid #ddd;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    cursor: pointer;
-    z-index: 5; /* 목록보다 위에 */
-    font-size: 18px;
-    line-height: 1;
-    color: #666;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-bottom: 3px; /* 글자 위치 미세조정 */
+.info-rating {
+    font-weight: 800;
+    color: var(--primary);
 }
 
-.nav-btn:hover {
-    background-color: #f8f8f8;
-    color: var(--mint-color);
-}
-
-.nav-btn.prev { left: -10px; } /* 왼쪽으로 살짝 뺌 */
-.nav-btn.next { right: -10px; } /* 오른쪽으로 살짝 뺌 */
-
-/* 모바일에서는 화살표 숨김 (손가락으로 미는 게 더 편함) */
-@media screen and (max-width: 768px) {
-    .nav-btn { display: none; }
-    .category-wrapper { margin: 0 -15px 15px -15px; padding: 0 15px; } /* 모바일 여백 꽉 차게 */
-}
-
-/* map.css 추가 */
-
-/* [1단] 마스터 필터 영역 (상단 고정 버튼들) */
-.master-filter-container {
-    display: flex;
-    gap: 8px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #f5f5f5;
-    margin-bottom: 10px;
-    overflow-x: auto;
-}
-.master-filter-container::-webkit-scrollbar { display: none; }
-
-/* 1단 칩 버튼 디자인 (캐치테이블 스타일) */
-.chip-btn {
-    padding: 8px 14px;
-    background: white;
-    border: 1px solid #e0e0e0;
+/* -------------------------------------------------------
+   Filter Buttons
+------------------------------------------------------- */
+.chip-btn, .cat-btn, .region-sub-btn, .filter-btn {
+    background: var(--white);
+    border: 1px solid var(--border);
     border-radius: 20px;
     font-size: 13px;
-    color: #333;
+    color: var(--text-main);
     cursor: pointer;
-    white-space: nowrap;
-    transition: 0.2s;
-}
-.chip-btn:hover { background-color: #f9f9f9; }
-
-/* 1단 버튼 활성화 시 (민트색) */
-.chip-btn.active {
-    border-color: var(--mint-color);
-    color: var(--mint-color);
-    font-weight: bold;
-    background-color: #ebfcf9;
+    transition: 0.25s;
 }
 
-/* [2단] 확장 영역 (평소엔 숨김) */
-.expand-section {
-    background-color: #fcfcfc; /* 배경을 살짝 다르게 줘서 구분 */
-    padding: 10px 5px;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 15px;
-    animation: slideDown 0.2s ease-out;
+.chip-btn {
+    padding: 8px 16px;
+    display: flex; align-items: center; gap: 6px;
 }
 
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+.cat-btn { padding: 8px 18px; }
+
+.filter-btn {
+    background: var(--bg-cream);
+    color: var(--text-sub);
 }
 
-/* 필터가 켜졌거나 선택되었을 때 (민트색) */
-.chip-btn.active {
-    border-color: var(--mint-color);
-    color: var(--mint-color);
-    font-weight: bold;
-    background-color: #ebfcf9; /* 아주 연한 민트 배경 */
-}
-
-/* 펼쳐질 영역 (초기엔 숨김 처리용 클래스) */
-.expand-section {
-    display: none; /* 기본 숨김 */
-    animation: slideDown 0.2s ease-out;
-    border-bottom: 1px solid #f0f0f0;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-}
-
-/* 펼쳐질 때 부드럽게 내려오는 효과 */
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}	
-
-/* map.css 맨 아래 추가 */
-
-/* 내 위치 찾기(GPS) 버튼 */
-/* map.css 수정 (맨 아래 부분) */
-
-/* 내 위치 찾기(GPS) 버튼 */
-.gps-btn {
-    position: absolute;
-    bottom: 130px; /* 재검색 버튼(80px)보다 더 위로 올림 */
-    right: 20px;   /* 오른쪽 여백 */
-    z-index: 20;   /* 지도 위에 떠야 함 */
-    
-    width: 45px;
-    height: 45px;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 50%; /* 완전 동그라미 */
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    cursor: pointer;
-    
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #555;
-    transition: 0.2s;
-}
-
-.gps-btn:hover {
-    background-color: #f9f9f9;
-    color: var(--mint-color); /* 마우스 올리면 민트색 */
-}
-
-.gps-icon {
-    font-size: 22px; /* 아이콘 크기 */
-}
-
-/* 모바일에서는 위치를 조금 조정 */
-@media screen and (max-width: 768px) {
-    .gps-btn {
-        bottom: 20px; /* 모바일 지도 영역 구석 */
-        right: 15px;
-    }
-}
-
-/* map.css 맨 아래 추가 */
-
-/* ★ 현재 위치 마커 (파란 점) */
-.my-location-dot {
-    width: 20px;
-    height: 20px;
-    background-color: #2d7aff; /* 쨍한 파란색 */
-    border: 3px solid white;    /* 흰색 테두리 */
-    border-radius: 50%;         /* 동그라미 */
-    box-shadow: 0 0 10px rgba(0,0,0,0.3); /* 그림자 */
-    position: relative;
-    z-index: 100;
-}
-
-/* ★ 펄럭이는 파장 효과 (애니메이션) */
-.my-location-dot::after {
-    content: '';
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 60px;  /* 파장 크기 */
-    height: 60px;
-    background-color: rgba(45, 122, 255, 0.4); /* 반투명 파란색 */
-    border-radius: 50%;
-    z-index: -1;
-    animation: pulse 2s infinite; /* 2초마다 반복 */
-}
-
-/* 애니메이션 정의 (커졌다 작아졌다) */
-@keyframes pulse {
-    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.8; }
-    100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
-}
-
-/* map.css 맨 아래 추가 */
-
-/* ★ [신규] 심플한 식당 마커 (CSS로 만듦) */
-.rest-marker {
-    width: 22px;
-    height: 22px;
-    background-color: #FF5A5A; /* 쨍한 코랄 레드 (파란색과 대비됨) */
-    border: 3px solid white;    /* 흰색 테두리로 깔끔하게 */
-    border-radius: 50%;         /* 동그라미 */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* 부드러운 그림자 */
-    cursor: pointer;
-    transition: transform 0.2s ease; /* 부드러운 애니메이션 */
-}
-
-/* 마우스 올렸을 때 살짝 커지는 효과 */
-.rest-marker:hover {
-    transform: scale(1.2); /* 1.2배 커짐 */
-    z-index: 10; /* 다른 마커보다 위로 */
-    background-color: #ff3333; /* 색상 약간 진하게 */
-}
-/* ★ [신규] 카페 마커 (커피색/갈색) */
-.cafe-marker {
-    width: 22px; height: 22px;
-    background-color: #8B4513; /* 진한 갈색 (커피색) */
-    border: 3px solid white;
-    border-radius: 50%;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
-.cafe-marker:hover { transform: scale(1.2); z-index: 10; background-color: #A0522D; }
-
-
-
-/* ★ [신규] 상단 필터를 감싸는 래퍼 (화살표 위치 기준점) */
-.master-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid #f5f5f5; /* 밑줄을 여기로 이동 */
-    margin-bottom: 10px;
-    padding: 0 5px; /* 화살표 공간 확보 */
-}
-
-/* ★ [수정] 기존 마스터 컨테이너 (border-bottom 제거, 여백 조정) */
-.master-filter-container {
-    display: flex;
-    gap: 8px;
-    padding-bottom: 10px;
-    /* border-bottom: 1px solid #f5f5f5; <-- 이거 지우거나 주석 처리하세요! (래퍼로 이동함) */
-    
-    overflow-x: auto;
-    width: 100%; /* 너비 꽉 차게 */
-    
-    scroll-behavior: smooth; /* 부드러운 스크롤 */
-    -ms-overflow-style: none; 
-    scrollbar-width: none; 
-}
-.master-filter-container::-webkit-scrollbar { display: none; }
-
-/* (참고) .nav-btn 스타일은 이미 아래쪽에 있으니 그대로 쓰시면 됩니다! */
-
-/* map.css 맨 아래 추가 */
-
-/* [1] 토스트 메시지 (검은 알림창) */
-.toast-box {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px); /* 살짝 아래에서 시작 */
-    background-color: rgba(30, 30, 30, 0.9); /* 반투명 검정 */
-    color: white;
-    padding: 12px 24px;
-    border-radius: 30px;
-    font-size: 14px;
-    font-weight: bold;
-    z-index: 9999; /* 최상단 */
-    opacity: 0;
-    transition: all 0.3s ease; /* 부드러운 애니메이션 */
-    pointer-events: none; /* 클릭 통과 */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-
-/* 토스트가 보일 때 클래스 */
-.toast-box.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0); /* 제자리로 */
-}
-
-/* [2] 로딩 스피너 (화면 덮기) */
-.loading-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(255, 255, 255, 0.7); /* 하얀 반투명 배경 */
-    z-index: 2000; /* 모달보다 위 */
-    display: none; /* 평소엔 숨김 */
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-}
-
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid var(--mint-color); /* 민트색 */
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-.loading-text {
-    margin-top: 10px;
-    color: var(--mint-color);
-    font-weight: bold;
-    font-size: 14px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* map.css 맨 아래 추가 */
-
-/* [지역 필터] 상단 탭 (서울, 경기, 인천...) */
-.region-tabs {
-    display: flex;
-    gap: 15px;
-    padding: 0 10px 10px 10px;
-    overflow-x: auto;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 0;
-}
-.region-tabs::-webkit-scrollbar { display: none; }
-
-.region-tab-btn {
-    background: none;
-    border: none;
-    font-size: 14px;
-    color: #999;
-    font-weight: bold;
-    cursor: pointer;
-    white-space: nowrap;
-    padding-bottom: 8px;
-    position: relative;
-}
-
-/* 선택된 탭 (검은색 + 밑줄) */
-.region-tab-btn.active {
-    color: #333;
-}
-.region-tab-btn.active::after {
-    content: '';
-    position: absolute;
-    bottom: -1px; left: 0; width: 100%;
-    height: 2px;
-    background-color: #333;
-}
-
-/* [지역 필터] 하단 서브 지역 리스트 (회색 박스) */
-.region-sub-container {
-    background-color: #f8f8f8; /* 연한 회색 배경 */
-    padding: 15px;
-    display: flex;
-    flex-wrap: wrap; /* 줄바꿈 허용 */
-    gap: 8px;
-    max-height: 200px; /* 너무 길어지면 스크롤 */
-    overflow-y: auto;
-}
-
-/* 서브 지역 버튼 (흰색 알약) */
-.region-sub-btn {
-    background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px; /* 약간 네모난 둥근 모서리 */
-    padding: 8px 12px;
-    font-size: 12px;
-    color: #555;
-    cursor: pointer;
-    flex-grow: 1; /* 너비 꽉 차게 */
-    text-align: center;
-    min-width: 80px; /* 최소 너비 */
+.chip-btn.active, .cat-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--white);
+    font-weight: 700;
+    box-shadow: 0 3px 8px rgba(74,46,36,0.22);
 }
 
 .region-sub-btn:hover {
-    border-color: #ccc;
-    background-color: #fff;
-    color: #333;
+    background-color: var(--bg-cream);
+    border-color: var(--primary);
+    color: var(--primary);
 }
 
-/* map.css 맨 아래 추가 */
-
-/* [지역 탭] 화살표 감싸는 래퍼 */
-.region-wrapper {
+/* -------------------------------------------------------
+   Overlay
+------------------------------------------------------- */
+.overlay-box {
+    background-color: var(--primary);
+    color: var(--white);
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 4px 10px rgba(74,46,36,0.45);
     position: relative;
+    white-space: nowrap;
+    margin-bottom: 35px;
+}
+
+.overlay-box::after {
+    content: '';
+    position: absolute;
+    bottom: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 9px solid var(--primary);
+}
+
+/* -------------------------------------------------------
+   Markers (배민/네이버 지도 스타일)
+------------------------------------------------------- */
+.simple-marker {
+    width: 34px; 
+    height: 34px;
+    border-radius: 50%;
+    
+    /* 아이콘 가운데 정렬 */
     display: flex;
     align-items: center;
-    border-bottom: 1px solid #eee; /* 밑줄을 여기로 이동 */
-    margin-bottom: 0;
+    justify-content: center;
+    
+    /* 디자인 디테일: 흰색 테두리와 그림자로 팝업 느낌 */
+    border: 2px solid #ffffff;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+    
+    cursor: pointer;
+    transition: transform 0.2s ease-out;
 }
 
-/* 기존 region-tabs 스타일 수정 (스크롤 부드럽게) */
-.region-tabs {
-    /* 기존 속성 덮어쓰기 */
-    display: flex;
-    gap: 15px;
-    padding: 0 10px 10px 10px;
-    overflow-x: auto;
-    border-bottom: none; /* 래퍼에 밑줄 줬으니 여긴 제거 */
-    width: 100%;
-    
-    scroll-behavior: smooth; /* 부드러운 스크롤 */
-    -ms-overflow-style: none; 
-    scrollbar-width: none; 
+/* 마우스 올렸을 때 */
+.simple-marker:hover, .simple-marker.active {
+    transform: scale(1.15) translateY(-3px); /* 뿅 하고 커짐 */
+    box-shadow: 0 6px 10px rgba(0,0,0,0.4);
+    z-index: 100;
 }
-.region-tabs::-webkit-scrollbar { display: none; }
+/* -------------------------------------------------------
+   GPS / Retry Buttons
+------------------------------------------------------- */
+.gps-btn, .retry-btn {
+    position: absolute;
+    z-index: 20;
+    background: var(--white);
+    border: 1px solid var(--border);
+    box-shadow: 0 3px 10px rgba(74,46,36,0.18);
+    cursor: pointer;
+    color: var(--text-main);
+    display: flex; align-items: center; justify-content: center;
+    transition: 0.25s;
+}
+
+.gps-btn {
+    width: 48px; height: 48px;
+    right: 20px; bottom: 80px;
+    border-radius: 50%;
+}
+
+.gps-btn:hover {
+    background: var(--bg-cream);
+    color: var(--primary);
+}
+
+.retry-btn {
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 22px;
+    border-radius: 24px;
+    color: var(--primary);
+    font-weight: 700;
+}
+
+/* -------------------------------------------------------
+   Modal
+------------------------------------------------------- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--white);
+    width: 90%; max-width: 420px;
+    padding: 30px 24px;
+    border-radius: 14px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.25);
+    animation: slideUp 0.3s ease-out;
+}
+
+.modal-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 15px;
+}
+
+/* -------------------------------------------------------
+   Mobile
+------------------------------------------------------- */
+@media screen and (max-width: 768px) {
+    .container { flex-direction: column; }
+    .map-area { height: 55vh; }
+    .sidebar { height: 45vh; border-right: none; border-top: 1px solid var(--border); }
+    .nav-btn { display: none; }
+}
+/* -------------------------------------------------------
+   Filter & Scroll Area (추가된 부분)
+------------------------------------------------------- */
+.master-wrapper, .category-wrapper, .region-wrapper {
+    display: flex;
+    align-items: center;
+    position: relative;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+/* 스크롤 가능한 컨테이너 공통 */
+.master-filter-container, 
+.category-container, 
+.region-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto; /* 가로 스크롤 허용 */
+    white-space: nowrap;
+    padding: 4px 2px;
+    flex: 1;
+    
+    /* 스크롤바 숨기기 (크롬, 사파리 등) */
+    -ms-overflow-style: none; /* IE, Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+.master-filter-container::-webkit-scrollbar,
+.category-container::-webkit-scrollbar,
+.region-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+/* 좌우 화살표 버튼 */
+.nav-btn {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    color: var(--text-sub);
+    cursor: pointer;
+    padding: 0 5px;
+    z-index: 5;
+}
+
+.nav-btn:hover {
+    color: var(--primary);
+}
+
+/* 확장 섹션 (지역, 카테고리 등을 눌렀을 때 나오는 하단 영역) */
+.expand-section {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border);
+    animation: slideDown 0.2s ease-out;
+}
+
+/* 지역 선택 탭 버튼 (서울, 경기 등) */
+.region-tab-btn {
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+}
+
+.region-tab-btn.active {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+}
+
+/* 세부 지역 버튼들 컨테이너 */
+.region-sub-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #ddd;
+}
+
+/* 애니메이션 */
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* -------------------------------------------------------
+   Mobile (App Style) - 기존 미디어 쿼리 삭제하고 이거 쓰세요
+------------------------------------------------------- */
+@media screen and (max-width: 768px) {
+    .container {
+        flex-direction: column; /* 세로 배치 */
+        height: calc(100vh - 55px); /* 헤더 제외 꽉 차게 */
+        position: relative;
+        overflow: hidden; /* 전체 스크롤 방지 */
+    }
+
+    /* 1. 지도 영역 (화면 상단 45% 차지) */
+    .map-area {
+        order: 1; /* 지도를 먼저 보여줌 */
+        height: 45%; 
+        width: 100%;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* 2. 사이드바(리스트) 영역 (화면 하단 55% 차지) */
+    .sidebar {
+        order: 2; /* 리스트는 지도 아래에 */
+        width: 100%;
+        height: 55%; /* 남은 공간 차지 */
+        border-right: none;
+        border-top: 1px solid #e0e0e0;
+        
+        /* 둥근 모서리 & 그림자 (카드 느낌) */
+        border-radius: 20px 20px 0 0; 
+        box-shadow: 0 -4px 16px rgba(0,0,0,0.15);
+        
+        padding: 0; /* 패딩 초기화 (내부에서 재정의) */
+        z-index: 10;
+        background: #fff;
+        
+        /* 부드러운 스크롤 */
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* 사이드바 스크롤바 숨김 (깔끔하게) */
+    .sidebar::-webkit-scrollbar { display: none; }
+
+    /* 3. 검색창 & 필터 고정 (스크롤 해도 위에 붙어있게) */
+    .sidebar > h2 { display: none; } /* 모바일에선 로고 숨김 (공간 절약) */
+    
+    .search-box {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 20;
+        padding: 15px 15px 5px 15px; /* 여백 조정 */
+        margin-bottom: 5px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .master-wrapper {
+        position: sticky; /* 필터도 검색창 바로 아래 붙기 */
+        top: 60px; /* 검색창 높이만큼 띄움 */
+        background: #fff;
+        z-index: 19;
+        padding: 5px 15px;
+        margin-bottom: 0;
+        box-shadow: 0 4px 6px -4px rgba(0,0,0,0.1); /* 살짝 그림자 */
+    }
+
+    /* 확장 섹션(지역 선택 등)도 패딩 조정 */
+    .expand-section {
+        margin: 10px 15px;
+    }
+
+    /* 리스트 아이템 패딩 조정 */
+    .item {
+        padding: 15px 20px;
+    }
+
+    /* 4. 버튼 터치 영역 확대 (손가락 배려) */
+    .chip-btn, .cat-btn {
+        padding: 8px 14px;
+        font-size: 13px;
+        margin-bottom: 5px; /* 줄간격 확보 */
+    }
+
+    /* 네비게이션 화살표는 모바일에서 숨김 (손으로 스크롤하면 됨) */
+    .nav-btn { display: none !important; }
+
+    /* GPS, 재검색 버튼 위치 조정 (지도 위로 올리기) */
+    .retry-btn {
+        bottom: 20px; /* 위치 살짝 위로 */
+        font-size: 13px;
+        padding: 8px 16px;
+        z-index: 5; /* 지도 위에 뜨도록 */
+    }
+    
+    .gps-btn {
+        bottom: 70px; /* 재검색 버튼 위로 */
+        right: 15px;
+        width: 40px; height: 40px;
+    }
+}

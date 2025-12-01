@@ -348,14 +348,37 @@
 
     kakao.maps.event.addListener(map, 'dragend', function() { if(retryBtn) retryBtn.style.display = 'flex'; });
 
+// [색상 변경] 피스타치오 & 다크브라운 테마 적용
     function addMarker(index, isInit) {
         if (markers[index]) return;
         var place = places[index];
         var position = new kakao.maps.LatLng(parseFloat(place.y), parseFloat(place.x));
-        var markerClass = 'rest-marker'; 
-        if (place.category.includes('카페') || place.category.includes('커피')) markerClass = 'cafe-marker';
         
-        var markerContent = '<div class="' + markerClass + '" onclick="selectPlace(' + index + ')"></div>';
+        // ★ 여기서 색상 바꾸시면 됩니다 형님
+        var colorPistachio = '#93C572'; // 피스타치오 (밝은 연두색)
+        var colorDarkBrown = '#4E342E'; // 다크브라운 (진한 갈색)
+
+        // 1. 카페냐 식당이냐 구분
+        var isCafe = place.category.includes('카페') || place.category.includes('커피') || place.category.includes('디저트');
+        
+        // 2. 색상 배정 (카페=피스타치오, 식당=다크브라운)
+        // 만약 반대로 하고 싶으면 뒤에 변수 순서만 바꾸세요 (isCafe ? colorDarkBrown : colorPistachio)
+        var bgColor = isCafe ? colorPistachio : colorDarkBrown; 
+        
+        // 3. 아이콘 설정 (흰색 아이콘은 그대로 유지해서 깔끔하게)
+        // 식당 아이콘 (나이프 & 포크)
+        var restIcon = `<svg viewBox="0 0 24 24" width="18" height="18" fill="#ffffff"><path d="M11,9H9V2H7v7H5V2H3v7c0,2.12,1.66,3.84,3.75,3.97V22h2.5v-9.03C11.34,12.84,13,11.12,13,9V2h-2V9z M16,6v14h2.5V6c0-2.21-1.79-4-4-4S10.5,3.79,10.5,6h2.5C13,6,13,6,16,6z"/></svg>`;
+        
+        // 카페 아이콘 (커피잔)
+        var cafeIcon = `<svg viewBox="0 0 24 24" width="17" height="17" fill="#ffffff"><path d="M20,3H4v10c0,2.21,1.79,4,4,4h6c2.21,0,4-1.79,4-4v-3h2c1.1,0,2-0.9,2-2V5C22,3.9,21.1,3,20,3z M20,8h-2V5h2V8z M4,19h16v2H4V19z"/></svg>`;
+
+        var iconSvg = isCafe ? cafeIcon : restIcon;
+
+        // 4. HTML 생성
+        var markerContent = `<div class="simple-marker" style="background-color: ${bgColor};" onclick="selectPlace(${index})">
+                                ${iconSvg}
+                             </div>`;
+        
         var marker = new kakao.maps.CustomOverlay({
             position: position, content: markerContent, yAnchor: 0.5, zIndex: 2, clickable: true
         });
@@ -366,8 +389,7 @@
         overlays[index] = overlay;
         clusterer.addMarker(marker);
     }
-
-    function selectPlace(index) {
+        function selectPlace(index) {
         if (!markers[index]) addMarker(index, false);
         var place = places[index];
         var moveLatLon = new kakao.maps.LatLng(place.y, place.x);
@@ -497,9 +519,15 @@
         }
     }
 
-    function scrollSection(elementId, direction) {
+   function scrollSection(elementId, direction) {
         var container = document.getElementById(elementId);
-        if (container) container.scrollLeft += (direction * 200);
+        if (container) {
+            // scrollLeft += ... 대신 scrollBy를 사용하고 behavior: 'smooth'를 추가
+            container.scrollBy({
+                left: direction * 200, // 이동할 거리
+                behavior: 'smooth'     // ★ 핵심: 부드럽게 스르륵 이동
+            });
+        }
     }
     
     function moveToCurrentLocation() {
