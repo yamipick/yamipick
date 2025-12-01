@@ -1,8 +1,5 @@
 package com.project.yamipick.user.entity;
 
-import com.test.jpa.model.UserDTO;
-import com.test.project.entity.Project;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
