@@ -1,18 +1,8 @@
 package com.project.yamipick.ai.entity;
 
+import jakarta.persistence.*;
+import lombok.*;
 import java.time.LocalDateTime;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "tblAIRecommend")
@@ -24,26 +14,21 @@ public class AIRecommend {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long seqAIRecommend;
+    @Column(name = "seqRecommend")
+    private Long seqRecommend;
 
-    private Long seqUser; // 비회원일 경우 null
+    @Column(name = "seqMenu", nullable = false)
+    private Long seqMenu;       // FK → tblMenu
 
-    @Column(nullable = false)
-    private String category;
+    @Column(name = "userInput", length = 2000)
+    private String userInput;
 
-    private String menuName;
-    private String storeName;
-    private String address;
-    private String priceRange;
+    @Column(name = "AIReason", length = 2000, nullable = false)
+    private String aiReason;
 
-    @Column(length = 2000)
-    private String imageUrl;
+    @Column(name = "AICreatedAt", nullable = false)
+    private LocalDateTime aiCreatedAt;
 
-    @Column(length = 2000)
-    private String reason; // GPT 추천 이유
-
-    private String source; // GPT / TOURAPI 등
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "seqSession")
+    private Long seqSession;    // FK → tblAIChatSession
 }
