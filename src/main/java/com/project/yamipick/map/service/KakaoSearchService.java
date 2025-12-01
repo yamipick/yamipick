@@ -1,4 +1,4 @@
-package com.project.yamipick.map.service;
+package com.project.yamipick.map.service; // ★ 패키지명 수정됨
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.project.yamipick.map.dto.RestaurantDTO;
+import com.project.yamipick.map.dto.RestaurantDTO; // ★ DTO 경로 수정됨
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,9 +26,10 @@ import lombok.RequiredArgsConstructor;
 public class KakaoSearchService {
 
     private static final String KAKAO_REST_API_KEY = "c46ba799390d0dd28c7adc89aa77bc40"; // 형님 키
-    private static final String KAKAO_SEARCH_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
+    
+    private static final String KAKAO_KEYWORD_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
+    private static final String KAKAO_CATEGORY_URL = "https://dapi.kakao.com/v2/local/search/category.json";
 
-    // 검색 메서드 (파라미터 11개 - 컨트롤러랑 짝꿍)
     public List<RestaurantDTO> search(String query, String filterType, String x, String y, Integer radius, 
                                       String vibe, String category, 
                                       Boolean parking, Boolean reservable, Boolean corkage, String price) {
@@ -40,36 +41,48 @@ public class KakaoSearchService {
 
         List<RestaurantDTO> finalResultList = new ArrayList<>();
 
-        // 1. 검색어 조합 (분위기가 있으면 검색어 뒤에 붙임)
         String finalQuery = query;
+        if ("맛집".equals(finalQuery)) finalQuery = "";
         if (vibe != null && !vibe.isEmpty()) {
-            finalQuery += " " + vibe; 
+            finalQuery = (finalQuery == null ? "" : finalQuery) + " " + vibe; 
+            finalQuery = finalQuery.trim();
         }
 
-        // 2. 카테고리 코드 결정 (식당 FD6 / 카페 CE7)
         List<String> targetCodes = new ArrayList<>();
         if ("카페".equals(category)) {
             targetCodes.add("CE7"); 
         } else if (category != null && !category.isEmpty()) {
             targetCodes.add("FD6");
         } else {
-            // 전체 검색 시 식당 + 카페 둘 다
             targetCodes.add("FD6");
             targetCodes.add("CE7");
         }
 
-        // 3. API 요청 시작
-        for (String code : targetCodes) {
-            int maxPage = (targetCodes.size() > 1) ? 2 : 3; // 페이지 수 조절
+        boolean useCategorySearch = (finalQuery == null || finalQuery.isEmpty()) && (x != null && y != null);
+        String targetUrl = useCategorySearch ? KAKAO_CATEGORY_URL : KAKAO_KEYWORD_URL;
 
-            for (int page = 1; page <= maxPage; page++) {
+        int r = (radius != null) ? radius : 1000;
+        int pageSize = 15;
+        int pageLimit = 1;
+
+        if (r <= 500) { pageSize = 15; pageLimit = 1; } 
+        else if (r <= 1000) { pageSize = 10; pageLimit = 2; } 
+        else { pageSize = 15; pageLimit = 2; }
+
+        if (targetCodes.size() == 1) {
+            pageLimit *= 2;
+            if (pageLimit > 3) pageLimit = 3;
+        }
+
+        for (String code : targetCodes) {
+            for (int page = 1; page <= pageLimit; page++) {
                 try {
-                    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(KAKAO_SEARCH_URL)
-                            .queryParam("query", finalQuery)
+                    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(targetUrl)
                             .queryParam("category_group_code", code)
-                            .queryParam("size", 15)
+                            .queryParam("size", pageSize)
                             .queryParam("page", page);
 
+                    if (!useCategorySearch) builder.queryParam("query", finalQuery);
                     if (x != null && y != null && radius != null) {
                         builder.queryParam("x", x).queryParam("y", y).queryParam("radius", radius).queryParam("sort", "distance");
                     }
@@ -83,67 +96,39 @@ public class KakaoSearchService {
 
                     for (Map<String, Object> doc : documents) {
                         String idStr = (String) doc.get("id");
-                        
-                        // ★ [하드코딩 핵심] ID를 시드로 사용해 고정된 가짜 데이터 생성
                         long id = Long.parseLong(idStr);
-                        Random random = new Random(id); // ID가 같으면 항상 같은 값이 나옴
+                        Random random = new Random(id);
 
                         int fakeReviewCount = random.nextInt(900) + 10;
                         double fakeRating = 3.5 + (random.nextDouble() * 1.5);
-                        
-                        // 편의시설 데이터 생성 (확률 조절)
-                        boolean isParking = random.nextBoolean(); // 50%
-                        boolean isReservable = random.nextBoolean(); // 50%
-                        boolean isCorkage = random.nextInt(10) < 2; // 20% (희귀함)
-
-                        // 가격대 생성
+                        boolean isParking = random.nextBoolean();
+                        boolean isReservable = random.nextBoolean();
+                        boolean isCorkage = random.nextInt(10) < 2;
                         String[] prices = {"1만원 미만", "1만원대", "2~3만원", "3~5만원", "5~10만원", "10만원 이상"};
                         String myPrice = prices[random.nextInt(prices.length)];
 
-                        // ---------------------------------------------------------
-                        // ★ [필터링 로직] 조건 안 맞으면 갖다 버림 (continue)
-                        // ---------------------------------------------------------
                         if (Boolean.TRUE.equals(parking) && !isParking) continue;
                         if (Boolean.TRUE.equals(reservable) && !isReservable) continue;
                         if (Boolean.TRUE.equals(corkage) && !isCorkage) continue;
                         if (price != null && !price.isEmpty() && !myPrice.equals(price)) continue;
 
-                        // 데이터 추출
                         String name = (String) doc.get("place_name");
                         String catName = (String) doc.get("category_name");
                         String address = (String) doc.get("road_address_name");
                         if(address == null || address.isEmpty()) address = (String) doc.get("address_name");
                         
-                        // 스마트 태그 생성
                         List<String> myTags = generateSmartTags(name, catName, address, random);
-                        
-                        // 분위기 필터 보정
                         if (vibe != null && !vibe.isEmpty()) {
-                            if (!myTags.contains(vibe)) { 
-                                myTags.remove(myTags.size() - 1); 
-                                myTags.add(0, vibe); 
-                            }
+                            if (!myTags.contains(vibe)) { myTags.remove(myTags.size() - 1); myTags.add(0, vibe); }
                         }
 
-                        // DTO 생성
                         RestaurantDTO dto = RestaurantDTO.builder()
-                                .id(idStr)
-                                .name(name)
-                                .address(address)
-                                .roadAddress(address)
-                                .phone((String) doc.get("phone"))
-                                .x((String) doc.get("x")) 
-                                .y((String) doc.get("y")) 
-                                .url((String) doc.get("place_url"))
-                                .category(catName)
-                                .reviewCount(fakeReviewCount)
-                                .rating(Math.round(fakeRating * 10) / 10.0)
-                                .tags(myTags)
-                                .parking(isParking)
-                                .reservable(isReservable)
-                                .corkageFree(isCorkage)
-                                .priceRange(myPrice)
-                                .build();
+                                .id(idStr).name(name).address(address).roadAddress(address)
+                                .phone((String) doc.get("phone")).x((String) doc.get("x")).y((String) doc.get("y"))
+                                .url((String) doc.get("place_url")).category(catName)
+                                .reviewCount(fakeReviewCount).rating(Math.round(fakeRating * 10) / 10.0)
+                                .tags(myTags).parking(isParking).reservable(isReservable)
+                                .corkageFree(isCorkage).priceRange(myPrice).build();
 
                         finalResultList.add(dto);
                     }
@@ -152,7 +137,6 @@ public class KakaoSearchService {
             }
         }
 
-        // 정렬
         if ("reviews".equals(filterType)) {
             Collections.sort(finalResultList, Comparator.comparingInt(RestaurantDTO::getReviewCount).reversed());
         } else if ("rating".equals(filterType)) {
@@ -162,7 +146,6 @@ public class KakaoSearchService {
         return finalResultList;
     }
 
-    // 스마트 태그 생성기
     private List<String> generateSmartTags(String name, String category, String address, Random random) {
         List<String> possibleTags = new ArrayList<>();
         

@@ -38,7 +38,7 @@ dependencies {
 	//2. 시큐리티 (일반 로그인용)
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
-	
+		
 	//3. 웹 & 화면
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
