@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>YamiPick</title>
+    
+    <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/map.css}">
+    
     <script src="/js/analytics.js"></script>
 </head>
 <body>
-
+<div th:replace="~{common/header :: headerFragment}"></div>
 <div class="container">
     <div class="sidebar">
         <h2 style="color:#00c7ae; margin-top: 0;">YamiPick 🍽️</h2>
@@ -231,8 +234,10 @@
     
         <p style="font-size: 13px; color: #888;">총 [[${#lists.size(list)}]]개의 맛집을 찾았습니다.</p>
         <hr style="border: 0; border-top: 1px solid #eee;">
-
-        <div th:each="place, iterStat : ${list}" class="item" th:onclick="|moveMap(${iterStat.index})|">
+        
+        <div th:each="place, iterStat : ${list}" class="item" 
+             th:id="'place-item-' + ${iterStat.index}"
+             th:onclick="|moveMap(${iterStat.index})|">
              <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">
                 [[${place.name}]] 
                 <span th:if="${place.reviewCount > 300}" class="badge">HOT</span>
@@ -282,7 +287,12 @@
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=2088b946e4226ded525fe7c667b17cfa&libraries=services,clusterer"></script>
 
 <script th:inline="javascript">
-    function safeTrack(type, id, msg) { if (typeof Analytics !== 'undefined') type === 'SEARCH' ? Analytics.trackSearch(id) : Analytics.trackClick(type, id, msg); }
+    // [로그 기능] 팀원 요청 반영
+    function safeTrack(type, id, msg) { 
+        if (typeof Analytics !== 'undefined') {
+            type === 'SEARCH' ? Analytics.trackSearch(id) : Analytics.trackClick(type, id, msg); 
+        }
+    }
 
     var savedLat = /*[[${y}]]*/ null;
     var savedLng = /*[[${x}]]*/ null;
@@ -364,13 +374,16 @@
         map.panTo(moveLatLon);
         overlays.forEach(o => { if(o) o.setMap(null); });
         if (overlays[index]) overlays[index].setMap(map);
+        
+        // ★ [추가됨] 사이드바 하이라이트 기능 호출
         highlightSidebar(index);
+        
+        // ★ [로그] 마커 클릭 로그
         safeTrack('MAP_MARKER', place.id, place.name + ' 클릭됨');
     }
 
     function moveMap(index) { selectPlace(index); }
 
-    // ★ [수정] 지역 선택 함수 (검색어 없이 좌표만 보냄)
     function selectRegion(regionName) {
         ps.keywordSearch(regionName, function(data, status) {
             if (status === kakao.maps.services.Status.OK) {
@@ -388,29 +401,26 @@
         showLoading();
         var center = map.getCenter();
         
-        // ★ 거리 값 처리 로직 (사용자 선택 우선 vs 줌 레벨 자동)
         var userRadius = document.getElementById('radiusInput').value;
         var radius;
         if (userRadius && userRadius !== '') {
-            radius = parseInt(userRadius); // 사용자가 찍은 값
+            radius = parseInt(userRadius); 
         } else {
             var level = map.getLevel();
-            radius = level <= 3 ? 1000 : (level <= 5 ? 3000 : 5000); // 자동 계산
+            radius = level <= 3 ? 1000 : (level <= 5 ? 3000 : 5000); 
         }
-		var cat = document.getElementById('categoryInput').value;
+        var cat = document.getElementById('categoryInput').value;
         var vibe = document.getElementById('vibeInput').value;
         var parking = document.getElementById('parkingInput').value;
         var reservable = document.getElementById('reservableInput').value;
         var corkage = document.getElementById('corkageInput').value;
         var price = document.getElementById('priceInput').value;
         
-        
-        var query = ''; // 검색어는 비움 (랜덤 검색 유도)
+        var query = ''; 
 
         if (isReset) {
             cat = vibe = parking = reservable = corkage = price = '';
             document.getElementById('categoryInput').value = '';
-            // (초기화)
         } else {
             if (cat) query = cat;
         }
@@ -437,6 +447,7 @@
         searchInCurrentLocation(false);
     }
     
+    // ★ [로그] 검색 로그
     function handleSearchLog() { var query = document.getElementById('searchInput').value; safeTrack('SEARCH', null, query); }
     
     function applyFilter(type) {
@@ -451,7 +462,6 @@
     }
 
    function toggleFilterSection(type) {
- 
         var sections = ['region', 'sort', 'radius', 'category', 'vibe', 'price']; 
         
         sections.forEach(sec => {
@@ -469,13 +479,18 @@
         var cat = document.getElementById('categoryInput').value;
         var vibe = document.getElementById('vibeInput').value;
         var price = document.getElementById('priceInput').value;
+        var radiusVal = document.getElementById('radiusInput') ? document.getElementById('radiusInput').value : '';
+
         if (cat) document.getElementById('btn-category').classList.add('active');
         else if (document.getElementById('section-category').style.display === 'none') document.getElementById('btn-category').classList.remove('active');
+        
         if (vibe) document.getElementById('btn-vibe').classList.add('active');
         else if (document.getElementById('section-vibe').style.display === 'none') document.getElementById('btn-vibe').classList.remove('active');
+        
         if (price) document.getElementById('btn-price').classList.add('active');
         else if (document.getElementById('section-price').style.display === 'none') document.getElementById('btn-price').classList.remove('active');
-     if (radius && radius !== '1000') { // 1000(기본값)이 아닐 때만 색칠
+        
+        if (radiusVal && radiusVal !== '1000') {
              document.getElementById('btn-radius').classList.add('active');
         } else if (document.getElementById('section-radius').style.display === 'none') {
              document.getElementById('btn-radius').classList.remove('active');
@@ -516,7 +531,8 @@
         var newIndex = places.push(newPlace) - 1;
         addMarker(newIndex, false);
         selectPlace(newIndex);
-        addSidebarItem(newPlace, newIndex);
+        // 주의: addSidebarItem 함수는 제공해주신 코드에 없어서 호출만 유지했습니다. 필요시 구현 필요.
+        if (typeof addSidebarItem === 'function') addSidebarItem(newPlace, newIndex);
     }
 
     function showToast(msg) {
@@ -544,33 +560,48 @@
         document.getElementById('modalAddress').innerText = place.roadAddress;
         document.getElementById('modalPhone').innerText = place.phone ? place.phone : '전화번호 없음';
         document.getElementById('detailModal').style.display = 'flex';
+        // ★ [로그] 모달 열기 로그
         safeTrack('BUTTON', place.id, '상세보기 모달 열림');
     }
     function closeModal(event) { if (!event || event.target.id === 'detailModal' || event.target.className === 'close-btn') document.getElementById('detailModal').style.display = 'none'; }
     function openKakaoMap() { if (currentPlace) { safeTrack('BUTTON', currentPlace.id, '카카오맵 이동'); if (currentPlace.url) window.open(currentPlace.url, '_blank'); } }
     function reserveLog() { if(currentPlace) { safeTrack('BUTTON', currentPlace.id, '예약하기 버튼 클릭'); showToast('🚧 예약 기능은 준비 중입니다!'); } }
 
-// [필수] 지역 탭 전환 함수
     function switchRegionTab(regionName) {
         var regions = ['seoul', 'gyeonggi', 'incheon', 'busan', 'jeju', 'daejeon', 'gangwon'];
         
         regions.forEach(function(r) {
-            // 탭 스타일 끄기
             var tabBtn = document.getElementById('tab-' + r);
             if (tabBtn) tabBtn.classList.remove('active');
             
-            // 내용 숨기기
             var subDiv = document.getElementById('sub-' + r);
             if (subDiv) subDiv.style.display = 'none';
         });
 
-        // 선택된 탭 켜기
         document.getElementById('tab-' + regionName).classList.add('active');
         document.getElementById('sub-' + regionName).style.display = 'flex';
     }
-	function selectRadius(val) {
+    function selectRadius(val) {
         document.getElementById('radiusInput').value = val;
         searchInCurrentLocation(false);
+    }
+
+    // ★ [추가] 사이드바 하이라이트 함수 (팀원 코드에 있던 것 + HTML id 연결)
+    function highlightSidebar(index) {
+        var listItems = document.querySelectorAll('.item'); // HTML의 class="item"과 맞춰야 합니다.
+        listItems.forEach(function(item) {
+            item.classList.remove('active');
+            item.style.backgroundColor = ""; 
+        });
+
+        // HTML 수정 단계에서 id="place-item-..." 을 추가했다면 여기서 찾을 수 있습니다.
+        var targetItem = document.getElementById('place-item-' + index);
+        
+        if (targetItem) {
+            targetItem.classList.add('active');
+            targetItem.style.backgroundColor = "#f1f3f5"; 
+            targetItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
 </script>
 </body>
