@@ -1,4 +1,4 @@
-package com.project.yamipick.store.dto;
+package com.project.yamipick.user.dto;
 
 import java.time.LocalDate;
 
@@ -15,12 +15,18 @@ import lombok.ToString;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StoreDTO {
+public class UserDTO {
 	
-	private Long seqStore;
-	private String kakaoPlaceId;
+	private Long seqUser;
 	private String name;
-	private String address;
+	private String id;
+	private String password;
+	private String email;
 	private String phone;
+	private String role;
+	private Integer penaltyScore;
+	private String nickname;
+	private String statusUser;
+	private LocalDate createdAt;
 
 }
