@@ -1,27 +1,26 @@
 package com.project.yamipick.log.aop;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Arrays;
+
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.annotation.Autowired;
+// ★ Security 관련 임포트 추가
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.project.yamipick.log.entity.BusinessLog;
+import com.project.yamipick.log.repository.BusinessLogRepository;
+
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-
-// ★ Security 관련 임포트 추가
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import com.project.yamipick.log.repository.BusinessLogRepository;
-import com.project.yamipick.log.entity.BusinessLog;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Arrays;
 
 @Aspect
 @Component

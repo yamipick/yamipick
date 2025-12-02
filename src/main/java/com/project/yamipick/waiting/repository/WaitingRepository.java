@@ -2,18 +2,23 @@ package com.project.yamipick.waiting.repository;
 
 import java.util.List;
 
-import org.apache.catalina.Store;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-import com.project.yamipick.waiting.domain.Member;
 import com.project.yamipick.waiting.domain.Waiting;
-import com.project.yamipick.waiting.domain.WaitingStatus;
-
-
 
 public interface WaitingRepository extends JpaRepository<Waiting, Long> {
-    // 매장별 대기 목록 (대기중, 호출됨 상태만)
-    List<Waiting> findByStoreIdAndStatusInOrderByRegDateAsc(Long storeId, List<WaitingStatus> statuses);
-    // 내 앞 대기 수
-    long countByStatusAndIdLessThan(WaitingStatus status, Long id);
+
+    // 1. 매장용 목록
+    @Query("SELECT w FROM Waiting w WHERE w.store.id = :storeId AND w.waitingStatus.statusName IN :statuses ORDER BY w.regDate ASC")
+    List<Waiting> findStoreList(@Param("storeId") Long storeId, @Param("statuses") List<String> statuses);
+
+    // 2. 손님용 기록
+    @Query("SELECT w FROM Waiting w WHERE w.member.id = :memberId AND w.waitingStatus.statusName IN :statuses ORDER BY w.regDate DESC")
+    List<Waiting> findMemberHistory(@Param("memberId") Long memberId, @Param("statuses") List<String> statuses);
+
+    // 3. 내 앞 대기 수
+    @Query("SELECT COUNT(w) FROM Waiting w WHERE w.waitingStatus.statusName = 'WAITING' AND w.id < :myId")
+    long countAhead(@Param("myId") Long myId);
 }

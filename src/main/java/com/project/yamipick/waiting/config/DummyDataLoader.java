@@ -5,25 +5,53 @@ import org.springframework.stereotype.Component;
 
 import com.project.yamipick.waiting.domain.Member;
 import com.project.yamipick.waiting.domain.Store;
+import com.project.yamipick.waiting.domain.WaitingStatus;
+import com.project.yamipick.waiting.domain.WaitingStatusType;
 import com.project.yamipick.waiting.repository.MemberRepository;
 import com.project.yamipick.waiting.repository.StoreRepository;
+import com.project.yamipick.waiting.repository.WaitingStatusRepository;
 
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
 public class DummyDataLoader implements CommandLineRunner {
+
     private final MemberRepository memberRepository;
     private final StoreRepository storeRepository;
+    private final WaitingStatusRepository statusRepository;
 
     @Override
     public void run(String... args) throws Exception {
-        // 서버 켜질 때 데이터 없으면 생성
-        if (memberRepository.count() == 0) {
-            memberRepository.save(Member.builder().name("테스터").phoneNumber("010-1234-5678").build());
+        
+        // 1. [필수] 상태값 기초 데이터 생성 (없으면 에러남!)
+        // Enum 이름 그대로 DB에 넣습니다. (WAITING, CALLED...)
+        for (WaitingStatusType type : WaitingStatusType.values()) {
+            createStatusIfAbsent(type.name());
         }
+
+        // 2. 더미 회원 (DDL NOT NULL 컬럼 채움)
+        if (memberRepository.count() == 0) {
+            memberRepository.save(Member.builder()
+                .name("테스터").phoneNumber("010-1234-5678")
+                .loginId("test").password("1234").email("test@t.com")
+                .nickname("T").statusUser("ACTIVE").role("USER").penaltyScore(0)
+                .build());
+        }
+
+        // 3. 더미 매장
         if (storeRepository.count() == 0) {
-            storeRepository.save(Store.builder().name("야미식당").build());
+            storeRepository.save(Store.builder()
+                .name("야미식당")
+                .waitingOpen(true) // 메모리용 (DB 저장 안됨)
+                .kakaoPlaceId("k1").address("서울").ownerId(1L)
+                .build());
+        }
+    }
+
+    private void createStatusIfAbsent(String name) {
+        if (statusRepository.findByStatusName(name).isEmpty()) {
+            statusRepository.save(WaitingStatus.builder().statusName(name).build());
         }
     }
 }

@@ -1,41 +1,54 @@
 package com.project.yamipick.waiting.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
+import lombok.*;
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 @Entity
-@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
-@Table(name = "tbl_waiting")
+@Getter @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "tblWaiting")
 public class Waiting {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_w_gen")
+    @SequenceGenerator(name = "seq_w_gen", sequenceName = "seqWaiting", allocationSize = 1)
+    @Column(name = "seqWaiting")
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "member_id")
-    private Member member;
-
-    @ManyToOne
-    @JoinColumn(name = "store_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seqStore")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Store store;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seqUser")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private Member member;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "seqWaitingStatus")
+    private WaitingStatus waitingStatus;
+
+    @Column(name = "timeSize")
     private int teamSize;
 
-    @Enumerated(EnumType.STRING)
-    private WaitingStatus status;
-
+    // ★ [수정] 옵션 제거 -> Java에서 설정한 값이 DB에 저장됨
+    @Column(name = "regdate") 
     private LocalDateTime regDate;
+    
+    @Column(name = "calledTime")
+    private LocalDateTime calledTime;
+    
+    @Column(name = "seatedTime")
+    private LocalDateTime seatedTime;
+    
+    @PrePersist
+    public void prePersist() {
+        // 이 값이 DB에 저장됩니다.
+        if (this.regDate == null) this.regDate = LocalDateTime.now();
+    }
 }
