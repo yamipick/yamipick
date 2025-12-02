@@ -1,4 +1,4 @@
-package com.project.yamipick.user.dto;
+package com.project.yamipick.store.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,17 +13,12 @@ import lombok.ToString;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDTO {
+public class StoreDTO {
 	
-	private Long seqUser;
+	private Long seqStore;
+	private String kakaoPlaceId;
 	private String name;
-	private String id;
-	private String password;
-	private String email;
+	private String address;
 	private String phone;
-	private String role;
-	private Integer penaltyScore;
-	private String nickname;
-	private String statusUser;
 
 }
