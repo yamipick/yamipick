@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>공지사항 목록</title></head>
+<body>
+    <h2>📢 공지사항 관리</h2>
+    <a href="/admin/notice/write">➕ 글쓰기</a>
+    <hr>
+    <table border="1" width="800">
+        <tr>
+            <th>번호</th>
+            <th>제목</th>
+            <th>작성자</th>
+            <th>조회수</th>
+            <th>날짜</th>
+        </tr>
+        <tr th:each="dto : ${list}">
+            <td th:text="${dto.seqNotice}"></td>
+            <td>
+                <a th:href="@{/admin/notice/view(seq=${dto.seqNotice})}" th:text="${dto.title}"></a>
+            </td>
+            <td th:text="${dto.writer.name}"></td>
+            <td th:text="${dto.viewCount}"></td>
+            <td th:text="${dto.createdAt}"></td>
+        </tr>
+    </table>
+</body>
+</html>

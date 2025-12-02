@@ -41,4 +41,9 @@ public class Notice {
     @CreationTimestamp
     @Column(name = "createdAt", updatable = false)
     private LocalDate createdAt;
+    
+    //
+    public void increaseViewCount() {
+        this.viewCount++;
+    }
 }

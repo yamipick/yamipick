@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>공지사항 상세</title></head>
+<body>
+    <h2>📄 <span th:text="${notice.title}"></span></h2>
+    <hr>
+    <p>작성자: <span th:text="${notice.writer.name}"></span> | 조회수: <span th:text="${notice.viewCount}"></span></p>
+    <p>작성일: <span th:text="${notice.createdAt}"></span></p>
+    <hr>
+    <div style="min-height: 200px; padding: 10px; border: 1px solid #ccc;">
+        <span th:text="${notice.content}"></span>
+    </div>
+    
+    <div th:if="${notice.filePath != null}">
+        <p>첨부파일: <span th:text="${notice.filePath}"></span></p>
+    </div>
+
+    <hr>
+    <a href="/admin/notice/list">목록으로</a>
+</body>
+</html>
