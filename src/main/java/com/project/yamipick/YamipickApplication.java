@@ -1,10 +1,10 @@
 package com.project.yamipick;
 
-import jakarta.annotation.PostConstruct;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-import java.util.TimeZone;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
 public class YamipickApplication {
@@ -13,11 +13,12 @@ public class YamipickApplication {
         SpringApplication.run(YamipickApplication.class, args);
     }
 
-    // ★ 이 부분이 핵심! (서버 켜질 때 딱 한 번 실행됨)
-    @PostConstruct
-    public void init() {
-        // 서버의 시간대를 '아시아/서울'로 강제 설정
-        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
-        System.out.println("⏰ 서버 시간이 KST(Asia/Seoul)로 설정되었습니다.");
+    // ★ 이 부분 추가! (서버 켜질 때 '1234'의 진짜 암호문을 찍어줌)
+    @Bean
+    public CommandLineRunner getPassword(PasswordEncoder passwordEncoder) {
+        return args -> {
+            String pw = passwordEncoder.encode("1234");
+            System.out.println("🔥 [복사하세요] 진짜 암호문: " + pw);
+        };
     }
 }

@@ -35,7 +35,7 @@ public class Notice {
 
     // ★ User가 있어야 에러 안 남
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "writerSeq", nullable = false)
+    @JoinColumn(name = "seqUser", nullable = false)
     private User writer;
 
     @CreationTimestamp

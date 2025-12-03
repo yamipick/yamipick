@@ -63,18 +63,24 @@ public class SecurityConfig {
     // 로그인 성공 핸들러
     @Bean
     AuthenticationSuccessHandler customSuccessHandler() {
-    	return (request, response, authentication) -> {
-    		// 권한 목록 가져오기
-    		var authorities = authentication.getAuthorities();
-    		
-    		// 관리자(ROLE_ADMIN)이면 관리자 공지 목록으로 이동
-    		if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIn"))) {
-    			response.sendRedirect("/admin/notice/list");
-    		}
-    		//아니면 메인으로 이동
-    		else {
-    			response.sendRedirect("/");
-    		}
-    	};
+        return (request, response, authentication) -> {
+            // 1. 로그인한 사람의 권한 목록 가져오기
+            var authorities = authentication.getAuthorities();
+            
+            // ★ [디버깅] 콘솔에 권한 찍어보기 (이게 중요!)
+            System.out.println("🔥 로그인 성공! 현재 권한: " + authorities);
+
+            // 2. 권한 확인 (ROLE_ADMIN이 있는지?)
+            boolean isAdmin = authorities.stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+            if (isAdmin) {
+                System.out.println("👉 관리자 페이지로 이동합니다.");
+                response.sendRedirect("/admin/notice/list");
+            } else {
+                System.out.println("👉 일반 메인으로 이동합니다.");
+                response.sendRedirect("/");
+            }
+        };
     }
 }
