@@ -3,282 +3,324 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>손님 페이지</title>
+    <title>야미픽 웨이팅</title>
     <style>
-        body { font-family: 'Pretendard', sans-serif; padding: 20px; text-align: center; max-width: 400px; margin: 0 auto; background-color: #f8f9fa;}
-        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        /* 기본 스타일 */
+        body { font-family: 'Pretendard', sans-serif; padding: 20px; text-align: center; max-width: 420px; margin: 0 auto; background-color: #f1f2f6; color: #333; }
+        .container { background: white; padding: 25px 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         
-        /* 화면 전환용 클래스 */
+        /* 화면 전환용 */
         .box { display: none; }
         
+        /* 버튼 스타일 */
+        button { cursor: pointer; border: none; font-family: inherit; transition: 0.2s; }
+        .btn-primary { width: 100%; padding: 14px; background: #00b894; color: white; border-radius: 8px; font-size: 1.1em; font-weight: bold; }
+        .btn-primary:disabled { background: #b2bec3; cursor: not-allowed; }
+        
+        .btn-group { display: flex; gap: 8px; margin-top: 15px; }
+        .btn-cancel { background: #ff7675; color: white; padding: 12px; border-radius: 8px; font-weight: bold; flex: 1; }
+        .btn-defer { background: #6c5ce7; color: white; padding: 12px; border-radius: 8px; font-weight: bold; flex: 1; }
+
+        /* 1. 실시간 알림 영역 (WebSocket) */
+        #alert-area { display: none; margin-bottom: 20px; }
+        .alert-box { padding: 15px; border-radius: 8px; text-align: left; margin-bottom: 8px; animation: slideIn 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .alert-urgent { background: #ffeaa7; color: #d63031; border-left: 5px solid #d63031; font-weight: bold; } /* 호출/취소 */
+        .alert-info { background: #74b9ff; color: #fff; border-left: 5px solid #0984e3; } /* 일반 안내 */
+
+        /* 2. 게시판형 공지사항 영역 (DB) */
+        .notice-board { margin: 20px 0; border: 1px solid #dfe6e9; border-radius: 8px; overflow: hidden; background: #fff; }
+        .notice-header { background: #f8f9fa; padding: 12px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .notice-list { display: none; padding: 0; margin: 0; list-style: none; text-align: left; }
+        .notice-item { padding: 12px; border-bottom: 1px solid #eee; }
+        .notice-item:last-child { border-bottom: none; }
+        .notice-item.pinned { background-color: #fff8e1; } /* 상단고정 강조 */
+        .n-title { font-weight: bold; display: block; margin-bottom: 4px; }
+        .n-badge { color: #e17055; font-size: 0.8em; margin-right: 4px; }
+        .n-content { font-size: 0.9em; color: #636e72; white-space: pre-wrap; line-height: 1.4; }
+        .n-date { font-size: 0.75em; color: #b2bec3; margin-top: 6px; text-align: right; }
+
+        /* 대기 상태 디자인 */
+        .waiting-display { margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; }
+        .waiting-number { font-size: 3.5em; font-weight: 800; color: #2d3436; margin: 10px 0; line-height: 1; }
+        .waiting-label { color: #636e72; font-size: 0.9em; font-weight: bold; }
+        .count-text { color: #00b894; font-weight: bold; font-size: 1.2em; }
+
+        /* 로그인 박스 */
+        #login-input { padding: 15px; width: 80%; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1.2em; text-align: center; }
+
         /* 기록 영역 */
-        .history { margin-top: 30px; text-align: left; border-top: 1px dashed #aaa; padding-top: 10px; }
-        .history h4 { margin-bottom: 10px; color: #555; }
-        .history-item { background: #f1f2f6; padding: 10px; margin-bottom: 8px; font-size: 0.9em; border-radius: 6px; display: flex; justify-content: space-between; }
-        
-        /* 알림 박스 */
-        #msg-area { background: #fff3cd; padding: 15px; margin: 10px 0; display: none; border-radius: 5px; color: #856404; font-weight: bold; animation: pulse 1s infinite; }
-        #notice-box { background: #2d3436; color: #ffeaa7; padding: 10px; margin-bottom: 10px; display: none; border-radius: 5px; text-align: left; font-size: 0.9em; }
-        
-        /* 버튼 */
-        .btn-reg { width: 100%; padding: 12px; background: #00b894; color: white; border: none; cursor: pointer; border-radius: 5px; font-size: 1.1em; font-weight: bold; transition: 0.2s; }
-        .btn-reg:disabled { background: #b2bec3; cursor: not-allowed; }
-        .btn-cancel { background: #ff7675; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; font-weight: bold; }
-        
-        /* 텍스트 */
-        .waiting-number { font-size: 2.5em; font-weight: bold; color: #ff6b6b; margin: 10px 0; }
-        .count-text { font-weight: bold; color: #0984e3; font-size: 1.2em; }
-        
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        .history { margin-top: 30px; text-align: left; border-top: 2px dashed #dfe6e9; padding-top: 20px; }
+        .history h4 { margin: 0 0 10px 0; color: #2d3436; }
+        .h-item { padding: 10px; background: white; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; font-size: 0.9em; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+
+        @keyframes slideIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="notice-box">📢 <b>공지:</b> <span id="notice-text"></span></div>
-        <div id="msg-area"></div>
 
-        <div id="reg-box" style="display: block;">
-            <h2>🍽️ 맛집 줄서기</h2>
-            <p id="store-status-text" style="color: #636e72; font-weight: bold;">매장 상태 확인 중...</p>
+    <div id="login-box" class="container">
+        <h2>👋 야미픽 웨이팅</h2>
+        <p style="color:#666;">테스트할 <b>User ID</b>를 입력하세요.</p>
+        <input type="number" id="login-input" placeholder="예: 1" value="1">
+        <button class="btn-primary" onclick="doLogin()">입장하기</button>
+    </div>
+
+    <div id="main-app" class="container box">
+        
+        <div id="alert-area"></div>
+
+        <div class="notice-board">
+            <div class="notice-header" onclick="toggleNotice()">
+                📢 매장 공지사항 확인하기
+                <span id="notice-arrow">🔽</span>
+            </div>
+            <ul id="notice-list" class="notice-list">
+                <li class="notice-item" style="text-align:center; color:#aaa;">등록된 공지가 없습니다.</li>
+            </ul>
+        </div>
+
+        <div id="reg-box">
+            <h2 style="margin-top:0;">🍽️ 대기 접수</h2>
+            <p id="store-status-text" style="color: #aaa;">매장 상태 확인 중...</p>
             
-            <div style="margin: 20px 0;">
-                <input type="number" id="size" value="2" placeholder="인원수" style="padding:10px; width: 60%; border: 1px solid #ddd; border-radius: 4px; text-align: center;"> 명
+            <div style="margin: 30px 0;">
+                <label style="display:block; margin-bottom:10px; font-weight:bold; color:#555;">총 인원</label>
+                <input type="number" id="size" value="2" placeholder="인원수" style="padding:15px; width: 50%; border: 2px solid #00b894; border-radius: 8px; text-align: center; font-size: 1.5em; font-weight:bold; color:#00b894;">
+                <span style="font-size:1.2em; font-weight:bold; margin-left:5px;">명</span>
             </div>
             
-            <button id="btn-reg" class="btn-reg" onclick="register()">줄서기</button>
+            <button id="btn-reg" class="btn-primary" onclick="register()">줄서기</button>
         </div>
 
         <div id="status-box" class="box">
-            <h3>나의 대기 번호</h3>
-            <div class="waiting-number" id="my-id"></div>
-            
-            <p>내 앞 <span id="cnt" class="count-text">0</span>팀 대기 중</p>
-            
-            <div style="font-size: 0.8em; color: #aaa; margin: 15px 0;">
-                잠시만 기다려주세요.<br>
-                연결 상태: <span id="socket-status">⚪</span>
+            <div class="waiting-display">
+                <div class="waiting-label">나의 대기 번호</div>
+                <div class="waiting-number" id="my-number">-</div>
+                <p style="margin:0;">내 앞 <span id="cnt" class="count-text">0</span>팀 대기 중</p>
             </div>
             
-            <button class="btn-cancel" onclick="cancel()">웨이팅 취소</button>
+            <div class="btn-group">
+                <button class="btn-defer" onclick="postpone()">↩️ 순서 미루기</button>
+                <button class="btn-cancel" onclick="cancel()">웨이팅 취소</button>
+            </div>
+
+            <div style="font-size: 0.8em; color: #b2bec3; margin-top: 15px;">
+                실시간 연결 상태: <span id="socket-status">⚪</span>
+            </div>
         </div>
 
         <div class="history">
-            <h4>📜 지난 방문 기록</h4>
+            <h4>📜 <span id="user-name"></span>님의 방문 기록</h4>
             <div id="history-list"></div>
         </div>
     </div>
 
     <script>
-        const userId = 1; // 더미 유저 ID (실제 서비스에선 세션/토큰 사용)
+        // 전역 변수
+        let userId = null;
         let myId = null;
         let socket = null;
         let pollingInterval = null;
+        const storeId = 1; // 테스트용 고정
 
-        // 페이지 로드 시 실행
-        window.onload = function() {
+        // 1. 로그인 및 초기화
+        function doLogin() {
+            const val = document.getElementById('login-input').value;
+            if(!val) return alert("ID를 입력하세요");
+            userId = val;
+            document.getElementById('user-name').innerText = "유저" + userId;
+            
+            document.getElementById('login-box').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            
+            init();
+        }
+
+        function init() {
             checkStoreStatus();
             loadHistory();
             restoreSession();
-        };
+            loadNotices(); // ★ 공지사항 로드 추가
+        }
 
-        // 1. 매장 상태 확인 (영업중/마감)
+        // 2. 매장 공지사항 (게시판) 로드
+        function loadNotices() {
+            fetch(`/waiting/notices?storeId=${storeId}`)
+                .then(r => r.json())
+                .then(list => {
+                    const ul = document.getElementById('notice-list');
+                    ul.innerHTML = "";
+
+                    if (list.length === 0) {
+                        ul.innerHTML = "<li class='notice-item' style='text-align:center; color:#aaa;'>등록된 공지가 없습니다.</li>";
+                        return;
+                    }
+
+                    list.forEach(item => {
+                        const pinnedClass = item.pinned ? 'pinned' : '';
+                        const badge = item.pinned ? '<span class="n-badge">[필독]</span>' : '';
+                        
+                        ul.innerHTML += `
+                            <li class="notice-item ${pinnedClass}">
+                                <span class="n-title">${badge}${item.title}</span>
+                                <div class="n-content">${item.content}</div>
+                                <div class="n-date">${item.regDate}</div>
+                            </li>
+                        `;
+                    });
+                });
+        }
+
+        function toggleNotice() {
+            const ul = document.getElementById('notice-list');
+            const arrow = document.getElementById('notice-arrow');
+            if(ul.style.display === 'block') {
+                ul.style.display = 'none';
+                arrow.innerText = '🔽';
+            } else {
+                ul.style.display = 'block';
+                arrow.innerText = '🔼';
+            }
+        }
+
+        // 3. 매장 영업 상태
         function checkStoreStatus() {
-            fetch('/waiting/store-info')
+            fetch(`/waiting/store-info?storeId=${storeId}`)
                 .then(r => r.json())
                 .then(store => {
                     const txt = document.getElementById('store-status-text');
                     const btn = document.getElementById('btn-reg');
-                    
                     if (store.waitingOpen) {
-                        txt.innerText = "🟢 현재 대기 접수 중";
-                        txt.style.color = "green";
+                        txt.innerHTML = "🟢 <b style='color:#333'>현재 대기 접수 중</b>";
                         btn.disabled = false;
                     } else {
-                        txt.innerText = "🔴 현재 접수 마감";
-                        txt.style.color = "red";
+                        txt.innerHTML = "🔴 <b style='color:#333'>현재 접수 마감</b>";
                         btn.disabled = true;
                     }
                 });
         }
 
-        // 2. 세션 복구 (새로고침 시 기존 대기 연결)
+        // 4. 세션 복구 & 등록
         function restoreSession() {
             fetch(`/waiting/my-active?userId=${userId}`)
-                .then(res => {
-                    if (res.status === 200) return res.json();
-                    return null;
-                })
+                .then(res => res.status === 200 ? res.json() : null)
                 .then(data => {
-                    if (data) {
-                        console.log("기존 대기 발견:", data.id);
-                        myId = data.id;
-                        showStatusScreen();
-                        connectWs();
-                        startPolling();
-                        updateCnt();
-                    }
+                    if (data) successRegister(data);
                 });
         }
 
-        // 3. 웨이팅 등록
         function register() {
             const size = document.getElementById('size').value;
             fetch(`/waiting/register?userId=${userId}&size=${size}`, { method: 'POST' })
                 .then(async res => {
-                    if (!res.ok) {
-                        const msg = await res.text();
-                        throw new Error(msg); // 에러 메시지 던짐
-                    }
+                    if(!res.ok) throw new Error(await res.text());
                     return res.json();
                 })
-                .then(data => {
-                    myId = data.id;
-                    showStatusScreen();
-                    connectWs();
-                    startPolling();
-                    updateCnt();
-                    alert("✅ 웨이팅이 등록되었습니다.");
-                })
-                .catch(err => alert("⛔ " + err.message));
+                .then(data => successRegister(data))
+                .catch(e => alert("⛔ " + e.message));
         }
 
-        // 4. 화면 전환
-        function showStatusScreen() {
+        function successRegister(data) {
+            myId = data.id;
+            document.getElementById('my-number').innerText = data.waitingNumber + "번"; // 대기번호 표시
+            
             document.getElementById('reg-box').style.display = 'none';
             document.getElementById('status-box').style.display = 'block';
-            document.getElementById('my-id').innerText = myId + "번";
-        }
-
-        // 5. 방문 기록 로드 (DTO 대응)
-        function loadHistory() {
-            fetch(`/waiting/history?userId=${userId}`)
-                .then(res => res.json())
-                .then(list => {
-                    const div = document.getElementById('history-list');
-                    div.innerHTML = "";
-                    
-                    if(list.length === 0) {
-                        div.innerHTML = "<div style='color:#aaa; text-align:center;'>기록이 없습니다.</div>";
-                        return;
-                    }
-
-                    list.forEach(item => {
-                        const statusStr = item.status;
-                        let color = 'gray';
-                        if(statusStr === 'ENTERED') color = 'green';
-                        else if(statusStr === 'CANCELED') color = 'red';
-
-                        // 날짜 처리 (DTO의 LocalDateTime 문자열)
-                        const dateStr = item.regDate ? item.regDate.split('T')[0] : '-';
-
-                        div.innerHTML += `
-                            <div class="history-item">
-                                <span>📅 ${dateStr} (${item.teamSize}명)</span>
-                                <span style="color:${color}; font-weight:bold;">[${statusStr}]</span>
-                            </div>`;
-                    });
-                });
-        }
-
-        // 6. 웹소켓 연결
-        function connectWs() {
-            if (!myId || (socket && socket.readyState === WebSocket.OPEN)) return;
-
-            socket = new WebSocket("ws://localhost:8080/ws/waiting");
-
-            socket.onopen = () => {
-                document.getElementById('socket-status').innerText = "🟢 실시간 연결됨";
-                // 내 ID 신고 (매핑용)
-                socket.send(JSON.stringify({ waitingId: myId }));
-            };
-
-            socket.onmessage = (msg) => {
-                handleMessage(msg.data);
-            };
-
-            socket.onclose = () => {
-                document.getElementById('socket-status').innerText = "🔴 재연결 중...";
-                setTimeout(connectWs, 3000); // 3초 후 재연결
-            };
-        }
-
-        // 7. 메시지 처리 (알림 표시)
-        function handleMessage(text) {
-            console.log("메시지 수신:", text);
-            const cleanText = text.trim();
-
-            if (cleanText.startsWith("CANCEL:") || cleanText === "CANCELED") {
-                const reason = cleanText.includes(":") ? cleanText.split(":")[1] : "취소되었습니다.";
-                
-                // 알림 씹힘 방지 (딜레이)
-                setTimeout(() => {
-                    alert("🚫 " + reason);
-                    stopPolling();
-                    location.reload();
-                }, 100);
-
-            } else if (cleanText.startsWith("CALL:") || cleanText === "CALLED") {
-                const msg = cleanText.includes(":") ? cleanText.split(":")[1] : "입장해주세요!";
-                const box = document.getElementById('msg-area');
-                box.innerText = "🔔 " + msg;
-                box.style.display = 'block';
-                
-                setTimeout(() => alert("🔔 " + msg), 100);
-
-            } else if (cleanText.startsWith("ENTER:") || cleanText === "ENTERED") {
-                setTimeout(() => {
-                    alert("✅ 입장 완료");
-                    stopPolling();
-                    location.reload();
-                }, 100);
-
-            } else if (cleanText.startsWith("NOTICE:")) {
-                const noticeMsg = cleanText.split(":")[1];
-                document.getElementById('notice-text').innerText = noticeMsg;
-                document.getElementById('notice-box').style.display = 'block';
-                
-                setTimeout(() => alert("📢 공지: " + noticeMsg), 100);
-            }
+            
+            connectWs();
+            startPolling();
             updateCnt();
         }
 
-        // 8. 폴링 (3초마다 상태 확인 - 웹소켓 보조)
+        // 5. 웹소켓 및 알림 처리 (Alert)
+        function connectWs() {
+            if (!myId || (socket && socket.readyState === WebSocket.OPEN)) return;
+            socket = new WebSocket("ws://localhost:8080/ws/waiting");
+            socket.onopen = () => {
+                document.getElementById('socket-status').innerText = "🟢 연결됨";
+                socket.send(JSON.stringify({ waitingId: myId }));
+            };
+            socket.onmessage = (msg) => showAlert(msg.data);
+            socket.onclose = () => {
+                document.getElementById('socket-status').innerText = "🔴 재연결 중...";
+                setTimeout(connectWs, 3000);
+            };
+        }
+
+        function showAlert(text) {
+            console.log("알림:", text);
+            const cleanText = text.trim();
+            const area = document.getElementById('alert-area');
+            area.style.display = 'block';
+
+            let html = "";
+            
+            // A. 호출/취소 (긴급)
+            if (cleanText.startsWith("CALL:") || cleanText.startsWith("CANCEL:")) {
+                const isCall = cleanText.startsWith("CALL:");
+                const msg = cleanText.split(":")[1];
+                
+                // 알림박스 추가
+                html = `<div class="alert-box alert-urgent">
+                            <div style="font-size:1.2em;">${isCall ? '🔔 호출 알림' : '🚫 취소 알림'}</div>
+                            <div style="margin-top:5px;">${msg}</div>
+                        </div>`;
+                
+                if(isCall) alert("🔔 입장해주세요!");
+                else { alert("🚫 취소되었습니다."); location.reload(); }
+
+            // B. 입장완료
+            } else if (cleanText.startsWith("ENTER:")) {
+                alert("✅ 입장 확인되었습니다.");
+                location.reload();
+                return;
+
+            // C. 실시간 안내 (Broadcast)
+            } else if (cleanText.startsWith("NOTICE:")) {
+                const msg = cleanText.split(":")[1];
+                html = `<div class="alert-box alert-info">
+                            <div>📢 실시간 안내</div>
+                            <div style="margin-top:5px;">${msg}</div>
+                        </div>`;
+            }
+
+            area.innerHTML = html; // 덮어쓰기 (가장 최근 중요 알림만 표시)
+            updateCnt();
+        }
+
+        // 6. 기타 기능 (폴링, 취소, 미루기, 기록)
         function startPolling() {
             if (pollingInterval) clearInterval(pollingInterval);
-            pollingInterval = setInterval(() => {
-                if (!myId) return;
-
-                // 앞팀 수 갱신
-                updateCnt();
-
-                // 상태 변경 감지 (웹소켓 놓쳤을 때 대비)
-                fetch(`/waiting/my-status/${myId}`)
-                    .then(r => r.text())
-                    .then(status => {
-                        if (status === 'CALLED' || status === 'CANCELED' || status === 'ENTERED') {
-                            // 이미 처리된 상태가 아니면 핸들링
-                            // (여기선 간단히 호출하지만, 실제론 중복 처리 방지 로직을 넣기도 함)
-                            // handleMessage(status); 
-                        }
-                    });
-            }, 3000);
+            pollingInterval = setInterval(updateCnt, 3000);
         }
-
-        function stopPolling() {
-            if (pollingInterval) clearInterval(pollingInterval);
-        }
-
         function updateCnt() {
-            if (myId) fetch(`/waiting/check/${myId}`).then(r => r.text()).then(c => document.getElementById('cnt').innerText = c);
+            if(myId) fetch(`/waiting/check/${myId}`).then(r=>r.text()).then(c => document.getElementById('cnt').innerText = c);
         }
-
         function cancel() {
-            if (confirm("정말 취소하시겠습니까?")) {
-                fetch(`/waiting/cancel/${myId}`, { method: 'POST' }).then(() => {
-                    alert("취소되었습니다.");
-                    location.reload();
+            if(confirm("취소하시겠습니까?")) fetch(`/waiting/cancel/${myId}`, {method:'POST'}).then(() => location.reload());
+        }
+        function postpone() {
+            if(confirm("순서를 맨 뒤로 미루시겠습니까?")) {
+                fetch(`/waiting/postpone/${myId}`, {method:'POST'}).then(async r => {
+                    if(r.ok) { alert("순서가 변경되었습니다."); location.reload(); }
+                    else alert(await r.text());
                 });
             }
+        }
+        function loadHistory() {
+            if(!userId) return;
+            fetch(`/waiting/history?userId=${userId}`).then(r=>r.json()).then(list => {
+                const div = document.getElementById('history-list');
+                div.innerHTML = "";
+                if(list.length===0) { div.innerHTML = "<div style='color:#aaa;text-align:center;'>기록 없음</div>"; return; }
+                list.forEach(item => {
+                    const color = item.status === 'ENTERED' ? '#00b894' : '#636e72';
+                    div.innerHTML += `<div class="h-item">
+                        <span>📅 ${item.regDate ? item.regDate.split('T')[0] : '-'} (${item.waitingNumber}번)</span>
+                        <span style="color:${color}; font-weight:bold;">${item.status}</span>
+                    </div>`;
+                });
+            });
         }
     </script>
 </body>

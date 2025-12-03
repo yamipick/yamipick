@@ -67,4 +67,15 @@ public class UserWaitingController {
         if (active != null) return ResponseEntity.ok(active);
         return ResponseEntity.noContent().build();
     }
+    
+ // 순서 미루기
+    @PostMapping("/waiting/postpone/{id}")
+    public ResponseEntity<?> postpone(@PathVariable("id") Long id) {
+        try {
+            waitingService.postpone(id);
+            return ResponseEntity.ok("ok");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

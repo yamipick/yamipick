@@ -22,7 +22,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Table(name = "tblUser")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class Member {
+public class WaitingMember {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_user_gen")

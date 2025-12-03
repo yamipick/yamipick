@@ -44,7 +44,7 @@ public class Waiting {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seqUser")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private Member member;
+    private WaitingMember member;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "seqWaitingStatus")

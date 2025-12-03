@@ -23,7 +23,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Table(name = "tblStore")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class Store {
+public class WaitingStore {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_store_gen")

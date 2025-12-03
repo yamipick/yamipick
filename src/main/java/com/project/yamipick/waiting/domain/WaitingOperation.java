@@ -36,7 +36,7 @@ public class WaitingOperation {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seqStore")
-    private Store store;
+    private WaitingStore store;
 
     @Column(name = "operationDate", nullable = false)
     private LocalDate operationDate; // 2025-12-02

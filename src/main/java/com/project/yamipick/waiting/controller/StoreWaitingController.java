@@ -1,15 +1,19 @@
 package com.project.yamipick.waiting.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.project.yamipick.waiting.domain.Store;
+import com.project.yamipick.waiting.domain.WaitingLog;
+import com.project.yamipick.waiting.domain.WaitingStore;
 import com.project.yamipick.waiting.dto.WaitingDTO;
+import com.project.yamipick.waiting.dto.WaitingNoticeDTO;
 import com.project.yamipick.waiting.service.WaitingService;
 
 import lombok.RequiredArgsConstructor;
@@ -26,7 +30,7 @@ public class StoreWaitingController {
     }
 
     @GetMapping("/waiting/store-info")
-    public Store storeInfo(@RequestParam(value = "storeId", defaultValue = "1") Long storeId) { return waitingService.getStoreInfo(storeId); }
+    public WaitingStore storeInfo(@RequestParam(value = "storeId", defaultValue = "1") Long storeId) { return waitingService.getStoreInfo(storeId); }
 
     // ★ 수정: 서비스 메소드 이름(toggleWaitingOpen)과 일치시킴
     @PostMapping("/waiting/toggle")
@@ -45,4 +49,49 @@ public class StoreWaitingController {
 
     @PostMapping("/waiting/notice")
     public String notice(@RequestParam("content") String content) { waitingService.notice(content); return "ok"; }
+    
+    
+ // 공지사항 조회 API
+    @GetMapping("/waiting/notices")
+    public List<WaitingNoticeDTO> getNotices(@RequestParam(value="storeId", defaultValue="1") Long storeId) {
+        return waitingService.getNoticeList(storeId);
+    }
+
+    // 공지사항 등록 API
+    @PostMapping("/waiting/notice/create")
+    public String createNotice(@RequestBody Map<String, Object> payload) {
+        Long storeId = 1L; // 테스트용 고정
+        String title = (String) payload.get("title");
+        String content = (String) payload.get("content");
+        boolean isPinned = Boolean.TRUE.equals(payload.get("isPinned")); // 체크박스 값
+        
+        waitingService.createNotice(storeId, title, content, isPinned);
+        return "ok";
+    }
+    
+    // 공지사항 수정 API
+    @PostMapping("/waiting/notice/update")
+    public String updateNotice(@RequestBody Map<String, Object> payload) {
+        Long id = Long.valueOf(String.valueOf(payload.get("id")));
+        String title = (String) payload.get("title");
+        String content = (String) payload.get("content");
+        boolean isPinned = Boolean.TRUE.equals(payload.get("isPinned"));
+
+        waitingService.updateNotice(id, title, content, isPinned);
+        return "ok";
+    }
+
+    // 공지사항 삭제 API
+    @PostMapping("/waiting/notice/delete/{id}")
+    public String deleteNotice(@PathVariable("id") Long id) {
+        waitingService.deleteNotice(id);
+        return "ok";
+    }
+    
+ // 로그 조회 API
+    @GetMapping("/waiting/logs")
+    public List<WaitingLog> getLogs(@RequestParam(value="storeId", defaultValue="1") Long storeId) {
+        return waitingService.getStoreLogs(storeId);
+    }	
+    
 }

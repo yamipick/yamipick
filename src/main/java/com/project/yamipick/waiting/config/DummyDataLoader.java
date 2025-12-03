@@ -3,12 +3,12 @@ package com.project.yamipick.waiting.config;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import com.project.yamipick.waiting.domain.Member;
-import com.project.yamipick.waiting.domain.Store;
+import com.project.yamipick.waiting.domain.WaitingMember;
+import com.project.yamipick.waiting.domain.WaitingStore;
 import com.project.yamipick.waiting.domain.WaitingStatus;
 import com.project.yamipick.waiting.domain.WaitingStatusType;
-import com.project.yamipick.waiting.repository.MemberRepository;
-import com.project.yamipick.waiting.repository.StoreRepository;
+import com.project.yamipick.waiting.repository.WaitingMemberRepository;
+import com.project.yamipick.waiting.repository.WaitingStoreRepository;
 import com.project.yamipick.waiting.repository.WaitingStatusRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -17,8 +17,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DummyDataLoader implements CommandLineRunner {
 
-    private final MemberRepository memberRepository;
-    private final StoreRepository storeRepository;
+    private final WaitingMemberRepository memberRepository;
+    private final WaitingStoreRepository storeRepository;
     private final WaitingStatusRepository statusRepository;
 
     @Override
@@ -32,7 +32,7 @@ public class DummyDataLoader implements CommandLineRunner {
 
         // 2. 더미 회원 (DDL NOT NULL 컬럼 채움)
         if (memberRepository.count() == 0) {
-            memberRepository.save(Member.builder()
+            memberRepository.save(WaitingMember.builder()
                 .name("테스터").phoneNumber("010-1234-5678")
                 .loginId("test").password("1234").email("test@t.com")
                 .nickname("T").statusUser("ACTIVE").role("USER").penaltyScore(0)
@@ -41,7 +41,7 @@ public class DummyDataLoader implements CommandLineRunner {
 
         // 3. 더미 매장
         if (storeRepository.count() == 0) {
-            storeRepository.save(Store.builder()
+            storeRepository.save(WaitingStore.builder()
                 .name("야미식당")
                 .waitingOpen(true) // 메모리용 (DB 저장 안됨)
                 .kakaoPlaceId("k1").address("서울").ownerId(1L)
