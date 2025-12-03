@@ -76,7 +76,7 @@ public class SecurityConfig {
 
             if (isAdmin) {
                 System.out.println("👉 관리자 페이지로 이동합니다.");
-                response.sendRedirect("/admin/notice/list");
+                response.sendRedirect("/admin/dashboard");
             } else {
                 System.out.println("👉 일반 메인으로 이동합니다.");
                 response.sendRedirect("/");
