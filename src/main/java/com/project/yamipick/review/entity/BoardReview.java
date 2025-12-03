@@ -3,7 +3,8 @@ package com.project.yamipick.review.entity;
 import java.sql.Date;
 
 import com.project.yamipick.review.dto.BoardReviewDTO;
-import com.project.yamipick.store.entity.Store;
+//import com.project.yamipick.store.entity.Store;
+import com.project.yamipick.user.entity.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,9 +34,9 @@ public class BoardReview {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seqReview")
 	private Long seqReview;
 	
-	@ManyToOne
-	@JoinColumn(name = "seqStore")
-	private Store store;
+	//@ManyToOne
+	//@JoinColumn(name = "seqStore")
+	//private Store store;
 	
 	@Column(nullable = false, length = 100)
 	private String title;
@@ -44,7 +45,8 @@ public class BoardReview {
 	private Integer starRating;
 	
 	@ManyToOne
-	private Long seqUser;
+	@JoinColumn(name = "seqUser", nullable = false)
+	private User user;
 	
 	@Lob
     @Column(nullable = false)
@@ -52,6 +54,9 @@ public class BoardReview {
 	
 	@Column(length = 300)
 	private String attach;
+	
+	@Column(length = 300)
+	private String place;
 	
 	@Column(nullable = false)
 	private Date regdate;
@@ -69,12 +74,13 @@ public class BoardReview {
 		
 		return BoardReviewDTO.builder()
 							.seqReview(this.seqReview)
-							.seqStore(this.store.getSeqStore())
+							//.seqStore(this.store.getSeqStore())
 							.title(this.title)
 							.starRating(this.starRating)
-							.seqUser(this.seqUser)
+							.seqUser(this.user.getSeqUser())
 							.reviewContent(this.reviewContent)
 							.attach(this.attach)
+							.place(this.place)
 							.regdate(this.regdate)
 							.readCount(this.readCount)
 							.favoriteCount(this.favoriteCount)
