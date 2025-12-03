@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 public class WeatherService {
 
     // ★ 형님 OpenWeatherMap 키 유지하세요!
-    private static final String API_KEY = "13bb8c2a66fad2d40d64cb393bf58006		"; 
+    private static final String API_KEY ="13bb8c2a66fad2d40d64cb393bf58006"; 
     
     private static final double LAT = 37.5665; 
     private static final double LON = 126.9780;
