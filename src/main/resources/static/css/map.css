@@ -1,8 +1,8 @@
 @charset "UTF-8";
 
-/* -------------------------------------------------------
-   Layout
-------------------------------------------------------- */
+/* =======================================================
+   [섹션 1] 레이아웃 & 기본 설정
+   ======================================================= */
 .container { display: flex; height: calc(100vh - 60px); }
 
 .sidebar {
@@ -19,9 +19,10 @@
 
 .map-area { flex: 1; width: 100%; }
 
-/* -------------------------------------------------------
-   Search Box
-------------------------------------------------------- */
+
+/* =======================================================
+   [섹션 2] 검색창 디자인 (★ 찌그러짐 방지 수정됨)
+   ======================================================= */
 .search-box { display: flex; gap: 8px; margin-bottom: 20px; }
 
 .search-box input {
@@ -43,6 +44,10 @@
 }
 
 .search-box button {
+    /* ★ [수정] 버튼이 절대 찌그러지지 않게 고정 */
+    flex-shrink: 0; 
+    white-space: nowrap;
+    
     padding: 0 22px;
     border-radius: 12px;
     background: #6D4C41; 
@@ -59,9 +64,10 @@
     transform: translateY(-1px);
 }
 
-/* -------------------------------------------------------
-   List & Items
-------------------------------------------------------- */
+
+/* =======================================================
+   [섹션 3] 리스트 아이템 디자인
+   ======================================================= */
 .item {
     padding: 18px 0;
     border-bottom: 1px solid #EFEBE9;
@@ -93,25 +99,31 @@
     color: var(--primary);
 }
 
-/* -------------------------------------------------------
-   Filter Buttons
-------------------------------------------------------- */
+
+/* =======================================================
+   [섹션 4] 필터 버튼 디자인 (★ 크기 복구 완료)
+   ======================================================= */
 .chip-btn, .cat-btn, .region-sub-btn, .filter-btn {
     background: #fff;
     border: 1px solid #D7CCC8;
     border-radius: 20px;
-    font-size: 13px;
+    font-size: 14px; /* 글자 크기 살짝 키움 */
     color: var(--text-main);
     cursor: pointer;
     transition: 0.25s;
+    
+    /* ★ [수정] 버튼 찌그러짐 방지 */
+    flex-shrink: 0; 
+    white-space: nowrap;
 }
 
 .chip-btn {
-    padding: 8px 16px;
+    /* ★ [수정] 패딩 넉넉하게 복구 */
+    padding: 8px 18px; 
     display: flex; align-items: center; gap: 6px;
 }
 
-.cat-btn { padding: 10px 18px; }
+.cat-btn { padding: 10px 20px; }
 
 .filter-btn {
     background: #FFF8E1;
@@ -127,9 +139,10 @@
     box-shadow: 0 3px 8px rgba(109, 76, 65, 0.2);
 }
 
-/* -------------------------------------------------------
-   Region & Expanded Sections (상세 필터)
-------------------------------------------------------- */
+
+/* =======================================================
+   [섹션 5] 확장 필터 영역 (지역, 카테고리 등)
+   ======================================================= */
 .expand-section {
     background: #FFFCF5; 
     padding: 20px 25px;
@@ -142,13 +155,15 @@
 .region-tab-btn {
     background: none;
     border: none;
-    padding: 10px 15px;
+    padding: 10px 15px; /* 탭 버튼 크기 확보 */
     font-size: 15px;
     font-weight: 600;
     color: #A1887F;
     cursor: pointer;
     border-bottom: 3px solid transparent;
     transition: 0.2s;
+    white-space: nowrap; /* 줄바꿈 방지 */
+    flex-shrink: 0;
 }
 
 .region-tab-btn.active {
@@ -156,17 +171,12 @@
     border-bottom: 3px solid #6D4C41;
 }
 
-/* ★ [하단 상세 버튼들] 
-   여기는 형님 요청대로 "줄바꿈(세로 배치)" 유지합니다.
-*/
 .region-sub-container, .category-container {
     display: flex;
-    flex-wrap: wrap; /* 옆으로 넘치면 아래로 떨어짐 */
+    flex-wrap: wrap; 
     gap: 12px;       
-    
     margin-top: 20px; 
     padding-top: 10px;
-    
     overflow-x: visible; 
 }
 
@@ -177,7 +187,7 @@
 }
 
 .region-sub-btn {
-    padding: 8px 16px;
+    padding: 10px 18px; /* 세부 버튼도 넉넉하게 */
     background-color: #fff;
     color: #6D4C41;
     font-weight: 500;
@@ -192,9 +202,10 @@
     transform: translateY(-2px);
 }
 
-/* -------------------------------------------------------
-   Overlay
-------------------------------------------------------- */
+
+/* =======================================================
+   [섹션 6] 지도 오버레이 & 마커 디자인
+   ======================================================= */
 .overlay-box {
     background-color: var(--primary);
     color: #FAF3E0;
@@ -219,9 +230,6 @@
     border-top: 9px solid var(--primary);
 }
 
-/* -------------------------------------------------------
-   Markers & Location Dot
-------------------------------------------------------- */
 .simple-marker {
     width: 34px; 
     height: 34px;
@@ -257,45 +265,116 @@
     100% { box-shadow: 0 0 0 0 rgba(45, 156, 219, 0); }
 }
 
-/* -------------------------------------------------------
-   Buttons (GPS, Retry)
-------------------------------------------------------- */
-.gps-btn, .retry-btn {
+
+/* =======================================================
+   [섹션 7] 버튼 & 챗봇 위치 (형님 확정안 유지)
+   ======================================================= */
+
+/* 1. 재검색 버튼 (지도 하단 중앙) */
+.retry-btn {
     position: absolute;
     z-index: 20;
+    
+    top: auto;          
+    bottom: 30px;       
+    
+    left: calc(50% + 180px); 
+    transform: translateX(-50%);
+    
+    padding: 10px 22px;
     background: #fff;
     border: 1px solid #D7CCC8;
-    box-shadow: 0 3px 10px rgba(109, 76, 65, 0.15);
-    cursor: pointer;
-    color: var(--text-main);
-    display: flex; align-items: center; justify-content: center;
-    transition: 0.25s;
-}
-
-.gps-btn {
-    width: 48px; height: 48px;
-    right: 20px; bottom: 80px;
-    border-radius: 50%;
-}
-
-.gps-btn:hover {
-    background: #FAF3E0;
-    color: var(--primary);
-}
-
-.retry-btn {
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 10px 22px;
     border-radius: 24px;
     color: var(--primary);
     font-weight: 700;
+    box-shadow: 0 3px 10px rgba(109, 76, 65, 0.15);
+    cursor: pointer;
+    transition: 0.25s;
+    
+    display: none; 
 }
 
-/* -------------------------------------------------------
-   Modal
-------------------------------------------------------- */
+.retry-btn:hover { background: #FAF3E0; color: #5D4037; }
+
+/* 2. 현위치(GPS) 아이콘 (왼쪽 하단, 사이드바 바로 옆) */
+.gps-btn {
+    position: absolute;
+    z-index: 20;
+    
+    left: 385px; 
+    bottom: 30px; 
+    
+    right: auto; 
+    top: auto;
+    
+    width: 48px; 
+    height: 48px;
+    background: #fff;
+    border: 1px solid #D7CCC8;
+    border-radius: 50%;
+    box-shadow: 0 3px 10px rgba(109, 76, 65, 0.15);
+    cursor: pointer;
+    color: var(--text-main);
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    transition: 0.25s;
+}
+
+.gps-btn:hover { background: #FAF3E0; color: var(--primary); transform: translateY(-2px); }
+
+/* 3. 날씨 곰돌이(챗봇) (오른쪽 하단) */
+.weather-widget {
+    position: fixed;
+    bottom: 30px;       
+    right: 30px;        
+    z-index: 100;       
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; 
+    gap: 10px;
+}
+
+/* 챗봇 아이콘 스타일 */
+.weather-icon-btn {
+    width: 55px; height: 55px;
+    background-color: var(--primary);
+    color: #fff; font-size: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(109, 76, 65, 0.4);
+    transition: transform 0.2s;
+    animation: float 3s ease-in-out infinite;
+}
+.weather-icon-btn:hover { transform: scale(1.1) rotate(10deg); background-color: #5D4037; }
+
+/* 말풍선 스타일 */
+.weather-bubble {
+    background-color: #ffffff;
+    padding: 12px 18px;
+    border-radius: 15px; border-bottom-right-radius: 2px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    margin-bottom: 5px; cursor: pointer;
+    position: relative; border: 1px solid #EFEBE9;
+    animation: slideUp 0.3s ease-out; max-width: 200px;
+}
+.weather-bubble:hover { background-color: #FFF8E1; }
+.bubble-text { font-size: 14px; color: #4E342E; line-height: 1.4; }
+.bubble-text b { color: #E65100; font-weight: 800; }
+.bubble-close {
+    position: absolute; top: -8px; left: -8px;
+    width: 20px; height: 20px; background: #A1887F; color: #fff;
+    border-radius: 50%; border: none; font-size: 14px; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-8px); } 100% { transform: translateY(0px); } }
+
+
+/* =======================================================
+   [섹션 8] 상세정보 모달창
+   ======================================================= */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0;
@@ -308,9 +387,7 @@
 }
 
 .modal-content {
-    /* ★ [중요] X버튼을 이 박스 기준으로 배치하기 위해 relative 추가 */
     position: relative; 
-    
     background: #ffffff; 
     width: 90%; max-width: 420px;
     padding: 30px 24px;
@@ -326,62 +403,71 @@
     margin-bottom: 15px;
 }
 
-/* 상세 정보 행 (주소, 별점 등) */
 .modal-row {
     font-size: 14px;
     margin-bottom: 10px;
-    color: #4E342E; /* 글자색도 진한 갈색으로 가독성 확보 */
+    color: #4E342E;
     display: flex; 
     align-items: flex-start;
 }
 
-.modal-icon {
-    margin-right: 8px;
-    min-width: 20px;
-}
+.modal-icon { margin-right: 8px; min-width: 20px; }
 
 .modal-actions {
     margin-top: 25px;
     display: flex;
-    gap: 10px; /* 버튼 사이 간격 */
+    gap: 10px; 
 }
 
-/* ★ [수정] 버튼 스타일: 로고 색상(초코브라운) 적용 */
 .btn-kakao, .btn-call {
-    flex: 1; /* 반반씩 꽉 차게 */
+    flex: 1; 
     padding: 14px 0;
     border: none;
     border-radius: 10px;
-    
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
     transition: 0.2s;
-    
-    /* 로고와 같은 초코색 배경 + 흰색 글씨 */
     background-color: #6D4C41; 
     color: #ffffff;
-    
-    /* 살짝 그림자 추가 */
     box-shadow: 0 3px 6px rgba(109, 76, 65, 0.2);
 }
 
-/* 마우스 올렸을 때 효과 */
 .btn-kakao:hover, .btn-call:hover {
-    background-color: #5D4037; /* 더 진한 초코색 */
-    transform: translateY(-2px); /* 살짝 위로 뜸 */
+    background-color: #5D4037; 
+    transform: translateY(-2px); 
     box-shadow: 0 5px 10px rgba(109, 76, 65, 0.3);
 }
-/* -------------------------------------------------------
-   ★ Filter Scroll & Navigation Arrows (형님, 여기 고쳤습니다!)
-------------------------------------------------------- */
+
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    font-size: 26px;
+    color: #A1887F; 
+    width: 36px;
+    height: 36px;
+    border-radius: 50%; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); 
+    z-index: 10;
+}
+.close-btn:hover { color: #6D4C41; background-color: #EFEBE9; transform: rotate(90deg); }
+
+
+/* =======================================================
+   [섹션 9] 필터 스크롤 화살표 & 네이버 리뷰
+   ======================================================= */
 .master-filter-container, .region-tabs {
-    display: flex; 
-    gap: 8px; 
+    display: flex; gap: 8px; 
     overflow-x: auto; 
-    white-space: nowrap; /* 상단 필터는 가로 스크롤 유지 */
-    padding: 4px 2px; 
-    flex: 1;
+    white-space: nowrap; 
+    padding: 4px 2px; flex: 1;
     -ms-overflow-style: none; scrollbar-width: none;
 }
 .master-filter-container::-webkit-scrollbar, .region-tabs::-webkit-scrollbar { display: none; }
@@ -390,52 +476,40 @@
     display: flex; align-items: center; position: relative; width: 100%; margin-bottom: 10px;
 }
 
-/* 화살표 버튼 (.nav-btn) 수정 코드 */
+/* 화살표 버튼 복구 */
 .nav-btn {
-    background: transparent; 
-    border: none; 
-    
-    /* ★ [수정] 크기 18px -> 26px로 확대 */
-    font-size: 26px; 
-    
-    color: var(--text-sub); 
-    cursor: pointer; 
-    
-    /* ★ [수정] 여백도 5px -> 10px로 늘려서 누르기 쉽게 */
-    padding: 0 10px; 
-    
-    z-index: 5;
-    display: flex; 
-    align-items: center;
-    justify-content: center;
+    background: transparent; border: none; 
+    font-size: 26px; color: var(--text-sub); 
+    cursor: pointer; padding: 0 10px; z-index: 5;
+    display: flex; align-items: center; justify-content: center;
 }
+.nav-btn:hover { color: var(--primary); transform: scale(1.2); }
 
-.nav-btn:hover { 
-    color: var(--primary); 
-    transform: scale(1.2); /* 마우스 올리면 살짝 더 커지게 효과 추가 */
-}
-/* ★ [예외 처리] 
-   하지만, 상세 필터(Category, Region Sub)는 세로 배치라서 화살표가 필요 없습니다.
-   거기서만 화살표를 숨깁니다.
-*/
-.category-wrapper .nav-btn, 
-.region-sub-container .nav-btn { 
-    display: none !important; 
-}
-
-/* 상세 필터 래퍼는 블록 요소로 변경 (화살표 공간 없애기 위해) */
-.category-wrapper {
-    display: block; 
-    width: 100%; 
-    margin-bottom: 0;
-}
-
+/* 하단 상세 필터에서는 화살표 숨김 */
+.category-wrapper .nav-btn, .region-sub-container .nav-btn { display: none !important; }
+.category-wrapper { display: block; width: 100%; margin-bottom: 0; }
 
 @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* -------------------------------------------------------
-   Mobile (App Style)
-------------------------------------------------------- */
+/* 네이버 리뷰 스타일 */
+.review-container { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #D7CCC8; }
+.review-header { font-size: 14px; font-weight: 800; color: var(--primary); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+.review-list { max-height: 250px; overflow-y: auto; padding-right: 5px; }
+.review-list::-webkit-scrollbar { width: 4px; }
+.review-list::-webkit-scrollbar-thumb { background-color: #D7CCC8; border-radius: 4px; }
+.review-list::-webkit-scrollbar-track { background-color: transparent; }
+.review-item { background-color: #fff; padding: 12px; border-radius: 8px; border: 1px solid #EFEBE9; margin-bottom: 8px; transition: 0.2s; }
+.review-item:hover { box-shadow: 0 2px 5px rgba(109, 76, 65, 0.1); transform: translateY(-1px); }
+.review-title { font-size: 13px; font-weight: 700; color: #3E2723; margin-bottom: 4px; display: block; line-height: 1.4; }
+.review-title:hover { color: #E65100; text-decoration: underline; }
+.review-meta { font-size: 11px; color: #A1887F; margin-bottom: 6px; }
+.review-desc { font-size: 12px; color: #6D4C41; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; opacity: 0.8; }
+.loading-review { text-align: center; padding: 20px; font-size: 13px; color: #A1887F; }
+
+
+/* =======================================================
+   [섹션 10] 모바일 반응형
+   ======================================================= */
 @media screen and (max-width: 768px) {
     .container { flex-direction: column; height: calc(100vh - 55px); position: relative; overflow: hidden; }
     .map-area { order: 1; height: 45%; width: 100%; position: relative; z-index: 1; }
@@ -448,132 +522,27 @@
     .sidebar::-webkit-scrollbar { display: none; }
     .sidebar > h2 { display: none; }
     
-    .search-box {
-        position: sticky; top: 0; background: #FFFCF5; z-index: 20;
-        padding: 15px 15px 5px 15px; margin-bottom: 5px; border-bottom: 1px solid #EFEBE9;
-    }
-    .master-wrapper {
-        position: sticky; top: 60px; background: #FFFCF5; z-index: 19;
-        padding: 5px 15px; margin-bottom: 0; box-shadow: 0 4px 6px -4px rgba(109, 76, 65, 0.05);
-    }
+    .search-box { position: sticky; top: 0; background: #FFFCF5; z-index: 20; padding: 15px 15px 5px 15px; margin-bottom: 5px; border-bottom: 1px solid #EFEBE9; }
+    .master-wrapper { position: sticky; top: 60px; background: #FFFCF5; z-index: 19; padding: 5px 15px; margin-bottom: 0; box-shadow: 0 4px 6px -4px rgba(109, 76, 65, 0.05); }
     .expand-section { margin: 10px 15px; background: #fff; }
     .item { padding: 15px 20px; }
     .chip-btn, .cat-btn { padding: 8px 14px; font-size: 13px; margin-bottom: 5px; }
-    
-    /* 모바일에서는 터치 스크롤 하니까 화살표 숨김 */
     .nav-btn { display: none !important; }
 
-    .retry-btn { bottom: 20px; font-size: 13px; padding: 8px 16px; z-index: 5; }
-    .gps-btn { bottom: 70px; right: 15px; width: 40px; height: 40px; }
-}
-
-/* -------------------------------------------------------
-   ★ [추가] 네이버 블로그 리뷰 스타일
-------------------------------------------------------- */
-.review-container {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px dashed #D7CCC8;
-}
-
-.review-header {
-    font-size: 14px;
-    font-weight: 800;
-    color: var(--primary);
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.review-list {
-    max-height: 250px; /* 너무 길어지면 스크롤 생기게 */
-    overflow-y: auto;
-    padding-right: 5px; /* 스크롤바 공간 */
-}
-
-/* 스크롤바 디자인 (크롬/사파리) */
-.review-list::-webkit-scrollbar { width: 4px; }
-.review-list::-webkit-scrollbar-thumb { background-color: #D7CCC8; border-radius: 4px; }
-.review-list::-webkit-scrollbar-track { background-color: transparent; }
-
-.review-item {
-    background-color: #fff;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #EFEBE9;
-    margin-bottom: 8px;
-    transition: 0.2s;
-}
-
-.review-item:hover {
-    box-shadow: 0 2px 5px rgba(109, 76, 65, 0.1);
-    transform: translateY(-1px);
-}
-
-.review-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: #3E2723;
-    margin-bottom: 4px;
-    display: block;
-    line-height: 1.4;
-}
-
-.review-title:hover {
-    color: #E65100; /* 제목에 마우스 올리면 오렌지색 */
-    text-decoration: underline;
-}
-
-.review-meta {
-    font-size: 11px;
-    color: #A1887F;
-    margin-bottom: 6px;
-}
-
-.review-desc {
-    font-size: 12px;
-    color: #6D4C41;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2; /* 두 줄 넘어가면 ... 처리 */
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    opacity: 0.8;
-}
-
-.loading-review {
-    text-align: center;
-    padding: 20px;
-    font-size: 13px;
-    color: #A1887F;
-}
-.close-btn {
-    /* ★ [위치] 우측 상단 모서리로 이동 */
-    position: absolute;
-    top: 15px;
-    right: 15px;
+    /* 모바일 버튼 위치 조정 */
+    .retry-btn { 
+        top: auto; 
+        bottom: calc(55% + 20px); /* 사이드바 위로 */
+        left: 50%; margin-left: 0; 
+    }
     
-    /* [디자인] 배경 없애고 깔끔하게 */
-    background: transparent;
-    border: none;
+    .gps-btn { 
+        left: 20px; 
+        bottom: calc(55% + 20px); 
+        right: auto; 
+    }
     
-    /* [폰트] 크고 시원하게 */
-    font-size: 26px;
-    color: #A1887F; /* 연한 갈색 (평소) */
-    
-    /* [크기] 클릭하기 좋게 영역 확보 */
-    width: 36px;
-    height: 36px;
-    border-radius: 50%; /* 동그랗게 */
-    
-    /* [정렬] X 글자 정중앙 */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* 부드러운 애니메이션 */
-    z-index: 10;
+    .weather-widget { 
+        bottom: 20px; right: 20px; 
+    }
 }
-

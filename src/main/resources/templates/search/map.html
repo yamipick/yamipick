@@ -245,10 +245,24 @@
 
     <div id="map" class="map-area"></div>
     <button class="gps-btn" onclick="moveToCurrentLocation()" title="내 위치로 이동"><span class="gps-icon">⌖</span></button>
-    <button class="retry-btn" onclick="searchInCurrentLocation()"><span class="retry-icon">↻</span> 이 지역에서 다시 검색</button>
-    
+    <button class="retry-btn" onclick="searchInCurrentLocation()"><span class="retry-icon">↻</span> 이 지역에서 다시 검색</button>    
     <div id="toast" class="toast-box">메시지 내용</div>
     <div id="loading" class="loading-overlay"><div class="spinner"></div><div class="loading-text">맛집 찾는 중...</div></div>
+   <div class="weather-widget" th:if="${weatherMenu != null}">
+        <div class="weather-bubble" 
+             th:data-menu="${weatherMenu}"
+             onclick="searchFromWidget(this.getAttribute('data-menu')); event.stopPropagation();">
+            
+            <span class="bubble-text">
+                오늘 날씨엔 <b>[[${weatherMenu}]]</b> 어때요? 😋
+            </span>
+            <button class="bubble-close" onclick="closeWidget(event)">×</button>
+        </div>
+        
+        <div class="weather-icon-btn" onclick="toggleBubble()">
+            🐻
+        </div>
+    </div>
 </div>
 
 <div id="detailModal" class="modal-overlay" onclick="closeModal(event)">
@@ -654,6 +668,27 @@
             targetItem.classList.add('active');
             targetItem.style.backgroundColor = "#EFEBE9"; 
             targetItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+    // [추가] 챗봇 위젯 관련 스크립트
+    function searchFromWidget(menu) {
+        // 검색창에 메뉴 넣고 검색 실행
+        var input = document.getElementById('searchInput');
+        input.value = "강남 " + menu; // (예: 강남 파전) - 현재 지역명 붙이면 더 좋음
+        document.querySelector('.search-box').submit();
+    }
+
+    function closeWidget(e) {
+        e.stopPropagation(); // 부모 클릭 방지
+        document.querySelector('.weather-bubble').style.display = 'none';
+    }
+
+    function toggleBubble() {
+        var bubble = document.querySelector('.weather-bubble');
+        if (bubble.style.display === 'none') {
+            bubble.style.display = 'block';
+        } else {
+            bubble.style.display = 'none';
         }
     }
 </script>

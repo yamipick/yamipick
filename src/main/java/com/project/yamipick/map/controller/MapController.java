@@ -12,6 +12,7 @@ import com.project.yamipick.map.dto.NaverReviewDTO;
 import com.project.yamipick.map.dto.RestaurantDTO;
 import com.project.yamipick.map.service.KakaoSearchService;
 import com.project.yamipick.map.service.NaverSearchService; // ★ 이 임포트가 중요합니다
+import com.project.yamipick.map.service.WeatherService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +22,9 @@ public class MapController {
 
     private final KakaoSearchService kakaoSearchService;
     private final NaverSearchService naverSearchService; // ★ 형님! 이 줄이 빠져 있었습니다! 추가 완료.
-
+    private final WeatherService weatherService;
+    
+    
     @GetMapping("/map")
     public String map(Model model, 
                       @RequestParam(name = "q", required = false) String query,
@@ -63,6 +66,9 @@ public class MapController {
         model.addAttribute("reservable", reservable);
         model.addAttribute("corkage", corkage);
         model.addAttribute("price", price);
+        
+        String weatherMenu = weatherService.getRecommnedMenu();
+        model.addAttribute("weatherMenu", weatherMenu);
         
         return "search/map"; 
     }
