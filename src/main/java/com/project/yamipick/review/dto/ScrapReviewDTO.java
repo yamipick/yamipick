@@ -2,6 +2,10 @@ package com.project.yamipick.review.dto;
 
 import java.sql.Date;
 
+import com.project.yamipick.review.entity.BoardReview;
+import com.project.yamipick.review.entity.ScrapReview;
+import com.project.yamipick.user.entity.User;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,5 +25,16 @@ public class ScrapReviewDTO {
 	private Long seqReview;
 	private Long seqUser;
 	private Date regdate;
+
+	public ScrapReview toEntity(BoardReview review, User user) {
+		
+		return ScrapReview.builder()
+							.seqscrapReview(this.seqscrapReview)
+							.review(review)
+							.user(user)
+							.regdate(this.regdate)
+							.build();
+		
+	}
 
 }

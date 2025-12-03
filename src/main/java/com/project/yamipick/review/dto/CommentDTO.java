@@ -2,6 +2,10 @@ package com.project.yamipick.review.dto;
 
 import java.sql.Date;
 
+import com.project.yamipick.review.entity.BoardReview;
+import com.project.yamipick.review.entity.Comment;
+import com.project.yamipick.user.entity.User;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,5 +27,18 @@ public class CommentDTO {
 	private Long seqUser;
 	private String content;
 	private Date regdate;
+	
+	public Comment toEntity(BoardReview review, User user, Comment parent) {
+		
+		return Comment.builder()
+						.seqComment(this.seqComment)
+						.review(review)
+						.parentComment(parent)
+						.user(user)
+						.content(this.content)
+						.regdate(this.regdate)
+						.build();
+		
+	}
 
 }

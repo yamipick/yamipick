@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>YamiPick</title>
+	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+</head>
+<body>
+	<!-- reviewmain.html -->
+	<!--
+	1. 검색창
+	2. 리스트 정렬 메뉴, 카테고리 / 태그 필터
+	3. 인기 게시글
+	4. 사용자 위치 근처 맛집 리뷰
+	5. 최근 본 리뷰 (쿠키 기반)
+	6. 사진 리뷰 갤러리(그리드)
+	-->
+	
+	<table width="100%" border="0" cellspacing="20">
+
+    <!-- 상단 검색창 -->
+    <tr>
+        <td colspan="2">
+            <table width="100%" border="1" cellspacing="0" cellpadding="10">
+                <tr>
+                    <td><input type="text" placeholder="검색어 입력" style="width:100%;"></td>
+                    <td width="120" align="center"><button>검색</button></td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
+    <!-- 정렬 + 카테고리 필터 -->
+    <tr>
+        <td colspan="2">
+            <table width="100%" border="1" cellspacing="0" cellpadding="10">
+                <tr>
+                    <td width="50%">
+                        정렬 :
+                        <select>
+                            <option>최신순</option>
+                            <option>인기순</option>
+                            <option>댓글 많은 순</option>
+                        </select>
+                    </td>
+                    <td width="50%">
+                        카테고리 :
+                        <select>
+                            <option>전체</option>
+                            <option>한식</option>
+                            <option>중식</option>
+                            <option>일식</option>
+                            <option>카페</option>
+                            <option>술집</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
+    <!-- 메인 + 사이드 2열 레이아웃 -->
+    <tr>
+        <!-- 메인 영역 -->
+        <td width="70%" valign="top">
+            
+            <!-- 사용자 위치 근처 맛집 리뷰 -->
+            <table width="100%" border="1" cellpadding="10" cellspacing="0">
+                <tr><th>사용자 위치 근처 맛집 리뷰</th></tr>
+                <tr><td>리뷰 목록 영역</td></tr>
+            </table>
+
+            <br>
+
+            <!-- 사진 리뷰 갤러리 -->
+            <table width="100%" border="1" cellpadding="10" cellspacing="0">
+                <tr><th>사진 리뷰 갤러리</th></tr>
+                <tr><td>사진 여러 개 표시되는 영역</td></tr>
+            </table>
+
+            <br>
+
+            <!-- 인기 게시글 -->
+            <table width="100%" border="1" cellpadding="10" cellspacing="0">
+                <tr><th>인기 게시글</th></tr>
+                <tr><td>인기 리뷰 리스트</td></tr>
+            </table>
+
+        </td>
+
+        <!-- 사이드 영역 -->
+        <td width="30%" valign="top">
+
+            <!-- 주간 인기 리뷰 -->
+            <table width="100%" border="1" cellpadding="10" cellspacing="0">
+                <tr><th>주간 인기 리뷰</th></tr>
+                <tr><td>리스트 영역</td></tr>
+            </table>
+
+            <br>
+
+            <!-- 최근 본 리뷰 -->
+            <table width="100%" border="1" cellpadding="10" cellspacing="0">
+                <tr><th>최근 본 리뷰</th></tr>
+                <tr><td>최근 본 항목</td></tr>
+            </table>
+
+            <br>
+
+            <!-- 추천 리뷰 -->
+            <table width="100%" border="1" cellpadding="10" cellspacing="0">
+                <tr><th>추천 리뷰</th></tr>
+                <tr><td>추천 리뷰 리스트</td></tr>
+            </table>
+
+        </td>
+    </tr>
+
+</table>
+	
+	
+</body>
+</html>

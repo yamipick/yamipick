@@ -1,6 +1,8 @@
 package com.project.yamipick.review.dto;
 
-import java.sql.Date;
+import com.project.yamipick.review.entity.BoardReview;
+import com.project.yamipick.review.entity.ReviewReport;
+import com.project.yamipick.user.entity.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,5 +23,14 @@ public class ReviewReportDTO {
 	private Long seqReview;
 	private Long seqUser;
 	private String reportReason;
+	
+	public ReviewReport toEntity(BoardReview review, User user) {
+		
+		return ReviewReport.builder()
+							.review(review)
+							.user(user)
+							.build();
+		
+	}
 
 }

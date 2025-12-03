@@ -2,6 +2,9 @@ package com.project.yamipick.review.dto;
 
 import java.sql.Date;
 
+import com.project.yamipick.review.entity.BoardReview;
+import com.project.yamipick.store.entity.Store;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,5 +31,22 @@ public class BoardReviewDTO {
 	private Integer readCount;
 	private Integer favoriteCount;
 	private String contentState;
+	
+	public BoardReview toEntity(Store store) {
+		
+		return BoardReview.builder()
+							.seqReview(this.seqReview)
+							.store(store)
+							.title(this.title)
+							.starRating(this.starRating)
+							.seqUser(this.seqUser)
+							.reviewContent(this.reviewContent)
+							.attach(this.attach)
+							.regdate(this.regdate)
+							.readCount(this.readCount)
+							.favoriteCount(this.favoriteCount)
+							.contentState(this.contentState)
+							.build();
+	}
 
 }
