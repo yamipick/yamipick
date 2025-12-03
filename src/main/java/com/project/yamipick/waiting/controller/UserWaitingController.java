@@ -23,15 +23,19 @@ public class UserWaitingController {
 
     // 1. 등록 (에러 메시지 처리 강화)
     @PostMapping("/waiting/register")
-    public ResponseEntity<?> register(@RequestParam("userId") Long userId, @RequestParam("size") int size) {
+    public ResponseEntity<?> register(
+            @RequestParam("userId") Long userId, 
+            @RequestParam("storeId") Long storeId, // ★ [추가] 이거 받아야 함!
+            @RequestParam("size") int size
+    ) {
         try {
-            Waiting waiting = waitingService.register(userId, size);
-            return ResponseEntity.ok(waiting); // 성공 시 JSON 반환
+            // 서비스로 storeId 토스!
+            Waiting waiting = waitingService.register(userId, storeId, size);
+            return ResponseEntity.ok(waiting);
         } catch (IllegalStateException e) {
-            // ★ 실패 시(마감 등) 에러 메시지를 문자열로 반환
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("서버 오류가 발생했습니다.");
+            return ResponseEntity.internalServerError().body("서버 오류");
         }
     }
 

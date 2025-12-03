@@ -2,6 +2,8 @@ package com.project.yamipick.waiting.domain;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -41,7 +43,8 @@ public class WaitingLog {
 
     @Column(name = "logMessage")
     private String logMessage; // 로그 내용
-
+    
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     @Column(name = "regDate")
     private LocalDateTime regDate;
     

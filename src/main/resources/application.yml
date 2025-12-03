@@ -5,26 +5,6 @@ spring:
   application:
     name: yamipick
 
-
-# ▼▼▼ [수정] Oracle 설정을 주석 처리하고 H2 설정을 활성화 (테스트용)▼▼▼
-  
-#  # 1. H2 데이터베이스 설정 (메모리 모드 - 테스트용)
-#  datasource:
-#    url: jdbc:h2:mem:yamipick;MODE=MySQL
-#    driver-class-name: org.h2.Driver
-#    username: sa
-#    password:
-#
-#  # 2. JPA 설정
-#  jpa:
-#    database: h2 # (oracle -> h2 로 변경)
-#    hibernate:
-#      ddl-auto: update # (none -> update 로 변경: 테이블 자동 생성)
-#    show-sql: true
-#    properties:
-#      hibernate:
-#        format_sql: true
-            
 # 1. JDBC(+HikariCP) 설정 //아직 오라클 클라우드 설정을 안 해놧음 설정후 변경 예정
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver

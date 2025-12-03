@@ -61,9 +61,10 @@ public class WaitingService {
 
     /**
      * 웨이팅 등록
+     * @param storeId2 
      */
-    public Waiting register(Long userId, int size) {
-        Long storeId = 1L; // (테스트용 고정)
+    public Waiting register(Long userId, Long storeId, int size) {
+        //Long storeId = 1L; // (테스트용 고정)
 
         // 1. 오늘 날짜의 운영 정보 확인 (없으면 자동 생성)
         LocalDate today = LocalDate.now();

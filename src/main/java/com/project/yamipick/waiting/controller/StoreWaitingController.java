@@ -60,7 +60,8 @@ public class StoreWaitingController {
     // 공지사항 등록 API
     @PostMapping("/waiting/notice/create")
     public String createNotice(@RequestBody Map<String, Object> payload) {
-        Long storeId = 1L; // 테스트용 고정
+        //Long storeId = 1L; // 테스트용 고정
+        Long storeId = Long.valueOf(String.valueOf(payload.get("storeId")));
         String title = (String) payload.get("title");
         String content = (String) payload.get("content");
         boolean isPinned = Boolean.TRUE.equals(payload.get("isPinned")); // 체크박스 값
