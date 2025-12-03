@@ -49,3 +49,7 @@ logging:
     com.test: debug # 본인 패키지명
     org.hibernate.SQL: debug # 하이버네이트 쿼리 로그
     org.hibernate.type.descriptor.sql.BasicBinder: trace # 바인딩 변수(값) 확인용
+    
+gemini:
+  api-key: ${GEMINI_API_KEY}
+  model: "gemini-2.5-flash"    
