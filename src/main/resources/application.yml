@@ -30,7 +30,13 @@ spring:
     driver-class-name: oracle.jdbc.OracleDriver
     url: jdbc:oracle:thin:@llgabbhp32n2794c_medium?TNS_ADMIN=C:/dev/Wallet_Yamipick 
     username: yamipick 
-    password: Java123456789   
+    password: Java123456789  
+    
+    # 오라클클라우드 세션 관리
+    hikari:
+      maximum-pool-size: 3      # 가장 중요! (팀원들이 각자 3개씩만 쓰도록 제한)
+      connection-timeout: 6000 # 6초 대기
+      idle-timeout: 600000 
 
   # 2. JPA 설정 (가져오신 고급 설정 적용)
   jpa:
