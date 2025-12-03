@@ -30,4 +30,11 @@ public class UserController {
 		return "redirect:/login";
 	}
 	
+	// ★ [추가] 로그인 페이지 (여기에 추가하면 됩니다!)
+    @GetMapping("/login")
+    public String loginPage() {
+        // templates/admin/login.html 혹은 templates/login.html 경로에 맞춰주세요
+        return "admin/login"; 
+    }
+	
 }
