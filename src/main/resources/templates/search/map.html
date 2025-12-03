@@ -14,7 +14,7 @@
 <div th:replace="~{common/header :: headerFragment}"></div>
 <div class="container">
     <div class="sidebar">
-        <h2 style="color:#00c7ae; margin-top: 0;">YamiPick 🍽️</h2>
+        <h2 style="color:#6D4C41; margin-top: 0;">YamiPick 🍽️</h2>
         
        <form action="/map" method="get" class="search-box" onsubmit="handleSearchLog()">
              <input type="hidden" name="category" id="categoryInput" th:value="${category}">
@@ -24,8 +24,8 @@
              <input type="hidden" name="reservable" id="reservableInput" th:value="${reservable}">
              <input type="hidden" name="corkage" id="corkageInput" th:value="${corkage}">
              <input type="hidden" name="price" id="priceInput" th:value="${price}">
+             <input type="hidden" name="radius" id="radiusInput" th:value="${radius}">             
              
-			<input type="hidden" name="radius" id="radiusInput" th:value="${radius}">             
             <input type="text" name="q" id="searchInput" th:value="${query}" placeholder="지역 + 메뉴 (예: 행궁동 파스타)">
             <button type="submit">검색</button>
         </form>
@@ -65,11 +65,9 @@
             <button type="button" class="nav-btn next" onclick="scrollSection('masterScroll', 1)">›</button>
         </div>
 
-  <div id="section-region" class="expand-section" style="display:none; padding:0;">
-            
+        <div id="section-region" class="expand-section" style="display:none; padding:20px 25px;">
             <div class="region-wrapper">
                 <button type="button" class="nav-btn prev" onclick="scrollSection('regionScroll', -1)">‹</button>
-                
                 <div class="region-tabs" id="regionScroll">
                     <button type="button" class="region-tab-btn active" id="tab-seoul" onclick="switchRegionTab('seoul')">서울</button>
                     <button type="button" class="region-tab-btn" id="tab-gyeonggi" onclick="switchRegionTab('gyeonggi')">경기</button>
@@ -79,10 +77,8 @@
                     <button type="button" class="region-tab-btn" id="tab-daejeon" onclick="switchRegionTab('daejeon')">대전</button>
                     <button type="button" class="region-tab-btn" id="tab-gangwon" onclick="switchRegionTab('gangwon')">강원</button>
                 </div>
-
                 <button type="button" class="nav-btn next" onclick="scrollSection('regionScroll', 1)">›</button>
             </div>
-
             <div id="sub-seoul" class="region-sub-container" style="display:flex;">
                 <button class="region-sub-btn" onclick="selectRegion('서울역')">서울 전체</button>
                 <button class="region-sub-btn" onclick="selectRegion('강남역')">강남</button>
@@ -97,7 +93,6 @@
                 <button class="region-sub-btn" onclick="selectRegion('혜화역')">대학로</button>
                 <button class="region-sub-btn" onclick="selectRegion('샤로수길')">관악/봉천</button>
             </div>
-
             <div id="sub-gyeonggi" class="region-sub-container" style="display:none;">
                 <button class="region-sub-btn" onclick="selectRegion('경기도')">경기 전체</button>
                 <button class="region-sub-btn" onclick="selectRegion('서현역')">분당/판교</button>
@@ -105,10 +100,8 @@
                 <button class="region-sub-btn" onclick="selectRegion('동탄역')">동탄</button>
                 <button class="region-sub-btn" onclick="selectRegion('일산킨텍스')">일산</button>
                 <button class="region-sub-btn" onclick="selectRegion('가평역')">가평</button>
-			    <button class="region-sub-btn" onclick="selectRegion('의정부역')">의정부역</button>
-                
+			    <button class="region-sub-btn" onclick="selectRegion('의정부역')">의정부</button>
             </div>
-
             <div id="sub-incheon" class="region-sub-container" style="display:none;">
                 <button class="region-sub-btn" onclick="selectRegion('인천시청')">인천 전체</button>
                 <button class="region-sub-btn" onclick="selectRegion('부평역')">부평</button>
@@ -116,30 +109,26 @@
                 <button class="region-sub-btn" onclick="selectRegion('구월동 로데오')">구월동</button>
                 <button class="region-sub-btn" onclick="selectRegion('을왕리 해수욕장')">을왕리</button>
             </div>
-
-            <div id="sub-busan" class="region-sub-container" style="display:none;">
+             <div id="sub-busan" class="region-sub-container" style="display:none;">
                 <button class="region-sub-btn" onclick="selectRegion('부산역')">부산 전체</button>
                 <button class="region-sub-btn" onclick="selectRegion('서면역')">서면</button>
                 <button class="region-sub-btn" onclick="selectRegion('해운대 해수욕장')">해운대</button>
                 <button class="region-sub-btn" onclick="selectRegion('광안리 해수욕장')">광안리</button>
             </div>
-
-            <div id="sub-jeju" class="region-sub-container" style="display:none;">
+             <div id="sub-jeju" class="region-sub-container" style="display:none;">
                 <button class="region-sub-btn" onclick="selectRegion('제주도청')">제주 전체</button>
                 <button class="region-sub-btn" onclick="selectRegion('제주시청')">제주시내</button>
                 <button class="region-sub-btn" onclick="selectRegion('애월 카페거리')">애월</button>
                 <button class="region-sub-btn" onclick="selectRegion('서귀포시청')">서귀포</button>
                 <button class="region-sub-btn" onclick="selectRegion('함덕해수욕장')">함덕</button>
             </div>
-
-            <div id="sub-daejeon" class="region-sub-container" style="display:none;">
+             <div id="sub-daejeon" class="region-sub-container" style="display:none;">
                 <button class="region-sub-btn" onclick="selectRegion('대전시청')">대전 전체</button>
                 <button class="region-sub-btn" onclick="selectRegion('둔산동')">둔산동</button>
                 <button class="region-sub-btn" onclick="selectRegion('은행동 으능정이')">은행동</button>
                 <button class="region-sub-btn" onclick="selectRegion('유성온천역')">유성</button>
             </div>
-
-            <div id="sub-gangwon" class="region-sub-container" style="display:none;">
+             <div id="sub-gangwon" class="region-sub-container" style="display:none;">
                 <button class="region-sub-btn" onclick="selectRegion('강원도청')">강원 전체</button>
                 <button class="region-sub-btn" onclick="selectRegion('강릉 중앙시장')">강릉</button>
                 <button class="region-sub-btn" onclick="selectRegion('속초 중앙시장')">속초</button>
@@ -147,6 +136,7 @@
                 <button class="region-sub-btn" onclick="selectRegion('춘천 명동')">춘천</button>
             </div>
         </div>
+
         <div id="section-sort" class="expand-section" style="display:none;">
             <div class="filter-group">
                 <button type="button" class="filter-btn" onclick="applyFilter('')">기본순</button>
@@ -154,10 +144,9 @@
                 <button type="button" class="filter-btn" onclick="applyFilter('rating')">⭐ 별점높은순</button>
             </div>
         </div>
-	<div id="section-radius" class="expand-section" style="display:none;">
-            <div class="category-wrapper">
-                <button type="button" class="nav-btn prev" onclick="scrollSection('radiusScroll', -1)">‹</button>
-                
+
+        <div id="section-radius" class="expand-section" style="display:none;">
+             <div class="category-wrapper">
                 <div class="category-container" id="radiusScroll">
                     <button type="button" class="cat-btn" onclick="selectRadius('')">📍 자동(화면기준)</button>
                     <button type="button" class="cat-btn" onclick="selectRadius(300)">🏃 5분 (300m)</button>
@@ -168,13 +157,11 @@
                     <button type="button" class="cat-btn" onclick="selectRadius(5000)">🚗 5km</button>
                     <button type="button" class="cat-btn" onclick="selectRadius(10000)">🚀 10km</button>
                 </div>
-
-                <button type="button" class="nav-btn next" onclick="scrollSection('radiusScroll', 1)">›</button>
             </div>
         </div>
+
         <div id="section-category" class="expand-section" style="display:none;">
             <div class="category-wrapper">
-                <button type="button" class="nav-btn prev" onclick="scrollSection('categoryScroll', -1)">‹</button>
                 <div class="category-container" id="categoryScroll">
                     <button type="button" class="cat-btn" onclick="selectCategory('')">🍽️ 전체</button>
                     <button type="button" class="cat-btn" onclick="selectCategory('한식')">🍚 한식</button>
@@ -183,7 +170,6 @@
                     <button type="button" class="cat-btn" onclick="selectCategory('양식')">🍝 양식</button>
                     <button type="button" class="cat-btn" onclick="selectCategory('카페')">☕ 카페</button>
                     <button type="button" class="cat-btn" onclick="selectCategory('술집')">🍺 술집</button>
-                    
                     <button type="button" class="cat-btn" onclick="selectCategory('이탈리아음식')">🍕 이탈리아</button>
                     <button type="button" class="cat-btn" onclick="selectCategory('프랑스음식')">🇫🇷 프랑스</button>
                     <button type="button" class="cat-btn" onclick="selectCategory('스페인음식')">🇪🇸 스페인</button>
@@ -192,16 +178,13 @@
                     <button type="button" class="cat-btn" onclick="selectCategory('태국음식')">🇹🇭 태국</button>
                     <button type="button" class="cat-btn" onclick="selectCategory('인도음식')">🍛 인도</button>
                     <button type="button" class="cat-btn" onclick="selectCategory('멕시코음식')">🌮 멕시코/남미</button>
-                    
                     <button type="button" class="cat-btn" onclick="selectCategory('이자카야')">🍶 이자카야</button>
                 </div>
-                <button type="button" class="nav-btn next" onclick="scrollSection('categoryScroll', 1)">›</button>
             </div>
         </div>
 
         <div id="section-vibe" class="expand-section" style="display:none;">
             <div class="category-wrapper">
-                <button type="button" class="nav-btn prev" onclick="scrollSection('vibeScroll', -1)">‹</button>
                 <div class="category-container" id="vibeScroll">
                     <button type="button" class="cat-btn" onclick="selectVibe('')">🌈 전체</button>
                     <button type="button" class="cat-btn" onclick="selectVibe('데이트')">💖 데이트</button>
@@ -214,7 +197,6 @@
                     <button type="button" class="cat-btn" onclick="selectVibe('노포')">👴 노포맛집</button>
                     <button type="button" class="cat-btn" onclick="selectVibe('격식있는')">🤵 격식있는</button>
                 </div>
-                <button type="button" class="nav-btn next" onclick="scrollSection('vibeScroll', 1)">›</button>
             </div>
         </div>
 
@@ -247,7 +229,7 @@
             <div style="margin-bottom: 5px;">
                 <span th:each="tag : ${place.tags}" 
                       th:text="'#' + ${tag}"
-                      style="color:#00c7ae; font-size:12px; margin-right:5px; background:#ebfcf9; padding:2px 6px; border-radius:4px;">
+                      style="color:#E65100; font-size:12px; margin-right:5px; background:#FFF3E0; padding:2px 6px; border-radius:4px; font-weight:600;">
                 </span>
             </div>
 
@@ -277,6 +259,16 @@
         <div class="modal-row"><span class="modal-icon">⭐</span><span id="modalRating" style="font-weight:bold;">4.5</span> <span style="color:#ddd; margin:0 5px;">|</span>리뷰 <span id="modalReview">120</span>개</div>
         <div class="modal-row"><span class="modal-icon">📍</span><span id="modalAddress">주소 정보</span></div>
         <div class="modal-row"><span class="modal-icon">📞</span><span id="modalPhone">전화번호 없음</span></div>
+        
+        <div id="blogReviewContainer" class="review-container" style="display:none;">
+            <div class="review-header">
+                <span>📝 생생 블로그 후기 (Naver)</span>
+                <span style="font-size:11px; color:#999;">실시간</span>
+            </div>
+            <div id="reviewList" class="review-list">
+                </div>
+        </div>
+
         <div class="modal-actions">
             <button class="btn-kakao" onclick="openKakaoMap()">카카오맵 보기</button>
             <button class="btn-call" onclick="reserveLog()">예약하기</button>
@@ -287,7 +279,6 @@
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=2088b946e4226ded525fe7c667b17cfa&libraries=services,clusterer"></script>
 
 <script th:inline="javascript">
-    // [로그 기능] 팀원 요청 반영
     function safeTrack(type, id, msg) { 
         if (typeof Analytics !== 'undefined') {
             type === 'SEARCH' ? Analytics.trackSearch(id) : Analytics.trackClick(type, id, msg); 
@@ -306,7 +297,7 @@
     var clusterer = new kakao.maps.MarkerClusterer({
         map: map, averageCenter: true, minLevel: 5,
         calculator: [10, 30, 50],
-        styles: [{ width : '40px', height : '40px', background: 'rgba(0, 199, 174, 0.8)', borderRadius: '50%', color: '#fff', textAlign: 'center', fontWeight: 'bold', lineHeight: '40px', boxShadow: '0 2px 5px rgba(0,0,0,0.3)' }]
+        styles: [{ width : '40px', height : '40px', background: 'rgba(109, 76, 65, 0.9)', borderRadius: '50%', color: '#fff', textAlign: 'center', fontWeight: 'bold', lineHeight: '40px', boxShadow: '0 2px 5px rgba(0,0,0,0.3)' }]
     });
 
     var places = /*[[${list}]]*/ []; 
@@ -331,51 +322,43 @@
         }
     }
 
-    kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
-        var latlng = mouseEvent.latLng;
-        ps.categorySearch('FD6', function(fd6Data, fd6Status) {
-            var fd6Best = (fd6Status === kakao.maps.services.Status.OK) ? fd6Data[0] : null;
-            ps.categorySearch('CE7', function(ce7Data, ce7Status) {
-                var ce7Best = (ce7Status === kakao.maps.services.Status.OK) ? ce7Data[0] : null;
-                var finalPick = null;
-                if (fd6Best && ce7Best) {
-                    if (parseInt(fd6Best.distance) < parseInt(ce7Best.distance)) finalPick = fd6Best; else finalPick = ce7Best;
-                } else if (fd6Best) finalPick = fd6Best; else if (ce7Best) finalPick = ce7Best;
-                if (finalPick) registerNewPlace(finalPick);
-            }, { location: latlng, radius: 30, sort: kakao.maps.services.SortBy.DISTANCE });
-        }, { location: latlng, radius: 30, sort: kakao.maps.services.SortBy.DISTANCE });
-    });
+ kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
+        
+        // 1. 말풍선 닫기
+        overlays.forEach(o => { if(o) o.setMap(null); });
+        
+        // 2. 리스트 하이라이트 끄기
+        var listItems = document.querySelectorAll('.item');
+        listItems.forEach(item => { 
+            item.classList.remove('active'); 
+            item.style.backgroundColor = ""; 
+        });
 
+        // 3. 상세 모달창 닫기
+        document.getElementById('detailModal').style.display = 'none';
+        
+        currentPlace = null;
+    });
     kakao.maps.event.addListener(map, 'dragend', function() { if(retryBtn) retryBtn.style.display = 'flex'; });
 
-// [색상 변경] 피스타치오 & 다크브라운 테마 적용
-    function addMarker(index, isInit) {
+   function addMarker(index, isInit) {
         if (markers[index]) return;
         var place = places[index];
         var position = new kakao.maps.LatLng(parseFloat(place.y), parseFloat(place.x));
         
-        // ★ 여기서 색상 바꾸시면 됩니다 형님
-        var colorPistachio = '#93C572'; // 피스타치오 (밝은 연두색)
-        var colorDarkBrown = '#4E342E'; // 다크브라운 (진한 갈색)
-
-        // 1. 카페냐 식당이냐 구분
+        // 색상 설정
+        var colorDarkChoco = '#6D4C41'; 
+        var colorLatte     = '#A1887F'; 
         var isCafe = place.category.includes('카페') || place.category.includes('커피') || place.category.includes('디저트');
+        var bgColor = isCafe ? colorLatte : colorDarkChoco; 
         
-        // 2. 색상 배정 (카페=피스타치오, 식당=다크브라운)
-        // 만약 반대로 하고 싶으면 뒤에 변수 순서만 바꾸세요 (isCafe ? colorDarkBrown : colorPistachio)
-        var bgColor = isCafe ? colorPistachio : colorDarkBrown; 
-        
-        // 3. 아이콘 설정 (흰색 아이콘은 그대로 유지해서 깔끔하게)
-        // 식당 아이콘 (나이프 & 포크)
+        // 아이콘 SVG
         var restIcon = `<svg viewBox="0 0 24 24" width="18" height="18" fill="#ffffff"><path d="M11,9H9V2H7v7H5V2H3v7c0,2.12,1.66,3.84,3.75,3.97V22h2.5v-9.03C11.34,12.84,13,11.12,13,9V2h-2V9z M16,6v14h2.5V6c0-2.21-1.79-4-4-4S10.5,3.79,10.5,6h2.5C13,6,13,6,16,6z"/></svg>`;
-        
-        // 카페 아이콘 (커피잔)
         var cafeIcon = `<svg viewBox="0 0 24 24" width="17" height="17" fill="#ffffff"><path d="M20,3H4v10c0,2.21,1.79,4,4,4h6c2.21,0,4-1.79,4-4v-3h2c1.1,0,2-0.9,2-2V5C22,3.9,21.1,3,20,3z M20,8h-2V5h2V8z M4,19h16v2H4V19z"/></svg>`;
-
         var iconSvg = isCafe ? cafeIcon : restIcon;
 
-        // 4. HTML 생성
-        var markerContent = `<div class="simple-marker" style="background-color: ${bgColor};" onclick="selectPlace(${index})">
+        // ★ [중요] 마커 클릭 시 지도 클릭으로 번지지 않게 막음
+        var markerContent = `<div class="simple-marker" style="background-color: ${bgColor};" onclick="selectPlace(${index}); event.stopPropagation(); return false;">
                                 ${iconSvg}
                              </div>`;
         
@@ -384,23 +367,38 @@
         });
         markers[index] = marker;
 
-        var content = '<div class="overlay-box" onclick="openModal(' + index + ')">' + place.name + ' <span style="font-weight:normal; opacity:0.9;">(★' + place.rating + ')</span></div>';
-        var overlay = new kakao.maps.CustomOverlay({ content: content, map: null, position: position, xAnchor: 0.5, yAnchor: 1 });
+        // ★ [중요] 이름(말풍선) 클릭 시 '상세창 열기' + '지도 클릭 막기' 동시에 수행
+        // event.stopPropagation()이 있어야 지도가 클릭된 걸로 오해하지 않습니다.
+        var content = `<div class="overlay-box" onclick="openModal(${index}); event.stopPropagation(); return false;">
+                            ${place.name} <span style="font-weight:normal; opacity:0.9;">(★${place.rating})</span>
+                       </div>`;
+        
+        var overlay = new kakao.maps.CustomOverlay({ 
+            content: content, 
+            map: null, 
+            position: position, 
+            xAnchor: 0.5, 
+            yAnchor: 1,
+            clickable: true // ★ 이게 있어야 클릭이 뚫리지 않습니다!
+        });
         overlays[index] = overlay;
         clusterer.addMarker(marker);
     }
-        function selectPlace(index) {
+       function selectPlace(index) {
         if (!markers[index]) addMarker(index, false);
         var place = places[index];
         var moveLatLon = new kakao.maps.LatLng(place.y, place.x);
+        
+        // ★ [수정] 여기가 핵심입니다! 
+        // 그냥 이동만 하지 말고, 상세히 보이게 '3레벨'로 확대를 먼저 시킵니다.
+        map.setLevel(3); 
+        
+        // 그 다음에 부드럽게 이동
         map.panTo(moveLatLon);
+        
         overlays.forEach(o => { if(o) o.setMap(null); });
         if (overlays[index]) overlays[index].setMap(map);
-        
-        // ★ [추가됨] 사이드바 하이라이트 기능 호출
         highlightSidebar(index);
-        
-        // ★ [로그] 마커 클릭 로그
         safeTrack('MAP_MARKER', place.id, place.name + ' 클릭됨');
     }
 
@@ -469,7 +467,6 @@
         searchInCurrentLocation(false);
     }
     
-    // ★ [로그] 검색 로그
     function handleSearchLog() { var query = document.getElementById('searchInput').value; safeTrack('SEARCH', null, query); }
     
     function applyFilter(type) {
@@ -522,11 +519,7 @@
    function scrollSection(elementId, direction) {
         var container = document.getElementById(elementId);
         if (container) {
-            // scrollLeft += ... 대신 scrollBy를 사용하고 behavior: 'smooth'를 추가
-            container.scrollBy({
-                left: direction * 200, // 이동할 거리
-                behavior: 'smooth'     // ★ 핵심: 부드럽게 스르륵 이동
-            });
+            container.scrollBy({ left: direction * 200, behavior: 'smooth' });
         }
     }
     
@@ -559,7 +552,6 @@
         var newIndex = places.push(newPlace) - 1;
         addMarker(newIndex, false);
         selectPlace(newIndex);
-        // 주의: addSidebarItem 함수는 제공해주신 코드에 없어서 호출만 유지했습니다. 필요시 구현 필요.
         if (typeof addSidebarItem === 'function') addSidebarItem(newPlace, newIndex);
     }
 
@@ -588,24 +580,61 @@
         document.getElementById('modalAddress').innerText = place.roadAddress;
         document.getElementById('modalPhone').innerText = place.phone ? place.phone : '전화번호 없음';
         document.getElementById('detailModal').style.display = 'flex';
-        // ★ [로그] 모달 열기 로그
         safeTrack('BUTTON', place.id, '상세보기 모달 열림');
+        
+        // ★ [형님 확인!] 모달 열릴 때 네이버 리뷰 불러오기
+        loadNaverReviews(place.name);
     }
+
+    // ★ [형님 확인!] 네이버 리뷰 가져오는 비동기 함수
+    function loadNaverReviews(placeName) {
+        var container = document.getElementById('blogReviewContainer');
+        var list = document.getElementById('reviewList');
+        
+        container.style.display = 'block';
+        list.innerHTML = '<div class="loading-review"><div class="spinner" style="width:20px; height:20px; border-width:2px; margin:0 auto 10px;"></div>네이버 블로그 후기 검색 중...</div>';
+        
+        // 백엔드 (/api/reviews) 호출
+        fetch('/api/reviews?query=' + encodeURIComponent(placeName))
+            .then(response => response.json())
+            .then(data => {
+                list.innerHTML = ''; // 로딩 문구 제거
+                
+                if (!data || data.length === 0) {
+                    list.innerHTML = '<div class="loading-review">관련 블로그 후기가 없습니다.</div>';
+                    return;
+                }
+                
+                // 데이터 3개 반복해서 HTML 생성
+                data.forEach(review => {
+                    var item = document.createElement('div');
+                    item.className = 'review-item';
+                    item.innerHTML = `
+                        <a href="${review.link}" target="_blank" class="review-title">${review.title}</a>
+                        <div class="review-meta">${review.postdate} | ${review.bloggername}</div>
+                        <div class="review-desc">${review.description}</div>
+                    `;
+                    list.appendChild(item);
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                list.innerHTML = '<div class="loading-review">후기를 불러오지 못했습니다.</div>';
+            });
+    }
+
     function closeModal(event) { if (!event || event.target.id === 'detailModal' || event.target.className === 'close-btn') document.getElementById('detailModal').style.display = 'none'; }
     function openKakaoMap() { if (currentPlace) { safeTrack('BUTTON', currentPlace.id, '카카오맵 이동'); if (currentPlace.url) window.open(currentPlace.url, '_blank'); } }
     function reserveLog() { if(currentPlace) { safeTrack('BUTTON', currentPlace.id, '예약하기 버튼 클릭'); showToast('🚧 예약 기능은 준비 중입니다!'); } }
 
     function switchRegionTab(regionName) {
         var regions = ['seoul', 'gyeonggi', 'incheon', 'busan', 'jeju', 'daejeon', 'gangwon'];
-        
         regions.forEach(function(r) {
             var tabBtn = document.getElementById('tab-' + r);
             if (tabBtn) tabBtn.classList.remove('active');
-            
             var subDiv = document.getElementById('sub-' + r);
             if (subDiv) subDiv.style.display = 'none';
         });
-
         document.getElementById('tab-' + regionName).classList.add('active');
         document.getElementById('sub-' + regionName).style.display = 'flex';
     }
@@ -614,20 +643,16 @@
         searchInCurrentLocation(false);
     }
 
-    // ★ [추가] 사이드바 하이라이트 함수 (팀원 코드에 있던 것 + HTML id 연결)
     function highlightSidebar(index) {
-        var listItems = document.querySelectorAll('.item'); // HTML의 class="item"과 맞춰야 합니다.
+        var listItems = document.querySelectorAll('.item'); 
         listItems.forEach(function(item) {
             item.classList.remove('active');
             item.style.backgroundColor = ""; 
         });
-
-        // HTML 수정 단계에서 id="place-item-..." 을 추가했다면 여기서 찾을 수 있습니다.
         var targetItem = document.getElementById('place-item-' + index);
-        
         if (targetItem) {
             targetItem.classList.add('active');
-            targetItem.style.backgroundColor = "#f1f3f5"; 
+            targetItem.style.backgroundColor = "#EFEBE9"; 
             targetItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }
