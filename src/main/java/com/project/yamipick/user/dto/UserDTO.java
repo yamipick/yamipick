@@ -1,5 +1,7 @@
 package com.project.yamipick.user.dto;
 
+import java.time.LocalDate;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,5 +27,6 @@ public class UserDTO {
 	private Integer penaltyScore;
 	private String nickname;
 	private String statusUser;
+	private LocalDate createdAt;
 
 }

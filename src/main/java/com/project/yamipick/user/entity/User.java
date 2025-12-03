@@ -1,5 +1,10 @@
 package com.project.yamipick.user.entity;
 
+import java.time.LocalDate;
+
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CreationTimestamp;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -34,8 +39,8 @@ public class User {
     @Column(nullable = false, length = 30)
     private String name;
 
-    @Column(nullable = false, length = 30)
-    private String id;
+    @Column(name = "id", nullable = false, length = 30, unique = true) 
+    private String userId; 
 
     @Column(nullable = false, length = 300)
     private String password;
@@ -55,7 +60,12 @@ public class User {
     @Column(nullable = false, length = 100)
     private String nickname;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "statusUser", length = 50)
+    @ColumnDefault("'ACTIVE'") // 기본값 활동중
     private String statusUser;
+
+    @CreationTimestamp
+    @Column(name = "createdAt", updatable = false)
+    private LocalDate createdAt;
 
 }
