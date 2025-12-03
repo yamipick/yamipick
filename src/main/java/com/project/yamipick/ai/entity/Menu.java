@@ -9,10 +9,15 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@SequenceGenerator(
+        name = "SEQ_MENU",
+        sequenceName = "SEQMENU",
+        allocationSize = 1
+)
 public class Menu {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_MENU")
     @Column(name = "seqMenu")
     private Long seqMenu;
 

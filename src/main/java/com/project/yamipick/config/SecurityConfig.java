@@ -31,6 +31,12 @@ public class SecurityConfig {
             .requestMatchers("/css/**", "/js/**", "/img/**", "/upload/**").permitAll()
             // 메인, 회원가입, 로그인 페이지는 모두 허용
             .requestMatchers("/", "/login", "/join", "/joinok").permitAll()
+            
+            // 🔥 메뉴 추천 API → 비회원 허용
+            .requestMatchers("/api/menu/recommend").permitAll()
+            // 🔥 Gemini 챗봇 API → 회원만 허용
+            .requestMatchers("/api/gemini/**").authenticated()
+            
             // 관리자 페이지는 ADMIN 권한만 허용
             .requestMatchers("/admin/**").hasRole("ADMIN")
          // .anyRequest().authenticated() // (주석 처리) 나중에 개발 다 끝나면 이거 푸세요!

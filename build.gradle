@@ -25,6 +25,9 @@ repositories {
 }
 
 dependencies {
+	//제미나이 호출용 WebClient
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	
 	//DB 설정
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.5'
@@ -42,7 +45,7 @@ dependencies {
 	//3. 웹 & 화면
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-	
+
 	//4. 롬복 + devtools
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
