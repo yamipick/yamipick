@@ -1,9 +1,25 @@
 package com.project.yamipick.waiting.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
-import lombok.*;
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter @Setter
@@ -19,10 +35,11 @@ public class Waiting {
     @Column(name = "seqWaiting")
     private Long id;
 
+    // ★ [변경] Store 대신 Operation 연결
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seqStore")
+    @JoinColumn(name = "seqOperation")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private Store store;
+    private WaitingOperation operation;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seqUser")
@@ -33,11 +50,14 @@ public class Waiting {
     @JoinColumn(name = "seqWaitingStatus")
     private WaitingStatus waitingStatus;
 
-    @Column(name = "timeSize")
+    // ★ [추가] 고정된 대기번호 (1번, 2번...)
+    @Column(name = "waitingNumber")
+    private int waitingNumber;
+
+    @Column(name = "teamSize")
     private int teamSize;
 
-    // ★ [수정] 옵션 제거 -> Java에서 설정한 값이 DB에 저장됨
-    @Column(name = "regdate") 
+    @Column(name = "regDate") 
     private LocalDateTime regDate;
     
     @Column(name = "calledTime")
@@ -48,7 +68,6 @@ public class Waiting {
     
     @PrePersist
     public void prePersist() {
-        // 이 값이 DB에 저장됩니다.
         if (this.regDate == null) this.regDate = LocalDateTime.now();
     }
 }

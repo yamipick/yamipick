@@ -1,5 +1,6 @@
 package com.project.yamipick.waiting.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,15 +11,32 @@ import com.project.yamipick.waiting.domain.Waiting;
 
 public interface WaitingRepository extends JpaRepository<Waiting, Long> {
 
-    // 1. 매장용 목록
-    @Query("SELECT w FROM Waiting w WHERE w.store.id = :storeId AND w.waitingStatus.statusName IN :statuses ORDER BY w.regDate ASC")
-    List<Waiting> findStoreList(@Param("storeId") Long storeId, @Param("statuses") List<String> statuses);
+    // 1. 매장용 목록 (오늘 날짜 + 특정 매장)
+    // operation을 거쳐서 storeId와 날짜를 확인합니다.
+    @Query("SELECT w FROM Waiting w " +
+           "WHERE w.operation.store.id = :storeId " +
+           "AND w.operation.operationDate = :today " +
+           "AND w.waitingStatus.statusName IN :statuses " +
+           "ORDER BY w.waitingNumber ASC")
+    List<Waiting> findStoreList(@Param("storeId") Long storeId, 
+                                @Param("today") LocalDate today, 
+                                @Param("statuses") List<String> statuses);
 
-    // 2. 손님용 기록
+    // 2. 손님용 기록 (변동 없음)
     @Query("SELECT w FROM Waiting w WHERE w.member.id = :memberId AND w.waitingStatus.statusName IN :statuses ORDER BY w.regDate DESC")
     List<Waiting> findMemberHistory(@Param("memberId") Long memberId, @Param("statuses") List<String> statuses);
 
-    // 3. 내 앞 대기 수
-    @Query("SELECT COUNT(w) FROM Waiting w WHERE w.waitingStatus.statusName = 'WAITING' AND w.id < :myId")
-    long countAhead(@Param("myId") Long myId);
+    // 3. 내 앞 대기 수 (같은 운영 정보 내에서, 나보다 번호가 빠르고, 아직 대기중인 사람)
+    @Query("SELECT COUNT(w) FROM Waiting w " +
+           "WHERE w.operation.id = :opId " +
+           "AND w.waitingStatus.statusName = 'WAITING' " +
+           "AND w.waitingNumber < :myNum")
+    long countAhead(@Param("opId") Long opId, @Param("myNum") int myNum);
+    
+    // 4. 유효한 웨이팅 찾기 (세션 복구용)
+    @Query("SELECT w FROM Waiting w " +
+           "WHERE w.member.id = :memberId " +
+           "AND w.waitingStatus.statusName IN :statuses " +
+           "ORDER BY w.regDate DESC")
+    List<Waiting> findActiveWaiting(@Param("memberId") Long memberId, @Param("statuses") List<String> statuses);
 }

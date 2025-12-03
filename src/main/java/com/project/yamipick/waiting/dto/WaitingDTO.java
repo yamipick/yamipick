@@ -10,15 +10,17 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class WaitingDTO {
-    private Long id;
+    private Long id;              // 시스템 PK
+    private int waitingNumber;    // ★ 보여줄 대기번호 (1번, 2번...)
     private String memberName;
     private String memberPhone;
     private int teamSize;
     private String status;
-    private LocalDateTime regDate; // JSON 변환 시 "2023-12-02T10:00:00" 형식으로 나감
+    private LocalDateTime regDate;
 
     public WaitingDTO(Waiting entity) {
         this.id = entity.getId();
+        this.waitingNumber = entity.getWaitingNumber(); // 추가됨
         this.teamSize = entity.getTeamSize();
         this.regDate = entity.getRegDate();
         
