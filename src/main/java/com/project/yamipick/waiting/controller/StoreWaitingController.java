@@ -93,6 +93,14 @@ public class StoreWaitingController {
     @GetMapping("/waiting/logs")
     public List<WaitingLog> getLogs(@RequestParam(value="storeId", defaultValue="1") Long storeId) {
         return waitingService.getStoreLogs(storeId);
-    }	
+    }
+    
+    @GetMapping("/waiting/logs/daily")
+    public Map<String, Object> getDailyLogs(
+            @RequestParam(value = "storeId", defaultValue = "1") Long storeId,
+            @RequestParam(value = "date") String date // yyyy-MM-dd
+    ) {
+        return waitingService.getDailyReport(storeId, date);
+    }
     
 }

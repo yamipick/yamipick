@@ -2,7 +2,10 @@ package com.project.yamipick.waiting.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -19,13 +22,13 @@ import com.project.yamipick.waiting.domain.WaitingStore;
 import com.project.yamipick.waiting.dto.WaitingDTO;
 import com.project.yamipick.waiting.dto.WaitingNoticeDTO;
 import com.project.yamipick.waiting.handler.WaitingWebSocketHandler;
-import com.project.yamipick.waiting.repository.WaitingMemberRepository;
-import com.project.yamipick.waiting.repository.WaitingStoreRepository;
 import com.project.yamipick.waiting.repository.WaitingLogRepository;
+import com.project.yamipick.waiting.repository.WaitingMemberRepository;
 import com.project.yamipick.waiting.repository.WaitingNoticeRepository;
 import com.project.yamipick.waiting.repository.WaitingOperationRepository;
 import com.project.yamipick.waiting.repository.WaitingRepository;
 import com.project.yamipick.waiting.repository.WaitingStatusRepository;
+import com.project.yamipick.waiting.repository.WaitingStoreRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -35,12 +38,12 @@ import lombok.RequiredArgsConstructor;
 public class WaitingService {
 
     private final WaitingRepository waitingRepository;
-    private final WaitingMemberRepository memberRepository; // Member -> WaitingMember
-    private final WaitingStoreRepository storeRepository;   // Store -> WaitingStore
+    private final WaitingMemberRepository memberRepository;
+    private final WaitingStoreRepository storeRepository;
     private final WaitingStatusRepository statusRepository;
     private final WaitingOperationRepository operationRepository;
-    private final WaitingNoticeRepository noticeRepository; // 공지사항
-    private final WaitingLogRepository logRepository;       // 활동 로그 (StoreLog -> WaitingLog)
+    private final WaitingNoticeRepository noticeRepository;
+    private final WaitingLogRepository logRepository;
     private final WaitingWebSocketHandler webSocketHandler;
 
     // ================================================================================
@@ -56,17 +59,66 @@ public class WaitingService {
     }
 
     // ================================================================================
-    // 1. 웨이팅 등록 및 운영 (손님/매장 공통)
+    // ★ [신규] 날짜별 운영 기록 조회 (인원수 포함)
     // ================================================================================
+    @Transactional(readOnly = true)
+    public Map<String, Object> getDailyReport(Long storeId, String dateStr) {
+        // 1. 날짜 파싱 (yyyy-MM-dd)
+        LocalDate date = LocalDate.parse(dateStr);
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.atTime(23, 59, 59);
 
-    /**
-     * 웨이팅 등록
-     * @param storeId2 
-     */
+        // 2. 해당 날짜의 로그 조회
+        // (주의: Repository에 해당 메서드가 선언되어 있어야 함)
+        List<WaitingLog> logs = logRepository.findAllByStoreIdAndRegDateBetweenOrderByRegDateDesc(storeId, start, end);
+
+        // 3. 로그에서 waitingId 추출 (null 제외)
+        Set<Long> waitingIds = logs.stream()
+                .map(WaitingLog::getWaitingId)
+                .filter(id -> id != null)
+                .collect(Collectors.toSet());
+
+        // 4. 인원수 정보 일괄 조회 (waitingId -> teamSize)
+        Map<Long, Integer> sizeMap = new HashMap<>();
+        if (!waitingIds.isEmpty()) {
+            sizeMap = waitingRepository.findAllById(waitingIds).stream()
+                    .collect(Collectors.toMap(Waiting::getId, Waiting::getTeamSize));
+        }
+        
+        // 5. 로그 + 인원수 데이터 합치기
+        final Map<Long, Integer> finalSizeMap = sizeMap;
+        List<Map<String, Object>> resultList = logs.stream().map(log -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("regDate", log.getRegDate());
+            map.put("actionType", log.getActionType());
+            map.put("logMessage", log.getLogMessage());
+            
+            // waitingId가 있고, 조회된 인원수가 있으면 넣고, 아니면 0
+            Integer size = finalSizeMap.getOrDefault(log.getWaitingId(), 0);
+            map.put("teamSize", size);
+            
+            return map;
+        }).collect(Collectors.toList());
+
+        // 6. 통계 계산
+        long totalCalls = logs.stream().filter(l -> "CALL".equals(l.getActionType())).count();
+        long totalEnters = logs.stream().filter(l -> "ENTER".equals(l.getActionType())).count();
+        long totalCancels = logs.stream().filter(l -> "CANCEL".equals(l.getActionType())).count();
+
+        return Map.of(
+            "logs", resultList,
+            "stats", Map.of(
+                "calls", totalCalls,
+                "enters", totalEnters,
+                "cancels", totalCancels
+            )
+        );
+    }
+
+    // ================================================================================
+    // 1. 웨이팅 등록 및 운영
+    // ================================================================================
     public Waiting register(Long userId, Long storeId, int size) {
-        //Long storeId = 1L; // (테스트용 고정)
-
-        // 1. 오늘 날짜의 운영 정보 확인 (없으면 자동 생성)
         LocalDate today = LocalDate.now();
         WaitingOperation op = operationRepository.findByStoreIdAndOperationDate(storeId, today)
                 .orElseGet(() -> {
@@ -81,16 +133,13 @@ public class WaitingService {
                             .build());
                 });
 
-        // 2. 마감 체크
         if (!"OPEN".equals(op.getStatus())) {
             throw new IllegalStateException("⛔ 현재 웨이팅 접수가 마감되었습니다.");
         }
 
-        // 3. 번호표 발급 (+1)
         int nextNum = op.getLastWaitingNum() + 1;
-        op.setLastWaitingNum(nextNum); // Dirty Checking 업데이트
+        op.setLastWaitingNum(nextNum);
 
-        // 4. 저장
         WaitingMember member = memberRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("회원 정보 없음"));
         
@@ -109,9 +158,6 @@ public class WaitingService {
         return waitingRepository.save(waiting);
     }
 
-    /**
-     * 영업 상태 토글 (OPEN <-> CLOSED)
-     */
     public boolean toggleWaitingOpen(Long storeId) {
         LocalDate today = LocalDate.now();
         WaitingOperation op = operationRepository.findByStoreIdAndOperationDate(storeId, today)
@@ -125,15 +171,11 @@ public class WaitingService {
         String nextStatus = isOpen ? "CLOSED" : "OPEN";
         op.setStatus(nextStatus);
 
-        // ★ 로그 저장
         saveLog(storeId, null, "TOGGLE", "영업 상태를 " + nextStatus + "로 변경");
         
         return !isOpen;
     }
 
-    /**
-     * 매장 정보 조회 (오늘의 영업 상태 포함)
-     */
     @Transactional(readOnly = true)
     public WaitingStore getStoreInfo(Long storeId) {
         WaitingStore store = storeRepository.findById(storeId).orElseThrow();
@@ -144,9 +186,6 @@ public class WaitingService {
         return store;
     }
 
-    /**
-     * 매장용 대기 목록 조회 (오늘 날짜 기준)
-     */
     @Transactional(readOnly = true)
     public List<WaitingDTO> getStoreList(Long storeId) {
         return waitingRepository.findStoreList(storeId, LocalDate.now(), 
@@ -155,9 +194,8 @@ public class WaitingService {
     }
 
     // ================================================================================
-    // 2. 상태 변경 액션 (호출, 입장, 취소, 미루기)
+    // 2. 상태 변경 액션
     // ================================================================================
-
     private void changeStatus(Long id, WaitingStatusType type) {
         Waiting waiting = waitingRepository.findById(id).orElseThrow();
         WaitingStatus newStatus = statusRepository.findByStatusName(type.name()).orElseThrow();
@@ -171,7 +209,6 @@ public class WaitingService {
         changeStatus(id, WaitingStatusType.CALLED);
         webSocketHandler.sendToCustomer(id, "CALL:입장해주세요! 🔔");
         
-        // ★ 로그 저장
         Waiting w = waitingRepository.findById(id).orElseThrow();
         saveLog(w.getOperation().getStore().getId(), id, "CALL", w.getWaitingNumber() + "번 손님 호출");
     }
@@ -180,7 +217,6 @@ public class WaitingService {
         changeStatus(id, WaitingStatusType.ENTERED);
         webSocketHandler.sendToCustomer(id, "ENTER:입장이 확인되었습니다.");
         
-        // ★ 로그 저장
         Waiting w = waitingRepository.findById(id).orElseThrow();
         saveLog(w.getOperation().getStore().getId(), id, "ENTER", w.getWaitingNumber() + "번 손님 입장 완료");
     }
@@ -190,15 +226,11 @@ public class WaitingService {
         if (isStoreAction) {
             webSocketHandler.sendToCustomer(id, "CANCEL:매장 사정으로 취소되었습니다. 😥");
             
-            // ★ 로그 저장 (매장이 취소한 경우만)
             Waiting w = waitingRepository.findById(id).orElseThrow();
             saveLog(w.getOperation().getStore().getId(), id, "CANCEL", w.getWaitingNumber() + "번 손님 거절(취소)");
         }
     }
 
-    /**
-     * 순서 미루기 (맨 뒤로 이동)
-     */
     public void postpone(Long waitingId) {
         Waiting waiting = waitingRepository.findById(waitingId)
                 .orElseThrow(() -> new IllegalArgumentException("정보 없음"));
@@ -210,26 +242,22 @@ public class WaitingService {
 
         WaitingOperation op = waiting.getOperation();
         int nextNum = op.getLastWaitingNum() + 1;
-        op.setLastWaitingNum(nextNum); // 번호 증가
+        op.setLastWaitingNum(nextNum);
         
-        waiting.setWaitingNumber(nextNum); // 내 번호 변경
+        waiting.setWaitingNumber(nextNum);
 
-        // 호출 상태였다면 다시 대기로 복귀
         if ("CALLED".equals(currentStatus)) {
             waiting.setWaitingStatus(statusRepository.findByStatusName("WAITING").get());
         }
     }
     
-    // 긴급 공지 (웹소켓)
     public void notice(String content) {
         webSocketHandler.broadcast(content);
-        // 긴급 공지는 굳이 DB 로그까지 안 남겨도 되지만, 필요하면 여기서 saveLog 호출
     }
 
     // ================================================================================
-    // 3. 게시판형 공지사항 관리 (CRUD)
+    // 3. 게시판형 공지사항 관리
     // ================================================================================
-
     @Transactional(readOnly = true)
     public List<WaitingNoticeDTO> getNoticeList(Long storeId) {
         return noticeRepository.findByStoreIdOrderByIsPinnedDescRegDateDesc(storeId)
@@ -245,7 +273,6 @@ public class WaitingService {
                 .isPinned(isPinned ? "Y" : "N")
                 .build();
         noticeRepository.save(notice);
-        
         saveLog(storeId, null, "NOTICE", "공지사항 등록: " + title);
     }
 
@@ -254,7 +281,6 @@ public class WaitingService {
         notice.setTitle(title);
         notice.setContent(content);
         notice.setIsPinned(isPinned ? "Y" : "N");
-        
         saveLog(notice.getStore().getId(), null, "NOTICE", "공지사항 수정: " + title);
     }
 
@@ -262,14 +288,12 @@ public class WaitingService {
         WaitingNotice notice = noticeRepository.findById(noticeId).orElseThrow();
         Long storeId = notice.getStore().getId();
         noticeRepository.deleteById(noticeId);
-        
         saveLog(storeId, null, "NOTICE", "공지사항 삭제 완료");
     }
 
     // ================================================================================
-    // 4. 조회 및 기타 (로그, 내 정보 등)
+    // 4. 조회 및 기타
     // ================================================================================
-
     @Transactional(readOnly = true)
     public List<WaitingLog> getStoreLogs(Long storeId) {
         return logRepository.findTop50ByStoreIdOrderByRegDateDesc(storeId);
