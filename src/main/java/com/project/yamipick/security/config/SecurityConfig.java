@@ -1,4 +1,4 @@
-package com.project.yamipick.config; // [체크] 본인 패키지명 확인
+package com.project.yamipick.security.config; // [체크] 본인 패키지명 확인
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -31,6 +32,8 @@ public class SecurityConfig {
             .requestMatchers("/css/**", "/js/**", "/img/**", "/upload/**").permitAll()
             // 메인, 회원가입, 로그인 페이지는 모두 허용
             .requestMatchers("/", "/login", "/join", "/joinok").permitAll()
+            // 로그 api 전역 허용
+            .requestMatchers("/api/log/**").permitAll()
             // 관리자 페이지는 ADMIN 권한만 허용
             .requestMatchers("/admin/**").hasRole("ADMIN")
          // .anyRequest().authenticated() // (주석 처리) 나중에 개발 다 끝나면 이거 푸세요!
@@ -43,7 +46,7 @@ public class SecurityConfig {
             .loginProcessingUrl("/loginProc") // HTML Form의 action 주소와 일치해야 함
             .usernameParameter("username")    // HTML input name="username"
             .passwordParameter("password")    // HTML input name="password"
-            .defaultSuccessUrl("/", true)     // 로그인 성공 시 메인으로 이동
+            .successHandler(customSuccessHandler())
             .permitAll()
         );
 
@@ -54,6 +57,24 @@ public class SecurityConfig {
             .invalidateHttpSession(true)     // 세션 삭제
         );
 
-        return http.build(); // [중요] 설정을 마무리하고 반환 (이게 빠져서 에러 났던 것)
+        return http.build(); // [중요] 설정을 마무리하고 반환
+    }
+    
+    // 로그인 성공 핸들러
+    @Bean
+    AuthenticationSuccessHandler customSuccessHandler() {
+    	return (request, response, authentication) -> {
+    		// 권한 목록 가져오기
+    		var authorities = authentication.getAuthorities();
+    		
+    		// 관리자(ROLE_ADMIN)이면 관리자 공지 목록으로 이동
+    		if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIn"))) {
+    			response.sendRedirect("/admin/notice/list");
+    		}
+    		//아니면 메인으로 이동
+    		else {
+    			response.sendRedirect("/");
+    		}
+    	};
     }
 }
