@@ -25,4 +25,10 @@ public class Banner {
     @Column(name = "isVisible", length = 1)
     @ColumnDefault("'Y'")
     private String isVisible;
+    
+    // 수정 메서드 (제목, 노출여부만 수정 가능)
+    public void updateInfo(String title, String isVisible) {
+        this.title = title;
+        this.isVisible = isVisible;
+    }
 }

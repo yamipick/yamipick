@@ -21,7 +21,7 @@ public class Report {
 
     // ★ User가 있어야 에러 안 남
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reporterSeq", nullable = false)
+    @JoinColumn(name = "seqUser", nullable = false)
     private User reporter;
 
     @Column(name = "targetType", nullable = false, length = 20)
@@ -43,4 +43,13 @@ public class Report {
     @CreationTimestamp
     @Column(name = "createdAt", updatable = false)
     private LocalDate createdAt;
+    
+    /**
+     * [비즈니스 로직] 신고 처리 완료
+     * @param comment 관리자 처리 내용 (예: "욕설 확인되어 블라인드 처리함")
+     */
+    public void completeProcess(String comment) {
+        this.status = "PROCESSED";
+        this.adminComment = comment;
+    }
 }
