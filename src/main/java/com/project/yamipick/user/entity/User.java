@@ -67,5 +67,15 @@ public class User {
     @CreationTimestamp
     @Column(name = "createdAt", updatable = false)
     private LocalDate createdAt;
+    
+    // 비즈니스 로직 (상태 변경)
+    public void changeStatus(String status) {
+        this.statusUser = status;
+    }
+    
+    // 비즈니스 로직 (벌점 부여 - 필요시 사용)
+    public void addPenalty(int score) {
+        this.penaltyScore += score;
+    }
 
 }
