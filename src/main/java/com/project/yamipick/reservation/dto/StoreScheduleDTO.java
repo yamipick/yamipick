@@ -1,4 +1,4 @@
-package com.project.yamipick.reservation.model;
+package com.project.yamipick.reservation.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,5 +22,7 @@ public class StoreScheduleDTO {
 	private String closeTime;
 	private String breakStart;
 	private String breakEnd;
+	
+	private Long seqStore;
 
 }

@@ -1,4 +1,4 @@
-package com.project.yamipick.reservation.model;
+package com.project.yamipick.reservation.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,5 +19,7 @@ public class StoreTableTypeDTO {
 	private String name;
 	private Integer capacity;
 	private Integer quantity;
+	
+	private Long seqStore;
 	
 }

@@ -1,6 +1,6 @@
-package com.project.yamipick.reservation.model;
+package com.project.yamipick.reservation.dto;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,9 +18,13 @@ import lombok.ToString;
 public class ReservationDTO {
 	
 	private Long seqReservation;
-	private Date reserveDate;
+	private LocalDate reserveDate;
 	private String reserveTime;
 	private Integer peopleCount;
 	private String status;
+	
+	private Long seqUser;
+	private Long seqStore;
+	private Long seqStoreTable;
 	
 }
