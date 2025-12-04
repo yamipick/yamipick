@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.project.yamipick.waiting.domain.StoreSchedule;
 import com.project.yamipick.waiting.domain.Waiting;
 import com.project.yamipick.waiting.domain.WaitingLog;
 import com.project.yamipick.waiting.domain.WaitingMember;
@@ -17,9 +18,12 @@ import com.project.yamipick.waiting.domain.WaitingOperation;
 import com.project.yamipick.waiting.domain.WaitingStatus;
 import com.project.yamipick.waiting.domain.WaitingStatusType;
 import com.project.yamipick.waiting.domain.WaitingStore;
+import com.project.yamipick.waiting.dto.StoreInfoDTO;
+import com.project.yamipick.waiting.dto.StoreScheduleDTO;
 import com.project.yamipick.waiting.dto.WaitingDTO;
 import com.project.yamipick.waiting.dto.WaitingNoticeDTO;
 import com.project.yamipick.waiting.handler.WaitingWebSocketHandler;
+import com.project.yamipick.waiting.repository.StoreScheduleRepository;
 import com.project.yamipick.waiting.repository.WaitingLogRepository;
 import com.project.yamipick.waiting.repository.WaitingMemberRepository;
 import com.project.yamipick.waiting.repository.WaitingNoticeRepository;
@@ -41,6 +45,7 @@ public class WaitingService {
     private final WaitingStatusRepository statusRepository;
     private final WaitingOperationRepository operationRepository;
     private final WaitingNoticeRepository noticeRepository;
+    private final StoreScheduleRepository scheduleRepository;
     
     // ★ [변경] 로그 레포지토리 직접 사용 X -> 트랜잭션 분리된 서비스 사용
     private final WaitingLogService logService; 
@@ -154,7 +159,29 @@ public Waiting register(Long userId, Long storeId, int size) {
         
         return !isOpen;
     }
+    
+ // [변경 후] DTO를 반환하도록 수정
+    @Transactional(readOnly = true)
+    public StoreInfoDTO getStoreInfo(Long storeId) {
+        // 1. 매장 조회 (DB)
+        WaitingStore store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new IllegalArgumentException("매장 정보 없음"));
+        
+        // 2. 영업 상태 계산 (로직 동일)
+        boolean isOpen = operationRepository.findByStoreIdAndOperationDate(storeId, LocalDate.now())
+                .map(op -> "OPEN".equals(op.getStatus()))
+                .orElse(false);
 
+        // 3. (단건 조회시 영업시간 텍스트가 필요 없다면 빈 문자열 or 로직 추가)
+        // 매장 관리 페이지에서는 보통 영업중 여부만 쓰므로 일단 빈 문자열 처리하거나,
+        // 필요하다면 아래 searchStores의 시간 계산 로직을 함수로 추출해서 쓰면 됩니다.
+        String hoursText = ""; 
+
+        // 4. ★ 엔티티에 set 하는 게 아니라, DTO를 만들어서 리턴!
+        return new StoreInfoDTO(store, isOpen, hoursText);
+    }
+
+    /*
     @Transactional(readOnly = true)
     public WaitingStore getStoreInfo(Long storeId) {
         WaitingStore store = storeRepository.findById(storeId).orElseThrow();
@@ -164,6 +191,7 @@ public Waiting register(Long userId, Long storeId, int size) {
         store.setWaitingOpen(isOpen);
         return store;
     }
+    */
 
     @Transactional(readOnly = true)
     public List<WaitingDTO> getStoreList(Long storeId) {
@@ -347,25 +375,123 @@ public Waiting register(Long userId, Long storeId, int size) {
             )
         );
     }
-    
-    
- // ★ [추가] 매장 검색 (영업 상태 포함)
+ // [변경 후] List<StoreInfoDTO> 반환
+    @Transactional(readOnly = true)
+    public List<StoreInfoDTO> searchStores(String keyword) {
+        List<WaitingStore> stores = storeRepository.findByNameContaining(keyword);
+        LocalDate today = LocalDate.now();
+        int dbDay = today.getDayOfWeek().getValue() % 7; 
+
+        // ★ 반환할 결과 리스트 (DTO용)
+        List<StoreInfoDTO> dtos = new java.util.ArrayList<>();
+
+        for (WaitingStore store : stores) {
+            // 1. 영업 상태 계산
+            boolean isOpenNow = operationRepository.findByStoreIdAndOperationDate(store.getId(), today)
+                    .map(op -> "OPEN".equals(op.getStatus()))
+                    .orElse(false);
+
+            // 2. 영업 시간 텍스트 계산
+            String hoursText = scheduleRepository.findByStoreIdAndDayOfWeek(store.getId(), dbDay)
+                    .map(s -> {
+                        if ("N".equals(s.getIsOpen())) return "오늘은 휴무입니다";
+                        String txt = s.getOpenTime() + " ~ " + s.getCloseTime();
+                        if (s.getBreakStart() != null && !s.getBreakStart().isEmpty() &&
+                            s.getBreakEnd() != null && !s.getBreakEnd().isEmpty()) {
+                            txt += " (브레이크타임 " + s.getBreakStart() + "~" + s.getBreakEnd() + ")";
+                        }
+                        return txt;
+                    })
+                    .orElse("정보 없음");
+
+            // 3. ★ 여기서 store.set...을 하는 게 아니라 DTO에 담습니다.
+            dtos.add(new StoreInfoDTO(store, isOpenNow, hoursText));
+        }
+        
+        return dtos;
+    }
+ /*
+ // 매장 검색 (영업 상태 + 영업 시간 + ★브레이크 타임 포함)
     @Transactional(readOnly = true)
     public List<WaitingStore> searchStores(String keyword) {
-        // 1. 이름으로 매장들 찾기
         List<WaitingStore> stores = storeRepository.findByNameContaining(keyword);
-        
-        // 2. 각 매장별로 오늘 영업 중인지 확인해서 세팅
         LocalDate today = LocalDate.now();
+        
+        // 자바 요일 -> DB 요일(0~6) 변환
+        int dbDay = today.getDayOfWeek().getValue() % 7; 
+
         for (WaitingStore store : stores) {
-            // 운영 기록(Operation)이 있고, 상태가 'OPEN'이어야 영업 중
-            boolean isOpen = operationRepository.findByStoreIdAndOperationDate(store.getId(), today)
+            // 1. 영업 상태 (OPEN/CLOSED)
+            boolean isOpenNow = operationRepository.findByStoreIdAndOperationDate(store.getId(), today)
                     .map(op -> "OPEN".equals(op.getStatus()))
-                    .orElse(false); // 기록 없으면 영업 안 함(false)
-            
-            store.setWaitingOpen(isOpen);
+                    .orElse(false);
+            store.setWaitingOpen(isOpenNow);
+
+            // 2. 영업 시간 + 브레이크 타임 텍스트 생성
+            String hoursText = scheduleRepository.findByStoreIdAndDayOfWeek(store.getId(), dbDay)
+                    .map(s -> {
+                        if ("N".equals(s.getIsOpen())) return "오늘은 휴무입니다";
+                        
+                        // 기본 영업 시간
+                        String txt = s.getOpenTime() + " ~ " + s.getCloseTime();
+                        
+                        // ★ [추가] 브레이크 타임이 있으면 뒤에 붙이기
+                        if (s.getBreakStart() != null && !s.getBreakStart().isEmpty() &&
+                            s.getBreakEnd() != null && !s.getBreakEnd().isEmpty()) {
+                            txt += " (브레이크타임 " + s.getBreakStart() + "~" + s.getBreakEnd() + ")";
+                        }
+                        
+                        return txt;
+                    })
+                    .orElse("정보 없음");
+
+            store.setTodayHours(hoursText);
         }
         
         return stores;
     }
+    */
+    
+    public void updateSchedule(StoreScheduleDTO dto) {
+        WaitingStore store = storeRepository.findById(dto.getStoreId())
+                .orElseThrow(() -> new IllegalArgumentException("매장 없음"));
+
+        // 선택된 요일들(days)을 돌면서 업데이트
+        for (Integer day : dto.getDays()) {
+            StoreSchedule schedule = scheduleRepository.findByStoreIdAndDayOfWeek(dto.getStoreId(), day)
+                    .orElseGet(() -> StoreSchedule.builder() // 없으면 새로 만듦
+                            .store(store)
+                            .dayOfWeek(day)
+                            .build());
+
+            schedule.setOpenTime(dto.getOpenTime());
+            schedule.setCloseTime(dto.getCloseTime());
+            schedule.setBreakStart(dto.getBreakStart());
+            schedule.setBreakEnd(dto.getBreakEnd());
+            schedule.setIsOpen(dto.getIsOpen()); // 영업 여부 (Y/N)
+
+            scheduleRepository.save(schedule);
+        }
+    }
+    
+// // ★ [추가] 매장 검색 (영업 상태 포함)
+//    @Transactional(readOnly = true)
+//    public List<WaitingStore> searchStores(String keyword) {
+//        // 1. 이름으로 매장들 찾기
+//        List<WaitingStore> stores = storeRepository.findByNameContaining(keyword);
+//        
+//        // 2. 각 매장별로 오늘 영업 중인지 확인해서 세팅
+//        LocalDate today = LocalDate.now();
+//        for (WaitingStore store : stores) {
+//            // 운영 기록(Operation)이 있고, 상태가 'OPEN'이어야 영업 중
+//            boolean isOpen = operationRepository.findByStoreIdAndOperationDate(store.getId(), today)
+//                    .map(op -> "OPEN".equals(op.getStatus()))
+//                    .orElse(false); // 기록 없으면 영업 안 함(false)
+//            
+//            store.setWaitingOpen(isOpen);
+//        }
+//        
+//        return stores;
+//    }
+        
 }

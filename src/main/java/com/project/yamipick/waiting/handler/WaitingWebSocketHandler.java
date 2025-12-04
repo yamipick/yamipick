@@ -91,9 +91,21 @@ public class WaitingWebSocketHandler extends TextWebSocketHandler {
     }
 
     // 5. 연결 해제
+//    @Override
+//    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+//    	waitingSessions.values().removeIf(s -> s.getId().equals(session.getId()));
+//        System.out.println("🔌 [웹소켓] 연결 끊김 (Session ID: " + session.getId() + ")");
+//    }
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-    	waitingSessions.values().removeIf(s -> s.getId().equals(session.getId()));
-        System.out.println("🔌 [웹소켓] 연결 끊김 (Session ID: " + session.getId() + ")");
+        // 세션에 저장해둔 ID를 꺼냅니다. (반복문 X, 바로 조회 O)
+        Long waitingId = (Long) session.getAttributes().get("waitingId");
+        
+        if (waitingId != null) {
+            waitingSessions.remove(waitingId); 
+            System.out.println("🔌 [웹소켓] 연결 종료 및 삭제 완료 (ID: " + waitingId + ")");
+        } else {
+            System.out.println("🔌 [웹소켓] 단순 연결 종료 (매핑된 ID 없음)");
+        }
     }
 }

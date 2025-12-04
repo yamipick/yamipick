@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>야미식당 매장 관리자</title>
+    <title>웨이팅 관리</title>
     <style>
         body { font-family: 'Pretendard', sans-serif; padding: 20px; background-color: #f1f2f6; color: #333; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -47,15 +47,62 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>👨‍🍳 야미식당 관리자</h1>
+            <h1>웨이팅 관리</h1>
             <button id="btn-status" class="btn-toggle on" onclick="toggleStatus()">접수 중</button>
         </div>
         
         <div class="section-box" style="background: #ffeaa750; border-color: #ffeaa7;">
-            <h3 class="section-title" style="margin-bottom: 15px;">🔔 실시간 긴급 알림 (1회성)</h3>
+            <h3 class="section-title" style="margin-bottom: 15px;">🔔 알림</h3>
             <div style="display: flex; gap: 10px;">
                 <input type="text" id="ws-content" placeholder="예: 재료 소진으로 마감합니다." style="flex: 1;">
                 <button class="btn-action" onclick="sendWsNotice()">전송</button>
+            </div>
+        </div>
+        
+        <div class="section-box">
+            <h3 class="section-title">⏰ 영업 시간 설정</h3>
+            <div style="background: #fff; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
+                
+                <div style="margin-bottom: 15px;">
+                    <span style="font-weight:bold; margin-right: 10px;">요일 선택:</span>
+                    <label><input type="checkbox" name="days" value="1" checked> 월</label>
+                    <label><input type="checkbox" name="days" value="2" checked> 화</label>
+                    <label><input type="checkbox" name="days" value="3" checked> 수</label>
+                    <label><input type="checkbox" name="days" value="4" checked> 목</label>
+                    <label><input type="checkbox" name="days" value="5" checked> 금</label>
+                    <label><input type="checkbox" name="days" value="6"> 토</label>
+                    <label><input type="checkbox" name="days" value="0"> 일</label>
+                </div>
+
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+                    <div>
+                        <div style="font-size: 0.9em; color: #666;">오픈 시간</div>
+                        <input type="time" id="sch-open" value="10:00">
+                    </div>
+                    <div>
+                        <div style="font-size: 0.9em; color: #666;">마감 시간</div>
+                        <input type="time" id="sch-close" value="22:00">
+                    </div>
+                    <div style="border-left: 1px solid #ddd; padding-left: 20px;">
+                        <div style="font-size: 0.9em; color: #666;">브레이크 타임 시작</div>
+                        <input type="time" id="sch-bs" value="15:00">
+                    </div>
+                    <div>
+                        <div style="font-size: 0.9em; color: #666;">브레이크 타임 끝</div>
+                        <input type="time" id="sch-be" value="17:00">
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                    <label style="cursor: pointer;">
+                        <input type="checkbox" id="sch-holiday"> ⛔ 해당일은 휴무(영업 안함)
+                    </label>
+                    <button class="btn-action" style="background-color: #0984e3;" onclick="saveSchedule()">설정 적용하기</button>
+                </div>
+                
+                <p style="font-size: 0.8em; color: #888; margin-top: 10px; margin-bottom: 0;">
+                    ※ 선택한 요일에 일괄 적용됩니다. 브레이크 타임이 없으면 비워두세요.
+                </p>
             </div>
         </div>
 
@@ -277,6 +324,48 @@
         function action(type, id) { 
             if(!confirm("처리하시겠습니까?")) return; 
             fetch(`/waiting/${type}/${id}`, {method:'POST'}).then(r=>{if(r.ok)loadList();}); 
+        }
+        
+        
+        
+        // --- 영업 시간 저장 ---
+        function saveSchedule() {
+            // 1. 선택된 요일 가져오기
+            const checkboxes = document.querySelectorAll('input[name="days"]:checked');
+            if (checkboxes.length === 0) return alert("요일을 하나 이상 선택해주세요.");
+            
+            const days = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            
+            // 2. 시간 값 가져오기
+            const openTime = document.getElementById('sch-open').value;
+            const closeTime = document.getElementById('sch-close').value;
+            const breakStart = document.getElementById('sch-bs').value;
+            const breakEnd = document.getElementById('sch-be').value;
+            const isHoliday = document.getElementById('sch-holiday').checked;
+
+            if (!openTime || !closeTime) return alert("오픈/마감 시간을 입력하세요.");
+
+            // 3. 전송 데이터 구성
+            const payload = {
+                storeId: storeId,
+                days: days,
+                openTime: openTime,
+                closeTime: closeTime,
+                breakStart: breakStart,
+                breakEnd: breakEnd,
+                isOpen: isHoliday ? "N" : "Y" // 휴무 체크하면 isOpen=N
+            };
+
+            // 4. API 호출
+            fetch('/waiting/schedule/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => {
+                if (res.ok) alert("영업 시간이 저장되었습니다.");
+                else alert("저장 실패");
+            });
         }
     </script>
 </body>

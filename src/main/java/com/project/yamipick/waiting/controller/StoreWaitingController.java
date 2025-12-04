@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.project.yamipick.waiting.domain.WaitingLog;
-import com.project.yamipick.waiting.domain.WaitingStore;
+import com.project.yamipick.waiting.dto.StoreInfoDTO;
+import com.project.yamipick.waiting.dto.StoreScheduleDTO;
 import com.project.yamipick.waiting.dto.WaitingDTO;
 import com.project.yamipick.waiting.dto.WaitingNoticeDTO;
 import com.project.yamipick.waiting.service.WaitingService;
@@ -30,7 +31,10 @@ public class StoreWaitingController {
     }
 
     @GetMapping("/waiting/store-info")
-    public WaitingStore storeInfo(@RequestParam(value = "storeId", defaultValue = "1") Long storeId) { return waitingService.getStoreInfo(storeId); }
+//    public WaitingStore storeInfo(@RequestParam(value = "storeId", defaultValue = "1") Long storeId) { return waitingService.getStoreInfo(storeId); }
+    public StoreInfoDTO storeInfo(@RequestParam(value = "storeId", defaultValue = "1") Long storeId) { 
+        return waitingService.getStoreInfo(storeId); 
+    }
 
     // ★ 수정: 서비스 메소드 이름(toggleWaitingOpen)과 일치시킴
     @PostMapping("/waiting/toggle")
@@ -101,6 +105,12 @@ public class StoreWaitingController {
             @RequestParam(value = "date") String date // yyyy-MM-dd
     ) {
         return waitingService.getDailyReport(storeId, date);
+    }
+    
+    @PostMapping("/waiting/schedule/update")
+    public String updateSchedule(@RequestBody StoreScheduleDTO dto) {
+        waitingService.updateSchedule(dto);
+        return "ok";
     }
     
 }

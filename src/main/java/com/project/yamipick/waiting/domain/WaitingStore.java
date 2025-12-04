@@ -45,9 +45,18 @@ public class WaitingStore {
 
     @Column(name = "seqUser")
     private Long ownerId;
-
+    
+    
+    /*
     // ★ DB에 없음! 메모리에서만 사용 (영업 상태 토글용)
     @Transient 
     @Builder.Default
     private boolean waitingOpen = true; 
+    
+    //------영업일-----
+    @Transient
+    private String todayHours;
+    */
+    
+
 }

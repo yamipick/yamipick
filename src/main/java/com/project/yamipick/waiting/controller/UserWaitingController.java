@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.project.yamipick.waiting.domain.Waiting;
-import com.project.yamipick.waiting.domain.WaitingStore;
+import com.project.yamipick.waiting.dto.StoreInfoDTO;
 import com.project.yamipick.waiting.dto.WaitingDTO;
 import com.project.yamipick.waiting.repository.WaitingStoreRepository;
 import com.project.yamipick.waiting.service.WaitingService;
@@ -91,8 +91,11 @@ public class UserWaitingController {
     
     
     @GetMapping("/waiting/search")
-    public List<WaitingStore> searchStores(@RequestParam("keyword") String keyword) {
-        // return storeRepository.findByNameContaining(keyword); // [삭제]
-        return waitingService.searchStores(keyword); // ★ [변경] 상태값 계산된 리스트 반환
+//    public List<WaitingStore> searchStores(@RequestParam("keyword") String keyword) {
+//        // return storeRepository.findByNameContaining(keyword); // [삭제]
+//        return waitingService.searchStores(keyword); // ★ [변경] 상태값 계산된 리스트 반환
+//    }
+    public List<StoreInfoDTO> searchStores(@RequestParam("keyword") String keyword) {
+        return waitingService.searchStores(keyword);
     }
 }
