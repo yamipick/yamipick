@@ -12,9 +12,13 @@ import java.time.LocalDateTime;
 @Builder
 public class AIChatSession {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "seqSession")
+	@Id
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "AI_CHAT_SESSION_SEQ")
+	@SequenceGenerator(
+	        name = "AI_CHAT_SESSION_SEQ",
+	        sequenceName = "SEQSESSION",  // DB 시퀀스 이름
+	        allocationSize = 1
+	)
     private Long seqSession;
 
     @Column(name = "sessionCreatedAt", nullable = false)

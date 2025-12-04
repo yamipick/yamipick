@@ -14,8 +14,9 @@ public class AIChatSessionService {
 
     private final AIChatSessionRepository sessionRepository;
 
-    // 세션 생성
-    public AIChatSessionDTO createSession(Long seqUser) {
+    // 세션 생성 → seqSession(Long)만 반환
+    public Long createSession(Long seqUser) {
+
         AIChatSession session = AIChatSession.builder()
                 .seqUser(seqUser)
                 .sessionCreatedAt(LocalDateTime.now())
@@ -23,12 +24,9 @@ public class AIChatSessionService {
 
         AIChatSession saved = sessionRepository.save(session);
 
-        return AIChatSessionDTO.builder()
-                .seqSession(saved.getSeqSession())
-                .sessionCreatedAt(saved.getSessionCreatedAt())
-                .seqUser(saved.getSeqUser())
-                .build();
+        return saved.getSeqSession();
     }
+
 
     // 세션 단건 조회
     public AIChatSessionDTO getSession(Long seqSession) {

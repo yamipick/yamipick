@@ -77,7 +77,8 @@ public class MenuRecommendService {
                 "- 추천 메뉴 이름: %s\n" +
                 "- 메뉴 설명: %s\n" +
                 "- 매칭된 태그: %s\n\n" +
-                "이 추천이 왜 적합한지 사용자가 이해하기 쉽게 설명해줘.",
+                "이 추천이 왜 적합한지 사용자가 이해하기 쉽게 설명해줘.\n" +
+                "주의: DB에 없는 음식 이름을 절대 언급하지 마.",
                 effectiveTags,
                 best.getMenuName(),
                 best.getMenuDescription(),
