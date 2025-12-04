@@ -4,6 +4,15 @@
 	<meta charset="UTF-8">
 	<title>YamiPick</title>
 <style>
+
+	.section { box-sizing: border-box; }
+	.container { width: 1200px; margin: 0 auto; display: flex; gap: 20px; }
+	
+	html {
+	    overflow-y: scroll;
+	}
+	
+
 	.search-box {
 	    display: flex;
 	    gap: 10px;
@@ -19,7 +28,7 @@
 	
 	.search-btn {
 	    padding: 10px 24px;     /* 가로 여유 */
-	    background: #4CAF50;
+	    background: #4A2D1A;
 	    color: white;
 	    border: none;
 	    border-radius: 6px;
@@ -33,7 +42,7 @@
 	.side { width: 25%; }
 
 	.section { margin-bottom: 40px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
-	.section h2 { margin-bottom: 15px; font-size: 20px; }
+	.section h2 { margin-top: 0; margin-bottom: 15px; font-size: 20px; }
 
 	/* 사진 리뷰 갤러리 */
 	.gallery { 
@@ -59,6 +68,73 @@
 		border: 1px solid #aaa;
 		border-radius: 6px;
 	}
+	
+	.count {
+	    float: right;
+	    color: #555;
+	}
+		
+	/* 내 활동 강조 */
+	.section.activity {
+	    background: #FAF4E8;        /* 크림 베이지 */
+	    border: 1px solid #4A2D1A;  /* 초코 브라운 */
+	}
+	.section.activity h2 {
+	    color: #4A2D1A;             /* 제목 색 */
+	    font-weight: 700;
+	}
+	.list-item.activity-item {
+	    font-weight: 500;
+	}
+	
+	.activity-header {
+	    display: flex;
+	    justify-content: space-between;
+	    align-items: center;
+	    margin-bottom: 10px;
+	}
+
+	.activity-write-btn {
+	    padding: 7.5px 10.5px;
+	    border-radius: 6px;
+	    border: none;
+	    background: #4A2D1A;
+	    color: #fff;
+	    font-size: 14px;
+	    cursor: pointer;
+	    margin-top: -14px;
+	}
+	
+	.activity-item {
+	    display: block;
+	    color: inherit;
+	    text-decoration: none;
+	}
+		
+	
+	.popular-tabs {
+	    display: flex;
+	    gap: 10px;
+	    margin-bottom: 15px;
+	}
+	
+	/* 일간주간 탭 버튼 */
+	.tab-btn {
+	    padding: 6px 12px;
+	    border: 1px solid #4A2D1A;
+	    background: #F4E9D3;
+	    border-radius: 6px;
+	    cursor: pointer;
+	    font-size: 14px;
+	}
+	
+	.tab-btn.active {
+	    background: #4A2D1A;
+	    color: white;
+	    border-color: #4A2D1A;
+	}
+		
+	
 </style>
 </head>
 <body>
@@ -94,11 +170,11 @@
 
             <!-- 인기 게시글 -->
             <div class="section">
-                <h2>인기 게시글</h2>
+                <h2>추천 게시글</h2>
 
-                <div class="list-item">🔥 인기 게시글 1</div>
-                <div class="list-item">🔥 인기 게시글 2</div>
-                <div class="list-item">🔥 인기 게시글 3</div>
+                <div class="list-item">⭐ 추천 게시글 1</div>
+                <div class="list-item">⭐ 추천 게시글 2</div>
+                <div class="list-item">⭐ 추천 게시글 3</div>
             </div>
 
             <!-- 사진 리뷰 갤러리 -->
@@ -128,6 +204,33 @@
 
         <!-- 사이드바 -->
         <div class="side">
+        
+        	<!-- 내 활동 요약 -->
+			<div class="section activity">
+			    <div class="activity-header">
+			        <h2>내 활동</h2>
+			        <button type="button" class="activity-write-btn"
+			                onclick="location.href='/review/reviewadd'">리뷰 쓰기</button>
+			    </div>
+			
+			    <a href="/review/activity?tab=review" class="list-item activity-item">
+			        📝 내가 쓴 리뷰 <span class="count">0개</span>
+			    </a>
+			
+			    <a href="/review/activity?tab=comment" class="list-item activity-item">
+			        💬 내가 쓴 댓글 <span class="count">0개</span>
+			    </a>
+			
+			    <a href="/review/activity?tab=favorite" class="list-item activity-item">
+			        ❤️ 좋아요한 리뷰 <span class="count">0개</span>
+			    </a>
+			
+			    <a href="/review/activity?tab=scrap" class="list-item activity-item">
+			        📌 즐겨찾기한 리뷰 <span class="count">0개</span>
+			    </a>
+			</div>
+
+
 
             <!-- 최근 본 리뷰 -->
             <div class="section">
@@ -136,25 +239,47 @@
                 <div class="list-item">👁 최근 본 리뷰 2</div>
             </div>
 
-            <!-- 주간 인기 리뷰 -->
-            <div class="section">
-                <h2>주간 인기 리뷰</h2>
-                <div class="list-item">📈 주간 인기 리뷰 1</div>
-                <div class="list-item">📈 주간 인기 리뷰 2</div>
-                <div class="list-item">📈 주간 인기 리뷰 3</div>
-            </div>
-
-            <!-- 추천 리뷰 (선호 태그 기반) -->
-            <div class="section">
-                <h2>추천 리뷰</h2>
-                <div class="list-item">⭐ 추천 리뷰 1</div>
-                <div class="list-item">⭐ 추천 리뷰 2</div>
-            </div>
-
-        </div>
-
+            <!-- 인기 리뷰 (일간/주간 탭) -->
+		    <div class="section">
+		
+		        <!-- 탭 버튼 -->
+		        <div class="popular-tabs">
+		            <button class="tab-btn active" onclick="showPopular('daily')">일간</button>
+		            <button class="tab-btn" onclick="showPopular('weekly')">주간</button>
+		        </div>
+		
+		        <!-- 일간 인기 리뷰 -->
+		        <div id="popular-daily" class="popular-list">
+		            <div class="list-item">🔥 일간 인기 리뷰 1</div>
+		            <div class="list-item">🔥 일간 인기 리뷰 2</div>
+		            <div class="list-item">🔥 일간 인기 리뷰 3</div>
+		        </div>
+		
+		        <!-- 주간 인기 리뷰 -->
+		        <div id="popular-weekly" class="popular-list" style="display:none;">
+		            <div class="list-item">📈 주간 인기 리뷰 1</div>
+		            <div class="list-item">📈 주간 인기 리뷰 2</div>
+		            <div class="list-item">📈 주간 인기 리뷰 3</div>
+		        </div>
+			</div>
+		</div>
+		
     </div>
 	
 	
 </body>
+
+<script>
+
+	function showPopular(type) {
+	    document.getElementById("popular-daily").style.display = (type === 'daily') ? 'block' : 'none';
+	    document.getElementById("popular-weekly").style.display = (type === 'weekly') ? 'block' : 'none';
+	
+	    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+	    event.target.classList.add('active');
+	}
+	
+</script>
+
+
 </html>
