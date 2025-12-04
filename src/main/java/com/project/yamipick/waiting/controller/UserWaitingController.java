@@ -34,6 +34,9 @@ public class UserWaitingController {
             return ResponseEntity.ok(waiting);
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }	catch (IllegalArgumentException e) {
+            // ★ [추가] 인원수 검증 실패 시 여기로 옴! (400 Bad Request 반환)
+            return ResponseEntity.badRequest().body(e.getMessage());  
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("서버 오류");
         }

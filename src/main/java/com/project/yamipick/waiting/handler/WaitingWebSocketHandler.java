@@ -93,7 +93,7 @@ public class WaitingWebSocketHandler extends TextWebSocketHandler {
     // 5. 연결 해제
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        waitingSessions.values().remove(session);
+    	waitingSessions.values().removeIf(s -> s.getId().equals(session.getId()));
         System.out.println("🔌 [웹소켓] 연결 끊김 (Session ID: " + session.getId() + ")");
     }
 }
