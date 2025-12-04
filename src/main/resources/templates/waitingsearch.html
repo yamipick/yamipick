@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>야미픽 - 맛집 찾기</title>
+    <style>
+        body { font-family: 'Pretendard', sans-serif; padding: 20px; text-align: center; max-width: 420px; margin: 0 auto; background-color: #f1f2f6; color: #333; }
+        .container { background: white; padding: 30px 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 500px; }
+        
+        h1 { color: #00b894; margin-bottom: 30px; }
+        
+        /* 검색창 스타일 */
+        .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { flex: 1; padding: 12px; border: 2px solid #dfe6e9; border-radius: 8px; font-size: 1em; outline: none; transition: 0.2s; }
+        input:focus { border-color: #00b894; }
+        button { background: #2d3436; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        /* 결과 리스트 스타일 */
+        #result-list { list-style: none; padding: 0; margin: 0; text-align: left; }
+        .store-item { background: #fff; border-bottom: 1px solid #eee; padding: 15px 10px; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; }
+        .store-item:hover { background: #f8f9fa; }
+        
+        .s-info { display: flex; flex-direction: column; }
+        .s-name { font-weight: bold; font-size: 1.1em; color: #2d3436; }
+        .s-addr { font-size: 0.85em; color: #b2bec3; margin-top: 4px; }
+        
+        .btn-go { background: #00b894; color: white; padding: 8px 12px; border-radius: 6px; font-size: 0.8em; text-decoration: none; font-weight: bold; }
+        
+        /* 마감된 상태 스타일 */
+        .btn-go.closed { background: #b2bec3; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🔍 맛집 찾기</h1>
+        <p style="color:#aaa; margin-bottom: 20px; font-size: 0.9em;">가고 싶은 매장 이름을 검색해보세요.</p>
+
+        <div class="search-box">
+            <input type="text" id="keyword" placeholder="예: 야미, 초밥" onkeypress="if(event.keyCode==13) doSearch()">
+            <button onclick="doSearch()">검색</button>
+        </div>
+
+        <ul id="result-list">
+            <li style="text-align:center; color:#ccc; margin-top: 50px;">검색 결과가 여기에 표시됩니다.</li>
+        </ul>
+    </div>
+
+    <script>
+        function doSearch() {
+            const keyword = document.getElementById('keyword').value;
+            if(!keyword) return alert("검색어를 입력하세요");
+
+            // 서버에서 검색 결과 가져오기 (매장 정보 + waitingOpen 여부)
+            fetch(`/waiting/search?keyword=${keyword}`)
+                .then(res => res.json())
+                .then(list => {
+                    const ul = document.getElementById('result-list');
+                    ul.innerHTML = "";
+                    
+                    if(list.length === 0) {
+                        ul.innerHTML = "<li style='text-align:center; color:#aaa; margin-top:30px;'>검색 결과가 없습니다. 😥</li>";
+                        return;
+                    }
+
+                    list.forEach(store => {
+                        // 1. 영업 상태에 따라 버튼 스타일과 텍스트 결정
+                        let btnClass = 'btn-go';
+                        let btnText = '줄서기 >';
+                        
+                        // 영업 마감(false)이면 회색 버튼 + 텍스트 변경
+                        if (!store.waitingOpen) {
+                            btnClass = 'btn-go closed';
+                            btnText = '마감됨';
+                        }
+
+                        // 2. HTML 생성
+                        // onclick="tryEnter(번호, 상태)" 함수를 호출하도록 단순화하여 따옴표 오류 방지
+                        ul.innerHTML += `
+                            <div class="store-item" onclick="tryEnter(${store.id}, ${store.waitingOpen})">
+                                <div class="s-info">
+                                    <span class="s-name">${store.name}</span>
+                                    <div class="s-addr">📍 ${store.address}</div>
+                                </div>
+                                <span class="${btnClass}">${btnText}</span>
+                            </div>
+                        `;
+                    });
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("검색 중 오류가 발생했습니다.");
+                });
+        }
+
+        // ★ 입장 시도 함수 (클릭 시 실행)
+        function tryEnter(storeId, isOpen) {
+            // 1. 마감된 매장이면 경고창 띄우고 끝냄 (이동 X)
+            if (!isOpen) {
+                alert("⛔ 현재 웨이팅 접수가 마감된 매장입니다.");
+                return;
+            }
+            
+            // 2. 영업 중이면 웨이팅 신청 페이지로 이동
+            location.href = `/waitinguser?storeId=${storeId}`;
+        }
+    </script>
+</body>
+</html>

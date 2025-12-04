@@ -16,4 +16,11 @@ public class WaitingPageController {
     
     @GetMapping("/waitinguser/history")
     public String userHistory() { return "userwaitinghistory"; }
+    
+    @GetMapping("/waitingsearch")
+    public String searchForm() {
+        return "waitingsearch"; // waitingsearch.html 파일을 보여줌
+    }
+    
+    
 }

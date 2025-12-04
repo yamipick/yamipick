@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.project.yamipick.waiting.domain.Waiting;
+import com.project.yamipick.waiting.domain.WaitingStore;
 import com.project.yamipick.waiting.dto.WaitingDTO;
+import com.project.yamipick.waiting.repository.WaitingStoreRepository;
 import com.project.yamipick.waiting.service.WaitingService;
 
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 public class UserWaitingController {
 
     private final WaitingService waitingService;
+    private final WaitingStoreRepository storeRepository;
 
     // 1. 등록 (에러 메시지 처리 강화)
     @PostMapping("/waiting/register")
@@ -84,5 +87,12 @@ public class UserWaitingController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+    
+    
+    @GetMapping("/waiting/search")
+    public List<WaitingStore> searchStores(@RequestParam("keyword") String keyword) {
+        // return storeRepository.findByNameContaining(keyword); // [삭제]
+        return waitingService.searchStores(keyword); // ★ [변경] 상태값 계산된 리스트 반환
     }
 }

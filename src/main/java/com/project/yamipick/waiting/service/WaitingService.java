@@ -263,6 +263,8 @@ public Waiting register(Long userId, Long storeId, int size) {
         
         // 공지는 실패해도 상관없으므로 굳이 트랜잭션 분리 안 해도 되지만, 통일성을 위해 사용 가능
         logService.saveLog(storeId, null, "NOTICE", "공지사항 등록: " + title);
+        
+        webSocketHandler.broadcast("REFRESH_NOTICE");
     }
 
     public void updateNotice(Long noticeId, String title, String content, boolean isPinned) {
@@ -272,6 +274,8 @@ public Waiting register(Long userId, Long storeId, int size) {
         notice.setIsPinned(isPinned ? "Y" : "N");
         
         logService.saveLog(notice.getStore().getId(), null, "NOTICE", "공지사항 수정: " + title);
+        
+        webSocketHandler.broadcast("REFRESH_NOTICE");
     }
 
     public void deleteNotice(Long noticeId) {
@@ -280,6 +284,8 @@ public Waiting register(Long userId, Long storeId, int size) {
         noticeRepository.deleteById(noticeId);
         
         logService.saveLog(storeId, null, "NOTICE", "공지사항 삭제 완료");
+        
+        webSocketHandler.broadcast("REFRESH_NOTICE");
     }
 
     // ================================================================================
@@ -340,5 +346,26 @@ public Waiting register(Long userId, Long storeId, int size) {
                 "cancels", totalCancels
             )
         );
+    }
+    
+    
+ // ★ [추가] 매장 검색 (영업 상태 포함)
+    @Transactional(readOnly = true)
+    public List<WaitingStore> searchStores(String keyword) {
+        // 1. 이름으로 매장들 찾기
+        List<WaitingStore> stores = storeRepository.findByNameContaining(keyword);
+        
+        // 2. 각 매장별로 오늘 영업 중인지 확인해서 세팅
+        LocalDate today = LocalDate.now();
+        for (WaitingStore store : stores) {
+            // 운영 기록(Operation)이 있고, 상태가 'OPEN'이어야 영업 중
+            boolean isOpen = operationRepository.findByStoreIdAndOperationDate(store.getId(), today)
+                    .map(op -> "OPEN".equals(op.getStatus()))
+                    .orElse(false); // 기록 없으면 영업 안 함(false)
+            
+            store.setWaitingOpen(isOpen);
+        }
+        
+        return stores;
     }
 }

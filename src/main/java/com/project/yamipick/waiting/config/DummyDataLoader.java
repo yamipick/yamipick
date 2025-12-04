@@ -13,7 +13,7 @@ import com.project.yamipick.waiting.repository.WaitingStatusRepository;
 
 import lombok.RequiredArgsConstructor;
 
-@Component
+//@Component
 @RequiredArgsConstructor
 public class DummyDataLoader implements CommandLineRunner {
 

@@ -15,7 +15,7 @@
         .off { background-color: #636e72; color: white; }
 
         .section-box { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e9ecef; }
-        .section-title { margin-top: 0; margin-bottom: 15px; font-size: 1.1em; color: #2d3436; font-weight: bold; }
+        .section-title { margin: 0; font-size: 1.1em; color: #2d3436; font-weight: bold; }
 
         input[type="text"], textarea { padding: 10px; border: 1px solid #dfe6e9; border-radius: 4px; font-family: inherit; }
         .btn-action { background-color: #2d3436; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
@@ -52,7 +52,7 @@
         </div>
         
         <div class="section-box" style="background: #ffeaa750; border-color: #ffeaa7;">
-            <h3 class="section-title">🔔 실시간 긴급 알림 (1회성)</h3>
+            <h3 class="section-title" style="margin-bottom: 15px;">🔔 실시간 긴급 알림 (1회성)</h3>
             <div style="display: flex; gap: 10px;">
                 <input type="text" id="ws-content" placeholder="예: 재료 소진으로 마감합니다." style="flex: 1;">
                 <button class="btn-action" onclick="sendWsNotice()">전송</button>
@@ -60,31 +60,43 @@
         </div>
 
         <div class="section-box">
-            <h3 class="section-title">📝 매장 공지사항 게시판</h3>
-            <input type="hidden" id="n-id" value=""> 
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <input type="text" id="n-title" placeholder="제목 (예: 주차 안내)" style="flex: 3;">
-                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-weight: bold; font-size: 0.9em;">
-                    <input type="checkbox" id="n-pinned"> 📌상단고정
-                </label>
+            <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleNoticeBoard()">
+                <h3 class="section-title">📝 매장 공지사항 게시판</h3>
+                <span id="n-arrow">🔽</span>
             </div>
-            <textarea id="n-content" placeholder="공지 내용을 입력하세요" style="width: 100%; height: 80px; box-sizing: border-box; margin-bottom: 10px; resize: vertical;"></textarea>
-            <div style="display: flex; gap: 5px;">
-                <button id="btn-save-notice" class="btn-action" style="flex: 1; background-color: #636e72;" onclick="saveNotice()">게시글 등록</button>
-                <button id="btn-cancel-edit" class="btn-action" style="background-color: #b2bec3; display: none;" onclick="cancelEditMode()">취소</button>
-            </div>
-            <div style="margin-top: 20px;">
-                <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">📜 등록된 공지 목록</div>
-                <ul id="manager-notice-list"></ul>
+
+            <div id="notice-body" style="display:none; margin-top: 15px;">
+                <input type="hidden" id="n-id" value=""> 
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" id="n-title" placeholder="제목 (예: 주차 안내)" style="flex: 3;">
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-weight: bold; font-size: 0.9em;">
+                        <input type="checkbox" id="n-pinned"> 📌상단고정
+                    </label>
+                </div>
+                <textarea id="n-content" placeholder="공지 내용을 입력하세요" style="width: 100%; height: 80px; box-sizing: border-box; margin-bottom: 10px; resize: vertical;"></textarea>
+                
+                <div style="display: flex; gap: 5px;">
+                    <button id="btn-save-notice" class="btn-action" style="flex: 1; background-color: #636e72;" onclick="saveNotice()">게시글 등록</button>
+                    <button id="btn-cancel-edit" class="btn-action" style="background-color: #b2bec3; display: none;" onclick="cancelEditMode()">취소</button>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">📜 등록된 공지 목록</div>
+                    <ul id="manager-notice-list"></ul>
+                </div>
             </div>
         </div>
 
         <div style="margin-top: 40px;">
             <div style="margin-bottom: 20px;">
-                <div style="font-size: 0.9em; font-weight: bold; color: #666; margin-bottom: 5px; cursor: pointer;" onclick="toggleLogs()">
-                    🕒 최근 매장 활동 로그 (Click to View) 🔽
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size: 0.9em; font-weight: bold; color: #666; cursor: pointer;" onclick="toggleLogs()">
+                        🕒 최근 활동 로그 (Click to View) 🔽
+                    </div>
+                    <a href="/waitingstore/history" style="text-decoration:none; color:white; background:#636e72; padding:5px 10px; border-radius:4px; font-size:0.8em;">📊 상세 기록 보기</a>
                 </div>
-                <div id="log-container" style="display: none; background: #2d3436; color: #dfe6e9; padding: 10px; border-radius: 5px; height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.85em;">
+                
+                <div id="log-container" style="display: none; background: #2d3436; color: #dfe6e9; padding: 10px; border-radius: 5px; height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.85em; margin-top:5px;">
                     <ul id="log-list" style="list-style: none; padding: 0; margin: 0;"><li>로딩 중...</li></ul>
                 </div>
             </div>
@@ -110,8 +122,22 @@
             checkStatus();
             loadList();
             loadNotices();
-            setInterval(loadList, 3000);
+            setInterval(loadList, 3000); // 3초마다 대기 목록 갱신
         };
+
+        // --- ★ [추가] 게시판 토글 함수 ---
+        function toggleNoticeBoard() {
+            const body = document.getElementById('notice-body');
+            const arrow = document.getElementById('n-arrow');
+            
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                arrow.innerText = '🔼';
+            } else {
+                body.style.display = 'none';
+                arrow.innerText = '🔽';
+            }
+        }
 
         // --- 공지사항 관리 ---
         function loadNotices() {
@@ -122,7 +148,7 @@
                 if(list.length === 0) { ul.innerHTML = "<li style='color:#aaa; justify-content:center;'>등록된 공지가 없습니다.</li>"; return; }
                 list.forEach(item => {
                     const pinIcon = item.pinned ? '<span style="color:red; font-weight:bold;">[필독]</span> ' : '';
-                    // ★ [수정] 날짜 시간 표시 (T제거)
+                    // 날짜 표시 (T 제거)
                     const dateStr = item.regDate ? item.regDate.replace('T', ' ') : '';
                     ul.innerHTML += `
                         <li>
@@ -144,20 +170,38 @@
             const title = document.getElementById('n-title').value;
             const content = document.getElementById('n-content').value;
             const isPinned = document.getElementById('n-pinned').checked;
+            
             if(!title || !content) return alert("제목과 내용을 입력하세요.");
+            
             const url = id ? '/waiting/notice/update' : '/waiting/notice/create';
             fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id, storeId: storeId, title: title, content: content, isPinned: isPinned }) })
-            .then(res => { if(res.ok) { alert(id ? "수정되었습니다." : "등록되었습니다."); cancelEditMode(); loadNotices(); } else alert("처리 실패"); });
+            .then(res => { 
+                if(res.ok) { 
+                    alert(id ? "수정되었습니다." : "등록되었습니다."); 
+                    cancelEditMode(); 
+                    loadNotices(); // 저장 후 목록 갱신
+                } else alert("처리 실패"); 
+            });
         }
 
         function deleteNotice(id) {
             if(!confirm("정말 삭제하시겠습니까?")) return;
-            fetch(`/waiting/notice/delete/${id}`, { method: 'POST' }).then(res => { if(res.ok) { loadNotices(); cancelEditMode(); } else alert("삭제 실패"); });
+            fetch(`/waiting/notice/delete/${id}`, { method: 'POST' })
+            .then(res => { 
+                if(res.ok) { 
+                    loadNotices(); 
+                    cancelEditMode(); 
+                } else alert("삭제 실패"); 
+            });
         }
 
         function editMode(id) {
             const item = loadedNotices.find(n => n.id === id);
             if(!item) return;
+            // 수정 시 게시판이 닫혀있으면 열어줌
+            const body = document.getElementById('notice-body');
+            if(body.style.display === 'none') toggleNoticeBoard();
+
             document.getElementById('n-id').value = item.id;
             document.getElementById('n-title').value = item.title;
             document.getElementById('n-content').value = item.content;
@@ -178,7 +222,7 @@
             document.getElementById('btn-cancel-edit').style.display = "none";
         }
 
-        // --- 로그 조회 (시간 표시 수정됨) ---
+        // --- 로그 조회 ---
         function toggleLogs() {
             const container = document.getElementById('log-container');
             if (container.style.display === 'none') { container.style.display = 'block'; loadLogs(); } else container.style.display = 'none';
@@ -189,11 +233,13 @@
                 ul.innerHTML = "";
                 if(list.length === 0) { ul.innerHTML = "<li>기록된 활동이 없습니다.</li>"; return; }
                 list.forEach(item => {
-                    // ★ [수정] 날짜 시간 표시
                     const date = item.regDate ? item.regDate.replace('T', ' ') : '-';
                     let color = '#fff';
-                    if(item.actionType === 'CALL') color = '#fab1a0'; if(item.actionType === 'ENTER') color = '#55efc4';
-                    if(item.actionType === 'CANCEL') color = '#ff7675'; if(item.actionType === 'TOGGLE') color = '#74b9ff';
+                    if(item.actionType === 'CALL') color = '#fab1a0'; 
+                    else if(item.actionType === 'ENTER') color = '#55efc4';
+                    else if(item.actionType === 'CANCEL') color = '#ff7675'; 
+                    else if(item.actionType === 'TOGGLE') color = '#74b9ff';
+                    
                     ul.innerHTML += `<li style="margin-bottom: 4px;"><span style="color: #b2bec3;">[${date}]</span> <span style="font-weight: bold; color: ${color}; width: 60px; display:inline-block;">${item.actionType}</span> <span>${item.logMessage}</span></li>`;
                 });
             });
@@ -222,12 +268,16 @@
                     let btns = '';
                     if(item.status==='WAITING') btns=`<button class="btn-call" onclick="action('call',${item.id})">🔔 호출</button><button class="btn-reject" onclick="action('reject',${item.id})">취소</button>`;
                     else if(item.status==='CALLED') btns=`<button class="btn-enter" onclick="action('enter',${item.id})">✅ 입장</button><button class="btn-reject" onclick="action('reject',${item.id})">취소</button>`;
+                    
                     const row=`<tr><td><b>${item.waitingNumber}번</b></td><td>${item.memberName||'비회원'}</td><td>${item.memberPhone||'-'}</td><td>${item.teamSize}명</td><td><span class="status-badge status-${item.status}">${item.status}</span></td><td>${btns}</td></tr>`;
                     tbody.innerHTML+=row;
                 });
             });
         }
-        function action(type, id) { if(!confirm("처리하시겠습니까?")) return; fetch(`/waiting/${type}/${id}`, {method:'POST'}).then(r=>{if(r.ok)loadList();}); }
+        function action(type, id) { 
+            if(!confirm("처리하시겠습니까?")) return; 
+            fetch(`/waiting/${type}/${id}`, {method:'POST'}).then(r=>{if(r.ok)loadList();}); 
+        }
     </script>
 </body>
 </html>

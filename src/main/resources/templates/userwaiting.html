@@ -108,8 +108,9 @@
         let myId = null;
         let socket = null;
         let pollingInterval = null;
-        const storeId = 2; 
-
+		const urlParams = new URLSearchParams(window.location.search);
+		const storeId = urlParams.get('storeId') || 2; 
+		
         function doLogin() {
             const val = document.getElementById('login-input').value;
             if(!val) return alert("ID를 입력하세요");
@@ -228,6 +229,14 @@
             const area = document.getElementById('alert-area');
             area.style.display = 'block';
             let html = "";
+            
+            if (cleanText === "NOTICE:REFRESH_NOTICE") {
+                
+                setTimeout(() => {
+                    loadNotices();
+                }, 300); 
+                return;
+            }
             
             if (cleanText.startsWith("CALL:") || cleanText.startsWith("CANCEL:")) {
                 const isCall = cleanText.startsWith("CALL:");
