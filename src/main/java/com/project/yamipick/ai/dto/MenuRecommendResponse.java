@@ -19,4 +19,7 @@ public class MenuRecommendResponse {
     private String menuImage;
     private List<String> matchedTags; // 겹친 태그들
     private int score; // 겹친 개수
+    
+    private String menuDescription;
+    private String reason;
 }

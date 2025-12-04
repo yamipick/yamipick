@@ -1,14 +1,17 @@
 package com.project.yamipick.ai.service;
 
-import com.project.yamipick.ai.dto.AIChatMessageDTO;
-import com.project.yamipick.ai.entity.AIChatMessage;
-import com.project.yamipick.ai.repository.AIChatMessageRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import com.project.yamipick.ai.dto.AIChatMessageDTO;
+import com.project.yamipick.ai.dto.AIChatMessageDTO.SenderType;
+import com.project.yamipick.ai.entity.AIChatMessage;
+import com.project.yamipick.ai.repository.AIChatMessageRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +25,11 @@ public class AIChatMessageService {
         AIChatMessage entity = AIChatMessage.builder()
                 .seqMessage(dto.getSeqMessage())
                 .seqSession(dto.getSeqSession())
-                .senderType(dto.getSenderType())
+                .senderType(
+                        dto.getSenderType() != null
+                                ? dto.getSenderType().name() // enum -> String 변환
+                                : null
+                )
                 .messageText(dto.getMessageText())
                 .messageCreatedAt(
                         dto.getMessageCreatedAt() != null ? dto.getMessageCreatedAt() : LocalDateTime.now()
@@ -34,7 +41,11 @@ public class AIChatMessageService {
         return AIChatMessageDTO.builder()
                 .seqMessage(saved.getSeqMessage())
                 .seqSession(saved.getSeqSession())
-                .senderType(saved.getSenderType())
+                .senderType(
+                        saved.getSenderType() != null
+                                ? SenderType.valueOf(saved.getSenderType()) // String → enum
+                                : null
+                )
                 .messageText(saved.getMessageText())
                 .messageCreatedAt(saved.getMessageCreatedAt())
                 .build();
@@ -47,10 +58,15 @@ public class AIChatMessageService {
                 .map(m -> AIChatMessageDTO.builder()
                         .seqMessage(m.getSeqMessage())
                         .seqSession(m.getSeqSession())
-                        .senderType(m.getSenderType())
+                        .senderType(
+                            m.getSenderType() != null
+                                    ? SenderType.valueOf(m.getSenderType())  // String → enum
+                                    : null
+                        )
                         .messageText(m.getMessageText())
                         .messageCreatedAt(m.getMessageCreatedAt())
                         .build())
                 .collect(Collectors.toList());
     }
+
 }

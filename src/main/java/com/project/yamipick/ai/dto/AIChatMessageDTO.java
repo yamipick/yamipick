@@ -16,18 +16,30 @@ import lombok.NoArgsConstructor;
 public class AIChatMessageDTO {
 
     private Long seqMessage;
-    private Long seqSession;
-    private String senderType;    // USER / AI
+    private Long seqSession;	//FK
+    private SenderType senderType;
     private String messageText;
     private LocalDateTime messageCreatedAt;
 
+    public enum SenderType {
+        USER, AI
+    }
+    
     public AIChatMessage toEntity() {
         return AIChatMessage.builder()
                 .seqMessage(this.seqMessage)
                 .seqSession(this.seqSession)
-                .senderType(this.senderType)
+                .senderType(
+                    this.senderType != null 
+                    ? this.senderType.name()   // enum → String 변환
+                    : null
+                )
                 .messageText(this.messageText)
-                .messageCreatedAt(this.messageCreatedAt)
+                .messageCreatedAt(
+                    this.messageCreatedAt != null 
+                    ? this.messageCreatedAt 
+                    : LocalDateTime.now()
+                )
                 .build();
     }
 }

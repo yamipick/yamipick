@@ -15,7 +15,7 @@ public class GeminiController {
     private final GeminiService geminiService;
 
     @PostMapping("/api/gemini/menu-test")
-    public String testMenuRecommend(@RequestBody PromptRequest request) {
+    public String createGeminiMenuTest(@RequestBody PromptRequest request) {
         return geminiService.generateText(request.getPrompt()).block();
     }
 

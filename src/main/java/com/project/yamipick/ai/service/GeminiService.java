@@ -4,7 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import jakarta.annotation.PostConstruct;
+import com.project.yamipick.ai.dto.GeminiResponse;
+
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -42,11 +43,18 @@ public class GeminiService {
                 .header("x-goog-api-key", apiKey)  // 🔥 요청 시점에 키 추가
                 .bodyValue(body)
                 .retrieve()
-                .bodyToMono(String.class);
-    }
-    
-    @PostConstruct
-    public void init() {
-        System.out.println("⭐ Loaded model = " + model);
+                .bodyToMono(GeminiResponse.class)
+                .map(res -> {
+                    // 정상 text 추출
+                    try {
+                        return res.getCandidates().get(0)
+                                .getContent()
+                                .getParts().get(0)
+                                .getText();
+                    } catch (Exception e) {
+                        return "추천 이유 생성 중 오류가 발생했어요.";
+                    }
+                })
+                .onErrorReturn("AI 추천 이유를 가져오는 중 문제가 발생했어요.");
     }
 }
