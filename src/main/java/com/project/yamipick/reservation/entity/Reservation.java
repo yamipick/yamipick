@@ -65,4 +65,9 @@ public class Reservation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "SEQSTORETABLE", nullable = false)
     private StoreTableType storeTableType;
+    
+    public void changeStatus(String status) {
+        this.status = status;
+    }
+    
 }

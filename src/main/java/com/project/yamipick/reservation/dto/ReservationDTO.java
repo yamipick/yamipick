@@ -27,4 +27,7 @@ public class ReservationDTO {
 	private Long seqStore;
 	private Long seqStoreTable;
 	
+	private String storeName;
+	private String tableTypeName;
+	
 }

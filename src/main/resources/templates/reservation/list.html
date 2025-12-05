@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>내 예약 목록</title>
+	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+	<style>
+        body {
+            font-family: sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border-bottom: 1px solid #ddd;
+            padding: 8px 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f5f5f5;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .badge-wait {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .badge-done {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .badge-cancel {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .badge-etc {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+
+        .top-actions {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        a.button {
+            padding: 6px 10px;
+            border-radius: 6px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        a.button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+	<h1>내 예약 목록</h1>
+
+	<div class="top-actions">
+	    <div>
+	        <!-- 나중에 로그인 붙이면 사용자 이름 표시 가능 -->
+	        <span th:text="'총 ' + ${#lists.size(reservations)} + '건'">총 0건</span>
+	    </div>
+	    <div>
+	        <a class="button" th:href="@{/reservation/form}">새 예약하기</a>
+	    </div>
+	</div>
+	
+	<table>
+	    <thead>
+	    <tr>
+		    <th>예약일</th>
+		    <th>시간</th>
+		    <th>매장</th>
+		    <th>좌석 타입</th>
+		    <th>인원</th>
+		    <th>상태</th>
+		    <th>상세</th> <!-- 요 줄 추가 -->
+		</tr>
+	    </thead>
+	    <tbody>
+	    <tr th:if="${#lists.isEmpty(reservations)}">
+	        <td colspan="6">예약 내역이 없습니다.</td>
+	    </tr>
+	
+	    <tr th:each="r : ${reservations}">
+	        <td th:text="${r.reserveDate}">예약 날짜</td>
+	        <td th:text="${r.reserveTime}">예약 시간</td>
+	        <td th:text="${r.storeName}">예약 장소</td>
+	        <td th:text="${r.tableTypeName}">테이블 타입</td>
+	        <td th:text="${r.peopleCount}">예약 인원</td>
+	        <td>
+	            <span th:text="${r.status == '취소' ? '취소완료' : r.status}"
+			          th:class="'badge ' + (${r.status} == '대기' ? 'badge-wait' :
+			                                  (${r.status} == '완료' ? 'badge-done' :
+			                                  (${r.status} == '취소' ? 'badge-cancel' : 'badge-etc')))">
+			        예약 상태
+			    </span>
+	        </td>
+	        <td>
+			    <a th:href="@{/reservation/detail/{seqReservation}(seqReservation=${r.seqReservation})}"
+				   class="btn btn-primary btn-sm">
+				   상세보기
+				</a>
+			</td>
+	    </tr>
+	    </tbody>
+	</table>
+	
+</body>
+</html>

@@ -63,16 +63,16 @@ public class YamipickApplicationReservation {
             tableTypeRepository.save(tableType);
 
             // 4) 요일별 스케줄 (월요일, 09~21시, 브레이크 15~17)
-            StoreSchedule schedule = StoreSchedule.builder()
-                    .dayOfWeek(1)           // 월요일
-                    .isOpen("Y")
-                    .openTime("09:00")
-                    .closeTime("21:00")
-                    .breakStart("15:00")
-                    .breakEnd("17:00")
-                    .store(store)           // ★ FK 연관
-                    .build();
-            scheduleRepository.save(schedule);
+//            StoreSchedule schedule = StoreSchedule.builder()
+//                    .dayOfWeek(1)           // 월요일
+//                    .isOpen("Y")
+//                    .openTime("09:00")
+//                    .closeTime("21:00")
+//                    .breakStart("15:00")
+//                    .breakEnd("17:00")
+//                    .store(store)           // ★ FK 연관
+//                    .build();
+//            scheduleRepository.save(schedule);
 
             System.out.println("==== initData 완료 ====");
         };

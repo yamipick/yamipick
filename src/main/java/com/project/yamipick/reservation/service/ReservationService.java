@@ -1,4 +1,4 @@
-package com.project.yamipick.service;
+package com.project.yamipick.reservation.service;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,10 +16,12 @@ import com.project.yamipick.store.repository.StoreRepository;
 import com.project.yamipick.user.entity.User;
 import com.project.yamipick.user.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
@@ -41,6 +43,11 @@ public class ReservationService {
         StoreTableType storeTableType = storeTableTypeRepository.findById(dto.getSeqStoreTable())
                 .orElseThrow(() -> new IllegalArgumentException("테이블 타입을 찾을 수 없습니다. seqStoreTable=" + dto.getSeqStoreTable()));
 
+        // 🔒 과거 날짜 예약 막기
+        if (dto.getReserveDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("이미 지난 날짜로는 예약할 수 없습니다.");
+        }
+        
         // TODO: 여기서 나중에
         //  - 매장 영업시간 체크
         //  - 브레이크타임 체크
@@ -99,7 +106,28 @@ public class ReservationService {
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
+    
+    //예약 상세보기
+    public ReservationDTO getReservationDetail(Long seqReservation) {
+        Reservation r = reservationRepository.findById(seqReservation)
+                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. seqReservation=" + seqReservation));
 
+        return toDTO(r);
+    }
+    
+    // 예약 취소용
+    public void cancelReservation(Long seqReservation) {
+        Reservation reservation = reservationRepository.findById(seqReservation)
+                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다. seqReservation=" + seqReservation));
+
+        // 필요하면 상태 체크
+        if (!"대기".equals(reservation.getStatus())) {
+            throw new IllegalStateException("대기 상태의 예약만 취소할 수 있습니다.");
+        }
+
+        reservation.changeStatus("취소");
+        // JPA 더티 체킹으로 자동 업데이트됨 (save() 안 해도 됨)
+    }
     /**
      * 엔티티 → DTO 변환
      */
@@ -113,6 +141,8 @@ public class ReservationService {
                 .seqUser(r.getUser().getSeqUser())
                 .seqStore(r.getStore().getSeqStore())
                 .seqStoreTable(r.getStoreTableType().getSeqStoreTable())
+                .storeName(r.getStore().getName())
+                .tableTypeName(r.getStoreTableType().getName())
                 .build();
     }
 }

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>예약 상세</title>
+	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+</head>
+<body>
+<h1>예약 상세</h1>
+
+<a th:href="@{/reservation/list}">← 내 예약 목록으로</a>
+
+<table>
+    <tr>
+        <th>예약일</th>
+        <td th:text="${reservation.reserveDate}">예약일</td>
+    </tr>
+    <tr>
+        <th>시간</th>
+        <td th:text="${reservation.reserveTime}">시간</td>
+    </tr>
+    <tr>
+        <th>매장</th>
+        <td th:text="${reservation.storeName}">매장</td>
+    </tr>
+    <tr>
+        <th>좌석 타입</th>
+        <td th:text="${reservation.tableTypeName}">좌석 타입</td>
+    </tr>
+    <tr>
+        <th>인원</th>
+        <td th:text="${reservation.peopleCount}">인원</td>
+    </tr>
+    <tr>
+        <th>상태</th>
+        <td th:text="${reservation.status}">상태</td>
+    </tr>
+</table>
+
+<hr/>
+
+<!-- 상태가 '대기'일 때만 취소 버튼 보이기 -->
+<form th:if="${reservation.status == '대기'}"
+      th:action="@{/reservation/cancel/{seqReservation}(seqReservation=${reservation.seqReservation})}"
+      method="post"
+      onsubmit="return confirm('정말 취소하시겠습니까?');">
+    <button type="submit">예약 취소</button>
+</form>
+
+<!-- 이미 취소된 예약일 때 안내 -->
+<div th:if="${reservation.status == '취소'}" style="color: red; margin-top: 10px;">
+    이 예약은 이미 취소된 상태입니다.
+</div>
+
+<!-- 완료/노쇼 같은 경우 -->
+<div th:if="${reservation.status == '완료'}" style="margin-top: 10px;">
+    이미 이용이 완료된 예약입니다.
+</div>
+<div th:if="${reservation.status == '노쇼'}" style="margin-top: 10px;">
+    노쇼 처리된 예약입니다.
+</div>
+
+</body>
+</html>

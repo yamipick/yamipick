@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>예약 메인</title>
+	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+	<style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 60px auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            padding: 32px 40px 40px;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 26px;
+            text-align: center;
+        }
+
+        p.subtitle {
+            margin-top: 8px;
+            margin-bottom: 32px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            min-width: 180px;
+            padding: 14px 20px;
+            text-align: center;
+            border-radius: 999px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
+        }
+
+        .btn-primary {
+            background-color: #ff6b6b;
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-primary:hover {
+            background-color: #ff5252;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(255, 82, 82, 0.5);
+        }
+
+        .btn-secondary {
+            background-color: #ffffff;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
+    </style>
+</head>
+<body>
+	<div class="container">
+	    <h1>예약 메뉴</h1>
+	    <p class="subtitle">
+	        방문 예약을 진행하거나,<br>
+	        내가 예약한 내역을 확인해 보세요.
+	    </p>
+	
+	    <div class="btn-group">
+	        <!-- 예약하기 폼 -->
+	        <a th:href="@{/reservation/form}"
+	           class="btn btn-primary"
+	           onclick="Analytics.trackClick('BUTTON', 'reservation_form', '예약하기 버튼 클릭');">
+	            예약하기
+	        </a>
+	
+	        <!-- 내 예약 목록 -->
+	        <a th:href="@{/reservation/list}"
+	           class="btn btn-secondary"
+	           onclick="Analytics.trackClick('BUTTON', 'reservation_list', '내 예약목록 버튼 클릭');">
+	            내 예약목록
+	        </a>
+	    </div>
+	</div>
+	
+</body>
+</html>

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.project.yamipick.reservation.dto.ReservationDTO;
-import com.project.yamipick.service.ReservationService;
+import com.project.yamipick.reservation.service.ReservationService;
 
 import lombok.RequiredArgsConstructor;
 
