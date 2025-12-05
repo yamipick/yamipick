@@ -6,4 +6,5 @@ import com.project.yamipick.store.entity.Store;
 
 public interface StoreRepository extends JpaRepository<Store, Long>{
 
+	
 }
