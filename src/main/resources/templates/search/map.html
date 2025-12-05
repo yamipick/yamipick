@@ -268,7 +268,13 @@
 <div id="detailModal" class="modal-overlay" onclick="closeModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()"> 
         <button class="close-btn" onclick="closeModal()">×</button>
-        <div id="modalTitle" class="modal-title">식당 이름</div>
+        <div class="modal-header-row">
+            <div id="modalTitle" class="modal-title" style="margin-bottom: 0;">식당 이름</div>
+            
+            <button id="bookmarkBtn" class="btn-bookmark" onclick="toggleBookmark(event)" title="찜하기">
+                ♥
+            </button>
+        </div>
         <div style="font-size:13px; color:#666; margin-bottom:15px;" id="modalCategory">카테고리</div>
         <div class="modal-row"><span class="modal-icon">⭐</span><span id="modalRating" style="font-weight:bold;">4.5</span> <span style="color:#ddd; margin:0 5px;">|</span>리뷰 <span id="modalReview">120</span>개</div>
         <div class="modal-row"><span class="modal-icon">📍</span><span id="modalAddress">주소 정보</span></div>
@@ -690,6 +696,45 @@
         } else {
             bubble.style.display = 'none';
         }
+    }
+  // [신규 추가] 찜하기 버튼 클릭 시 실행되는 함수
+    function toggleBookmark(e) {
+        // 부모 요소(모달 배경 등)로 클릭 이벤트가 전파되는 것을 막음
+        e.stopPropagation(); 
+        
+        var btn = document.getElementById('bookmarkBtn');
+        
+        // 버튼에 'active' 클래스가 있는지 확인하여 토글(켰다 껐다) 처리
+        if (btn.classList.contains('active')) {
+            btn.classList.remove('active');
+            // TODO: 나중에 이 부분에 [찜 취소 API]를 호출하는 코드가 들어갑니다.
+            showToast('찜이 해제되었습니다. 💔');
+        } else {
+            btn.classList.add('active');
+            // TODO: 나중에 이 부분에 [찜하기 API]를 호출하는 코드가 들어갑니다.
+            showToast('나만의 맛집으로 찜했습니다! ❤️');
+        }
+        // 클릭 후 버튼에서 포커스 제거 (눌린 자국 없애기)
+        btn.blur(); 
+    }
+
+// [기존 함수 수정] 모달창 열 때 하트 상태 초기화
+    function openModal(index) {
+        var place = places[index];
+        currentPlace = place; 
+        
+        // (기존 데이터 바인딩 코드들...)
+        document.getElementById('modalTitle').innerText = place.name;
+        // ... 기타 정보 바인딩 ...
+
+        // ★ [추가] 모달을 열 때마다 하트 버튼을 초기 상태(꺼진 상태)로 리셋
+        // 나중에는 여기서 DB를 조회해서, 사용자가 이미 찜한 식당이면 active 클래스를 추가해야 합니다.
+        document.getElementById('bookmarkBtn').classList.remove('active');
+
+        document.getElementById('detailModal').style.display = 'flex';
+        safeTrack('BUTTON', place.id, '상세보기 모달 열림');
+        
+        loadNaverReviews(place.name);
     }
 </script>
 </body>

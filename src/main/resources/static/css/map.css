@@ -546,3 +546,39 @@
         bottom: 20px; right: 20px; 
     }
 }
+/* 제목과 하트 버튼을 감싸는 줄 */
+.modal-header-row {
+    display: flex;
+    /* ★ [핵심] 왼쪽부터 차례대로 쌓이게 설정 (기존엔 양쪽 끝 정렬이었을 수 있음) */
+    justify-content: flex-start; 
+    align-items: center; /* 수직 중앙 정렬 */
+    
+    padding-right: 40px; /* 닫기 버튼(X) 공간 확보 */
+    margin-bottom: 15px; 
+    
+    /* 제목과 하트 사이 간격 8px로 고정 */
+    gap: 8px; 
+}
+
+/* 하트 버튼 */
+.btn-bookmark {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 26px; /* 크기 유지 */
+    color: #D7CCC8; 
+    padding: 0;
+    line-height: 1;
+    
+    /* margin-left 제거 (위의 gap으로 대체) */
+    margin: 0; 
+    
+    /* 찌그러짐 방지 (제목이 길어져도 하트 크기 유지) */
+    flex-shrink: 0; 
+    
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+}
+
+/* ... (나머지 호버/액티브 효과는 그대로 두셔도 됩니다) ... */
+.btn-bookmark:hover { transform: scale(1.15); }
+.btn-bookmark.active { color: var(--point-red); transform: scale(1.25); filter: drop-shadow(0 2px 4px rgba(156, 63, 63, 0.3)); }

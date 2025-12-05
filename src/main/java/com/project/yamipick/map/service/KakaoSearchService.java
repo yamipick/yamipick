@@ -1,4 +1,4 @@
-package com.project.yamipick.map.service; // ★ 패키지명 수정됨
+package com.project.yamipick.map.service;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+//import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.project.yamipick.map.dto.RestaurantDTO; // ★ DTO 경로 수정됨
+import com.project.yamipick.map.dto.RestaurantDTO;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,15 +26,22 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class KakaoSearchService {
 
-    private static final String KAKAO_REST_API_KEY = "c46ba799390d0dd28c7adc89aa77bc40"; // 형님 키
+    private static final String KAKAO_REST_API_KEY = "c46ba799390d0dd28c7adc89aa77bc40"; 
     
     private static final String KAKAO_KEYWORD_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
     private static final String KAKAO_CATEGORY_URL = "https://dapi.kakao.com/v2/local/search/category.json";
 
+	/*
+	 * @Cacheable(value = "restaurantSearch", key =
+	 * "#query + '_' + #filterType + '_' + #x + '_' + #y + '_' + #radius + '_' + #vibe + '_' + #category + '_' + #parking + '_' + #reservable + '_' + #corkage + '_' + #price"
+	 * )
+	 */
     public List<RestaurantDTO> search(String query, String filterType, String x, String y, Integer radius, 
                                       String vibe, String category, 
                                       Boolean parking, Boolean reservable, Boolean corkage, String price) {
         
+	        System.out.println("★ [API 직접 호출] Redis에 없어서 요청함 -> 검색어: " + query); 
+
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "KakaoAK " + KAKAO_REST_API_KEY.trim());
@@ -48,12 +56,17 @@ public class KakaoSearchService {
             finalQuery = finalQuery.trim();
         }
 
+        // [타겟 설정]
         List<String> targetCodes = new ArrayList<>();
-        if ("카페".equals(category)) {
-            targetCodes.add("CE7"); 
-        } else if (category != null && !category.isEmpty()) {
+        boolean isCafeSearch = "카페".equals(category);
+        boolean isFoodSearch = !isCafeSearch && (category != null && !category.isEmpty() && !"음식 종류".equals(category));
+
+        if (isCafeSearch) {
+            targetCodes.add("CE7");
+        } else if (isFoodSearch) {
             targetCodes.add("FD6");
         } else {
+            // 카테고리 없으면 무조건 둘 다 검색
             targetCodes.add("FD6");
             targetCodes.add("CE7");
         }
@@ -61,18 +74,13 @@ public class KakaoSearchService {
         boolean useCategorySearch = (finalQuery == null || finalQuery.isEmpty()) && (x != null && y != null);
         String targetUrl = useCategorySearch ? KAKAO_CATEGORY_URL : KAKAO_KEYWORD_URL;
 
+        // [황금 밸런스 3페이지]
         int r = (radius != null) ? radius : 1000;
-        int pageSize = 15;
-        int pageLimit = 1;
+        int pageSize = 15; 
+        int pageLimit = 3; 
 
-        if (r <= 500) { pageSize = 15; pageLimit = 1; } 
-        else if (r <= 1000) { pageSize = 10; pageLimit = 2; } 
-        else { pageSize = 15; pageLimit = 2; }
-
-        if (targetCodes.size() == 1) {
-            pageLimit *= 2;
-            if (pageLimit > 3) pageLimit = 3;
-        }
+        if (r <= 500) pageLimit = 1; 
+        if (targetCodes.size() == 1) pageLimit = 4;
 
         for (String code : targetCodes) {
             for (int page = 1; page <= pageLimit; page++) {
@@ -137,18 +145,22 @@ public class KakaoSearchService {
             }
         }
 
+        // [정렬 로직]
         if ("reviews".equals(filterType)) {
             Collections.sort(finalResultList, Comparator.comparingInt(RestaurantDTO::getReviewCount).reversed());
         } else if ("rating".equals(filterType)) {
             Collections.sort(finalResultList, Comparator.comparingDouble(RestaurantDTO::getRating).reversed());
+        } else {
+            // ★ [핵심] 기본순일 때 식당/카페가 골고루 섞이도록 랜덤 셔플!
+            Collections.shuffle(finalResultList);
         }
 
         return finalResultList;
     }
 
     private List<String> generateSmartTags(String name, String category, String address, Random random) {
+        // (기존과 동일)
         List<String> possibleTags = new ArrayList<>();
-        
         if (category.contains("카페") || category.contains("디저트")) {
             possibleTags.addAll(Arrays.asList("디저트맛집", "커피맛집", "조용한", "인스타감성", "수다떨기좋은"));
         } else if (category.contains("술집") || category.contains("포차") || category.contains("이자카야")) {
