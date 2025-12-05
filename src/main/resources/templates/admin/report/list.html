@@ -3,196 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <title>신고 관리 - Yamipick Admin</title>
-    <!-- 부트스트랩 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- 아이콘 (FontAwesome) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="/css/admin.css" rel="stylesheet">
     <style>
-        body { background-color: #f0f2f5; font-family: 'Noto Sans KR', sans-serif; }
-        
-        /* 테이블 헤더 스타일 (신고니까 붉은 계열 포인트) */
-        .table th { background-color: #dc3545; color: white; border-color: #dc3545; }
-        
-        /* 탭 스타일 */
-        .nav-pills .nav-link { color: #555; font-weight: 500; }
-        .nav-pills .nav-link.active { background-color: #dc3545; color: white; }
-        
-        /* 페이징 색상 커스텀 */
-        .pagination .page-link { color: #dc3545; }
-        .pagination .active .page-link { background-color: #dc3545; border-color: #dc3545; color: white; }
-        
-        /* 뱃지 스타일 */
-        .badge-pending { background-color: #ffc107; color: #000; }
-        .badge-processed { background-color: #198754; color: #fff; }
+        .nav-pills .nav-link.active { background-color: #dc3545; } /* 신고 전용 빨간색 */
+        .table th { background-color: #dc3545; color: white; }
     </style>
 </head>
 <body>
 
-<div class="container-fluid mt-5 px-5">
-    
-    <!-- 1. 타이틀 영역 -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-dark"><i class="fas fa-exclamation-triangle me-2 text-danger"></i>신고 관리</h2>
-    </div>
+<div th:replace="~{admin/common/header :: header}"></div>
 
-    <!-- 2. 상태 필터 탭 (전체 / 대기중 / 처리완료) -->
-    <ul class="nav nav-pills mb-3">
-        <li class="nav-item">
-            <a class="nav-link" th:classappend="${status == 'ALL'} ? 'active'" 
-               href="/admin/report/list?status=ALL">전체</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" th:classappend="${status == 'PENDING'} ? 'active'" 
-               href="/admin/report/list?status=PENDING">처리 대기 <i class="fas fa-clock ms-1"></i></a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" th:classappend="${status == 'PROCESSED'} ? 'active'" 
-               href="/admin/report/list?status=PROCESSED">처리 완료 <i class="fas fa-check ms-1"></i></a>
-        </li>
-    </ul>
-
-    <!-- 3. 신고 리스트 테이블 -->
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
-            <table class="table table-hover table-bordered m-0 align-middle text-center">
-                <thead>
-                    <tr>
-                        <th width="5%">No</th>
-                        <th width="10%">대상 유형</th>
-                        <th width="15%">대상 식별자</th>
-                        <th width="30%">신고 사유</th>
-                        <th width="10%">신고자</th>
-                        <th width="10%">접수일</th>
-                        <th width="10%">상태</th>
-                        <th width="10%">관리</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- 데이터 없을 때 -->
-                    <tr th:if="${list.isEmpty()}">
-                        <td colspan="8" class="py-5 text-muted">
-                            <i class="fas fa-folder-open fa-2x mb-3 d-block"></i>
-                            접수된 신고 내역이 없습니다.
-                        </td>
-                    </tr>
-                    
-                    <!-- 데이터 반복 출력 -->
-                    <tr th:each="report : ${list}">
-                        <td th:text="${report.seqReport}">1</td>
-                        <td>
-                            <!-- 유형에 따라 아이콘 다르게 표시 (심미성 UP) -->
-                            <span class="badge bg-light text-dark border">
-                                <i th:if="${report.targetType == 'REVIEW'}" class="fas fa-star text-warning me-1"></i>
-                                <i th:if="${report.targetType == 'REPLY'}" class="fas fa-comment text-info me-1"></i>
-                                <span th:text="${report.targetType}">REVIEW</span>
-                            </span>
-                        </td>
-                        <td class="text-truncate" style="max-width: 150px;" th:text="${report.targetId}">review_123</td>
-                        <td class="text-start text-truncate" style="max-width: 300px;" 
-                            th:text="${report.reason}" title="신고 사유 전체보기">욕설/비방</td>
-                        <td th:text="${report.reporterId}">user1</td>
-                        <td th:text="${report.createdAt}">2024-01-01</td>
-                        <td>
-                            <!-- 상태 뱃지 -->
-                            <span class="badge rounded-pill" 
-                                  th:classappend="${report.status == 'PENDING' ? 'badge-pending' : 'badge-processed'}"
-                                  th:text="${report.status}">PENDING</span>
-                        </td>
-                        <td>
-                            <!-- 처리 버튼 (PENDING일 때만 활성화) -->
-                            <button th:if="${report.status == 'PENDING'}" 
-                                    class="btn btn-sm btn-outline-danger"
-                                    th:onclick="openProcessModal([[${report.seqReport}]], [[${report.reason}]])">
-                                <i class="fas fa-gavel"></i> 처리
-                            </button>
-                            
-                            <!-- 완료 버튼 (비활성화) -->
-                            <button th:if="${report.status == 'PROCESSED'}" class="btn btn-sm btn-secondary" disabled>
-                                완료
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+<div class="admin-content">
+    <div class="container-fluid">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold text-dark"><i class="fas fa-exclamation-triangle me-2 text-danger"></i>신고 관리</h2>
         </div>
+
+        <ul class="nav nav-pills mb-3">
+            <li class="nav-item">
+                <a class="nav-link" th:classappend="${status == 'ALL'} ? 'active'" href="/admin/report/list?status=ALL">전체</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" th:classappend="${status == 'PENDING'} ? 'active'" href="/admin/report/list?status=PENDING">처리 대기</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" th:classappend="${status == 'PROCESSED'} ? 'active'" href="/admin/report/list?status=PROCESSED">처리 완료</a>
+            </li>
+        </ul>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <table class="table table-hover table-bordered m-0 align-middle text-center">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>유형</th>
+                            <th>ID</th>
+                            <th>사유</th>
+                            <th>신고자</th>
+                            <th>접수일</th>
+                            <th>상태</th>
+                            <th>관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${list == null or list.isEmpty()}">
+                            <td colspan="8" class="py-5 text-muted">접수된 신고 내역이 없습니다.</td>
+                        </tr>
+                        <tr th:each="report : ${list}">
+                            <td th:text="${report.seqReport}">1</td>
+                            <td><span class="badge bg-light text-dark border" th:text="${report.targetType}">REVIEW</span></td>
+                            <td th:text="${report.targetId}">101</td>
+                            <td class="text-start text-truncate" style="max-width: 200px;" th:text="${report.reason}">사유</td>
+                            <td th:text="${report.reporterId}">user1</td>
+                            <td th:text="${report.createdAt}">2024-01-01</td>
+                            <td>
+                                <span class="badge" th:classappend="${report.status == 'PENDING' ? 'bg-warning text-dark' : 'bg-success'}"
+                                      th:text="${report.status}">PENDING</span>
+                            </td>
+                            <td>
+                                <button th:if="${report.status == 'PENDING'}" class="btn btn-sm btn-outline-danger"
+                                        th:onclick="openReportProcessModal([[${report.seqReport}]], [[${report.reason}]])">
+                                    <i class="fas fa-gavel"></i> 처리
+                                </button>
+                                <button th:if="${report.status == 'PROCESSED'}" class="btn btn-sm btn-secondary" disabled>완료</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
-
-    <!-- 4. 페이징 (Pagination) -->
-    <div class="mt-4 d-flex justify-content-center" th:if="${!list.isEmpty()}">
-        <nav>
-            <ul class="pagination">
-                <li class="page-item" th:classappend="${list.first} ? 'disabled'">
-                    <a class="page-link" th:href="@{/admin/report/list(page=${list.number - 1}, status=${status})}">Prev</a>
-                </li>
-                
-                <li class="page-item" th:each="page : ${#numbers.sequence(0, list.totalPages - 1)}"
-                    th:classappend="${page == list.number} ? 'active'">
-                    <a class="page-link" th:text="${page + 1}" 
-                       th:href="@{/admin/report/list(page=${page}, status=${status})}">1</a>
-                </li>
-
-                <li class="page-item" th:classappend="${list.last} ? 'disabled'">
-                    <a class="page-link" th:href="@{/admin/report/list(page=${list.number + 1}, status=${status})}">Next</a>
-                </li>
-            </ul>
-        </nav>
-    </div>
-
 </div>
 
-<!-- ★ 신고 처리 모달 (Modal) -->
-<div class="modal fade" id="processModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+<!-- 신고 처리 모달 (admin.js에서 제어) -->
+<div class="modal fade" id="processModal" tabindex="-1">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title fw-bold"><i class="fas fa-gavel me-2"></i>신고 처리</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title fw-bold">신고 처리</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            
             <form action="/admin/report/process" method="post">
                 <div class="modal-body">
-                    <!-- 숨겨진 값 (PK, 현재 필터 유지용) -->
                     <input type="hidden" id="modalSeqReport" name="seqReport">
                     <input type="hidden" name="currentFilter" th:value="${status}">
                     
                     <div class="mb-3">
-                        <label class="form-label fw-bold">신고 사유 (참고용)</label>
+                        <label class="form-label">신고 사유</label>
                         <input type="text" id="modalReason" class="form-control bg-light" readonly>
                     </div>
-
-                    <!-- [NEW] 제재 조치 선택 -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-danger">제재 조치 (회원/콘텐츠)</label>
+                        <label class="form-label text-danger fw-bold">제재 조치</label>
                         <select class="form-select" name="penaltyType" id="modalPenaltyType" onchange="toggleDurationBox()">
-                            <option value="NONE" selected>⚠️ 일반 처리 (제재 없음)</option>
-                            <option value="BLIND_USER">🚫 계정 블라인드 (로그인 차단)</option>
-                            <option value="WITHDRAW_USER">💀 강제 탈퇴 (영구 정지)</option>
+                            <option value="NONE" selected>⚠️ 일반 처리</option>
+                            <option value="BLIND_USER">🚫 계정 블라인드</option>
+                            <option value="WITHDRAW_USER">💀 강제 탈퇴</option>
                         </select>
-                        <div class="form-text text-muted small">
-                            '계정 블라인드/탈퇴' 선택 시 해당 회원의 상태가 즉시 변경됩니다.
-                        </div>
                     </div>
-
-                    <!-- [NEW] 정지 기간 선택 (블라인드 선택 시에만 보임) -->
-                    <div class="mb-3 p-3 bg-light border rounded" id="penaltyDurationBox" style="display: none;">
-                        <label class="form-label fw-bold text-dark"><i class="fas fa-calendar-alt me-2"></i>정지 기간 선택</label>
+                    <div class="mb-3" id="penaltyDurationBox" style="display:none;">
+                        <label class="form-label">정지 기간</label>
                         <select class="form-select" name="penaltyDuration">
-                            <option value="3">3일 정지</option>
-                            <option value="7" selected>7일 정지 (기본)</option>
-                            <option value="30">30일 정지</option>
-                            <option value="365">1년 정지</option>
-                            <option value="9999">영구 정지</option>
+                            <option value="7">7일</option>
+                            <option value="30">30일</option>
+                            <option value="9999">영구</option>
                         </select>
                     </div>
-
                     <div class="mb-3">
-                        <label class="form-label fw-bold">관리자 코멘트</label>
-                        <textarea class="form-control" name="comment" rows="3" 
-                                  placeholder="처리 내용을 입력하세요.&#13;&#10;(예: 욕설 확인되어 회원 블라인드 조치함)" required></textarea>
+                        <label class="form-label">관리자 코멘트</label>
+                        <textarea class="form-control" name="comment" rows="3" required></textarea>
                     </div>
-                    
                 </div>
-                
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
                     <button type="submit" class="btn btn-danger">처리 완료</button>
@@ -202,48 +127,7 @@
     </div>
 </div>
 
-<!-- 부트스트랩 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- 자바스크립트 로직 -->
-<script>
-    /**
-     * 신고 처리 모달 열기
-     * @param seqReport 신고 번호 (PK)
-     * @param reason 신고 사유
-     */
-    function openProcessModal(seqReport, reason) {
-        // 1. 모달 input에 값 채워넣기
-        document.getElementById('modalSeqReport').value = seqReport;
-        document.getElementById('modalReason').value = reason;
-        
-        // 초기화 (기본값: 일반 처리)
-        var penaltySelect = document.getElementById('modalPenaltyType');
-        penaltySelect.value = 'NONE';
-        
-        // 기간 박스 숨기기 및 초기화
-        toggleDurationBox(); 
-        
-        // 2. 모달 띄우기
-        var myModal = new bootstrap.Modal(document.getElementById('processModal'));
-        myModal.show();
-    }
-
-    /**
-     * 제재 유형에 따라 기간 선택 박스 보이기/숨기기
-     */
-    function toggleDurationBox() {
-        var penaltyType = document.getElementById('modalPenaltyType').value;
-        var durationBox = document.getElementById('penaltyDurationBox');
-
-        // '계정 블라인드' 선택 시에만 기간 선택 박스 노출
-        if (penaltyType === 'BLIND_USER') {
-            durationBox.style.display = 'block';
-        } else {
-            durationBox.style.display = 'none';
-        }
-    }
-</script>
-
+<script src="/js/admin.js"></script>
 </body>
 </html>

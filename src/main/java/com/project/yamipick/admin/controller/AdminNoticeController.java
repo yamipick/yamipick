@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 @Controller
-@RequestMapping("/admin/notice") // 관리자 공지사항 경로 통합
+@RequestMapping("/admin/notice")
 @RequiredArgsConstructor
 @Slf4j
 public class AdminNoticeController {
@@ -24,17 +24,17 @@ public class AdminNoticeController {
     private final NoticeService noticeService;
     private final UserRepository userRepository;
 
-    // 1. 관리자용 리스트 (수정/삭제 버튼 포함)
+    // 1. 관리자용 리스트
     @GetMapping("/list")
-    public String adminList(Model model) {
+    public String list(Model model) {
         model.addAttribute("list", noticeService.getNoticeList());
-        model.addAttribute("menu", "notice"); // 사이드바 활성화용
-        return "admin/notice/list"; // 관리자용 테이블 디자인
+        model.addAttribute("menu", "notice");
+        return "admin/notice/list";
     }
 
-    // 2. 관리자용 상세 보기 (수정/삭제 버튼 포함)
+    // 2. 관리자용 상세 보기
     @GetMapping("/view")
-    public String adminView(@RequestParam Long seq, Model model) {
+    public String view(@RequestParam("seq") Long seq, Model model) { // ("seq") 추가
         model.addAttribute("notice", noticeService.getNotice(seq));
         model.addAttribute("menu", "notice");
         return "admin/notice/view";
@@ -47,12 +47,12 @@ public class AdminNoticeController {
         return "admin/notice/write";
     }
 
-    // 4. 글 등록 처리 (POST)
+    // 4. 글 등록 처리
     @PostMapping("/write")
     public String writeProcess(
-            @RequestParam String title,
-            @RequestParam String content,
-            @RequestParam(required = false) MultipartFile file
+            @RequestParam("title") String title,     // ("title") 추가
+            @RequestParam("content") String content, // ("content") 추가
+            @RequestParam(value = "file", required = false) MultipartFile file // ("file") 추가
     ) {
         String currentId = getCurrentUserId();
         User admin = userRepository.findByUserId(currentId)
@@ -63,7 +63,6 @@ public class AdminNoticeController {
         return "redirect:/admin/notice/list";
     }
 
-    // [유틸] ID 추출
     private String getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated()) {

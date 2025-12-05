@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- ★ 쌈뽕한 상단 고정 헤더 (Navbar) -->
+<header th:fragment="header" class="admin-header sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-3" 
+         style="background: linear-gradient(90deg, #004d4d 0%, #008080 100%);"> <!-- 그라데이션 적용 -->
+        
+        <div class="container-fluid px-4">
+            
+            <!-- 1. 로고 영역 -->
+            <a class="navbar-brand fw-bold fs-4" href="/admin/dashboard">
+                <i class="fas fa-utensils me-2"></i>Yamipick
+                <span class="badge bg-white text-teal ms-1 align-middle" 
+                      style="font-size: 0.6rem; color: #008080;">ADMIN</span>
+            </a>
+
+            <!-- 모바일용 토글 버튼 (화면 줄어들면 햄버거 메뉴 뜸) -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- 2. 메뉴 영역 (가로 배치) -->
+            <div class="collapse navbar-collapse" id="adminNavbar">
+                
+                <!-- 왼쪽 메뉴들 -->
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4 gap-1">
+                    <li class="nav-item">
+                        <a class="nav-link px-3 rounded-pill" 
+                           th:classappend="${menu == 'dashboard'} ? 'active bg-white text-teal fw-bold shadow-sm'" 
+                           href="/admin/dashboard">
+                            <i class="fas fa-chart-line me-1"></i> 대시보드
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3 rounded-pill" 
+                           th:classappend="${menu == 'member'} ? 'active bg-white text-teal fw-bold shadow-sm'" 
+                           href="/admin/user/list">
+                            <i class="fas fa-users me-1"></i> 회원 관리
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3 rounded-pill" 
+                           th:classappend="${menu == 'report'} ? 'active bg-white text-teal fw-bold shadow-sm'" 
+                           href="/admin/report/list">
+                            <i class="fas fa-exclamation-triangle me-1"></i> 신고 관리
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3 rounded-pill" 
+                           th:classappend="${menu == 'banner'} ? 'active bg-white text-teal fw-bold shadow-sm'" 
+                           href="/admin/banner/list">
+                            <i class="fas fa-images me-1"></i> 배너 관리
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3 rounded-pill" 
+                           th:classappend="${menu == 'notice'} ? 'active bg-white text-teal fw-bold shadow-sm'" 
+                           href="/admin/notice/list">
+                            <i class="fas fa-bullhorn me-1"></i> 공지사항
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- 3. 우측 프로필 & 로그아웃 -->
+                <div class="d-flex align-items-center gap-3 text-white">
+                    <!-- 프로필 정보 (큰 화면에서만 보임) -->
+                    <div class="d-none d-lg-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle d-flex justify-content-center align-items-center me-2" 
+                             style="width: 35px; height: 35px;">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                        <div class="lh-1 text-start">
+                            <div style="font-size: 0.75rem;" class="opacity-75">Welcome</div>
+                            <div class="fw-bold" style="font-size: 0.9rem;">Administrator</div>
+                        </div>
+                    </div>
+
+                    <!-- 구분선 -->
+                    <div class="vr d-none d-lg-block bg-white opacity-50 mx-2" style="height: 25px;"></div>
+
+                    <!-- 메인으로 버튼 -->
+                    <a href="/" class="btn btn-outline-light btn-sm rounded-pill px-3" title="메인 페이지로">
+                        <i class="fas fa-home"></i> <span class="d-lg-none">메인으로</span>
+                    </a>
+
+                    <!-- 로그아웃 버튼 -->
+                    <form action="/logout" method="post" class="m-0">
+                        <button class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm" 
+                                style="background-color: #ff6b6b; border: none;">
+                            Logout <i class="fas fa-sign-out-alt ms-1"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+</body>
+</html>

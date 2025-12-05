@@ -5,332 +5,360 @@
     <title>Yamipick Admin Dashboard</title>
     <!-- 부트스트랩 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- 아이콘 (FontAwesome) -->
+    <!-- 아이콘 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 공통 CSS -->
+    <link href="/css/admin.css" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        :root {
-            --primary-color: #008080; /* 보여주신 이미지의 청록색 (Teal) */
-            --bg-color: #f0f2f5;
-            --card-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
-        body { background-color: var(--bg-color); font-family: 'Noto Sans KR', sans-serif; }
-        
-        /* 상단 헤더 스타일 */
-        .dashboard-header {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 20px 0;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        /* 카드 공통 스타일 */
-        .card {
+        /* 대시보드 전용 추가 스타일 */
+        .stat-card {
             border: none;
-            border-radius: 12px;
-            box-shadow: var(--card-shadow);
-            margin-bottom: 20px;
-            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+            overflow: hidden;
         }
-        .card-header {
-            background: transparent;
-            border-bottom: 1px solid #eee;
-            font-weight: 700;
-            color: #333;
-            padding: 15px 20px;
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-icon {
+            width: 50px; height: 50px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 12px; font-size: 1.5rem;
         }
+        .bg-gradient-primary { background: linear-gradient(45deg, #008080, #20c997); color: white; }
+        .bg-gradient-info { background: linear-gradient(45deg, #17a2b8, #138496); color: white; }
+        .bg-gradient-warning { background: linear-gradient(45deg, #ffc107, #ffca2c); color: white; }
+        .bg-gradient-danger { background: linear-gradient(45deg, #dc3545, #bd2130); color: white; }
         
-        /* 프로그레스 바 커스텀 */
-        .progress { height: 8px; border-radius: 4px; background-color: #e9ecef; }
-        .progress-bar { background-color: var(--primary-color); }
-
-        /* KPI 숫자 스타일 */
-        .kpi-value { font-size: 2rem; font-weight: bold; color: var(--primary-color); }
-        .kpi-label { color: #666; font-size: 0.9rem; }
-        
-        /* 도넛 차트 중앙 텍스트 */
-        .donut-inner { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
-        .donut-percent { font-size: 1.5rem; font-weight: bold; color: var(--primary-color); }
+        .chart-container { position: relative; height: 300px; width: 100%; }
     </style>
 </head>
 <body>
 
-<!-- 1. 헤더 영역 -->
-<div class="dashboard-header">
-    <div class="container-fluid px-4">
-        <div class="d-flex justify-content-between align-items-center">
-            <h2 class="m-0"><i class="fas fa-chart-line me-2"></i>Yamipick CEO Dashboard</h2>
-            <div>
-                <span class="me-3"><i class="fas fa-user-circle me-1"></i> 관리자님 환영합니다</span>
-                <a href="/logout" class="btn btn-sm btn-light text-teal fw-bold">Logout</a>
+<div class="admin-wrapper">
+    <!-- 사이드바 -->
+    <div class="admin-sidebar">
+        <div th:replace="~{admin/common/header :: header}"></div>
+    </div>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="admin-content">
+        <div class="container-fluid">
+            
+            <!-- 헤더 -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold text-dark mb-0">Dashboard</h2>
+                    <p class="text-muted mb-0">Yamipick 서비스 현황을 한눈에 확인하세요.</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-white shadow-sm"><i class="fas fa-sync-alt me-1"></i> 새로고침</button>
+                </div>
             </div>
+
+            <!-- 1. 핵심 지표 카드 -->
+            <div class="row g-4 mb-4">
+                <!-- 전체 회원 -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stat-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h6 class="text-muted mb-1">전체 회원수</h6>
+                                    <h3 class="fw-bold mb-0" th:text="${totalUser ?: 0}">0</h3>
+                                </div>
+                                <div class="stat-icon bg-gradient-primary">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                            </div>
+                            <div class="small text-success fw-bold">
+                                <i class="fas fa-arrow-up me-1"></i> 12% <span class="text-muted fw-normal">지난달 대비</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 오늘 가입 -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stat-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h6 class="text-muted mb-1">오늘 신규 가입</h6>
+                                    <h3 class="fw-bold mb-0" th:text="${todayJoin ?: 0}">0</h3>
+                                </div>
+                                <div class="stat-icon bg-gradient-info">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                            </div>
+                            <div class="small text-muted">
+                                <span class="badge bg-light text-dark">Today</span> 실시간 집계 중
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 오늘 방문자 -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stat-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h6 class="text-muted mb-1">오늘 방문자</h6>
+                                    <!-- visitData가 null이거나 비었을 때 안전하게 0 출력 -->
+                                    <h3 class="fw-bold mb-0" 
+                                        th:text="${visitData != null and !visitData.isEmpty() ? visitData.get(visitData.size()-1) : 0}">0</h3>
+                                </div>
+                                <div class="stat-icon bg-gradient-warning">
+                                    <i class="fas fa-eye"></i>
+                                </div>
+                            </div>
+                            <div class="small text-danger fw-bold">
+                                <i class="fas fa-arrow-down me-1"></i> 3% <span class="text-muted fw-normal">어제 대비</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 매출 -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stat-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h6 class="text-muted mb-1">이번달 매출</h6>
+                                    <h3 class="fw-bold mb-0 text-primary">₩ <span th:text="${#numbers.formatInteger(currentRevenue ?: 0, 0, 'COMMA')}">0</span></h3>
+                                </div>
+                                <div class="stat-icon bg-gradient-danger">
+                                    <i class="fas fa-won-sign"></i>
+                                </div>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-danger" role="progressbar" style="width: 65%"></div>
+                            </div>
+                            <div class="small text-muted mt-2">목표 달성률 65%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 차트 영역 -->
+            <div class="row g-4 mb-4">
+                <!-- 방문자 추이 차트 -->
+                <div class="col-lg-8">
+                    <div class="card stat-card h-100">
+                        <div class="card-header border-0 bg-white pt-4 px-4">
+                            <h5 class="fw-bold mb-0"><i class="fas fa-chart-area me-2 text-primary"></i>주간 방문자 추이</h5>
+                        </div>
+                        <div class="card-body px-4 pb-4">
+                            <div class="chart-container">
+                                <canvas id="visitChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 인기 식당 랭킹 -->
+                <div class="col-lg-4">
+                    <div class="card stat-card h-100">
+                        <div class="card-header border-0 bg-white pt-4 px-4">
+                            <h5 class="fw-bold mb-0"><i class="fas fa-fire me-2 text-danger"></i>핫플레이스 TOP 5</h5>
+                        </div>
+                        <div class="card-body px-4 pb-4">
+                            <div class="chart-container" style="height: 300px;">
+                                <canvas id="rankChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 하단 상세 정보 -->
+            <div class="row g-4">
+                <!-- 운영 지표 -->
+                <div class="col-lg-6">
+                    <div class="card stat-card h-100">
+                        <div class="card-header border-0 bg-white pt-4 px-4 d-flex justify-content-between">
+                            <h5 class="fw-bold mb-0">서비스 운영 지표</h5>
+                            <span class="badge bg-light text-dark border">Realtime</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center align-items-center h-100">
+                                <div class="col-4">
+                                    <div style="width: 120px; margin: 0 auto;">
+                                        <canvas id="donut1"></canvas>
+                                    </div>
+                                    <div class="mt-3 fw-bold">예약 이행률</div>
+                                    <div class="small text-muted">73% 달성</div>
+                                </div>
+                                <div class="col-4 border-start border-end">
+                                    <div style="width: 120px; margin: 0 auto;">
+                                        <canvas id="donut2"></canvas>
+                                    </div>
+                                    <div class="mt-3 fw-bold text-danger">노쇼 비율</div>
+                                    <div class="small text-muted">12% 발생</div>
+                                </div>
+                                <div class="col-4">
+                                    <div style="width: 120px; margin: 0 auto;">
+                                        <canvas id="donut3"></canvas>
+                                    </div>
+                                    <div class="mt-3 fw-bold text-success">가동률</div>
+                                    <div class="small text-muted">서버 안정적</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 최근 공지사항 -->
+                <div class="col-lg-6">
+                    <div class="card stat-card h-100">
+                        <div class="card-header border-0 bg-white pt-4 px-4 d-flex justify-content-between align-items-center">
+                            <h5 class="fw-bold mb-0">최근 공지사항</h5>
+                            <a href="/admin/notice/list" class="btn btn-sm btn-light">전체보기</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0" style="border-color: #f0f0f0;">
+                                    <tbody th:if="${noticeList != null}">
+                                        <tr th:each="notice : ${noticeList}">
+                                            <td class="ps-4" style="width: 50px;">
+                                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                                                    <i class="fas fa-bullhorn text-secondary small"></i>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a th:href="@{/admin/notice/view(seq=${notice.seqNotice})}" 
+                                                   class="text-dark text-decoration-none fw-bold" th:text="${notice.title}">제목</a>
+                                                <div class="small text-muted" th:text="${notice.createdAt}">날짜</div>
+                                            </td>
+                                            <td class="pe-4 text-end">
+                                                <span class="badge bg-light text-secondary rounded-pill">
+                                                    <i class="fas fa-eye me-1"></i> <span th:text="${notice.viewCount}">0</span>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 
-<div class="container-fluid px-4">
-    
-    <!-- 2. 상단 요약 (Financial Segment 느낌) -->
-    <div class="row">
-        <!-- (1) 플랫폼 현황 테이블 스타일 -->
-        <div class="col-lg-5">
-            <div class="card h-100">
-                <div class="card-header">Platform Status (플랫폼 현황)</div>
-                <div class="card-body">
-                    <!-- 유저 현황 -->
-                    <div class="d-flex justify-content-between mb-1">
-                        <span>전체 회원수</span>
-                        <span class="fw-bold" th:text="${totalUser} + ' 명'">0 명</span>
-                    </div>
-                    <div class="progress mb-3">
-                        <div class="progress-bar" style="width: 70%"></div> <!-- 예시로 70% 채움 -->
-                    </div>
+<!-- 부트스트랩 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- 공통 JS -->
+<script src="/js/admin.js"></script>
 
-                    <!-- 오늘 가입 -->
-                    <div class="d-flex justify-content-between mb-1">
-                        <span>오늘 신규 가입</span>
-                        <span class="fw-bold" th:text="${todayJoin} + ' 명'">0 명</span>
-                    </div>
-                    <div class="progress mb-3">
-                        <div class="progress-bar bg-info" style="width: 30%"></div>
-                    </div>
-
-                    <!-- 매출 목표 달성률 (가짜 데이터) -->
-                    <div class="d-flex justify-content-between mb-1">
-                        <span>이번달 매출 목표 달성</span>
-                        <span class="fw-bold" 
-                              th:text="${#numbers.formatInteger(currentRevenue, 0, 'COMMA')} + ' / ' + ${#numbers.formatInteger(targetRevenue, 0, 'COMMA')}">
-                        </span>
-                    </div>
-                    <div class="progress">
-                        <!-- 실제 비율 계산해서 width 적용 -->
-                        <div class="progress-bar bg-warning" role="progressbar" 
-                             th:style="'width:' + ${currentRevenue * 100 / targetRevenue} + '%'"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- (2) 핵심 KPI (큰 숫자) -->
-        <div class="col-lg-2">
-            <div class="card h-100 text-center py-3">
-                <div class="card-body d-flex flex-column justify-content-center">
-                    <div class="kpi-label">Today's Visits</div>
-                    <div class="kpi-value my-2" 
-                         th:text="${visitData != null and !visitData.isEmpty() ? visitData.get(visitData.size()-1) : 0}">
-                        0
-                    </div>
-                    <div class="text-muted small">오늘 방문자</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-2">
-            <div class="card h-100 text-center py-3">
-                <div class="card-body d-flex flex-column justify-content-center">
-                    <div class="kpi-label">Active Stores</div>
-                    <div class="kpi-value my-2 text-warning">189</div> <!-- 임시 숫자 -->
-                    <div class="text-muted small">입점 식당 수</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- (3) 바 차트 (Revenue) -->
-        <div class="col-lg-3">
-            <div class="card h-100">
-                <div class="card-header">Weekly Revenue</div>
-                <div class="card-body">
-                    <canvas id="revenueChart" height="150"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. 메인 차트 영역 -->
-    <div class="row">
-        <!-- (1) 방문자 트렌드 (Line Area Chart) -->
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-users me-2"></i>Traffic Trends (방문자 추이)
-                </div>
-                <div class="card-body">
-                    <canvas id="visitChart" height="80"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- (2) 운영 지표 (도넛 차트 4개) -->
-        <div class="col-lg-4">
-            <div class="card h-100">
-                <div class="card-header">Operation Metrics</div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-6 mb-4">
-                            <div style="position: relative; height: 100px; width: 100px; margin: 0 auto;">
-                                <canvas id="donut1"></canvas>
-                                <div class="donut-inner"><div class="donut-percent">73%</div></div>
-                            </div>
-                            <div class="mt-2 small fw-bold">예약 이행률</div>
-                        </div>
-                        <div class="col-6 mb-4">
-                            <div style="position: relative; height: 100px; width: 100px; margin: 0 auto;">
-                                <canvas id="donut2"></canvas>
-                                <div class="donut-inner"><div class="donut-percent text-danger">12%</div></div>
-                            </div>
-                            <div class="mt-2 small fw-bold">노쇼 비율</div>
-                        </div>
-                        <div class="col-6">
-                            <div style="position: relative; height: 100px; width: 100px; margin: 0 auto;">
-                                <canvas id="donut3"></canvas>
-                                <div class="donut-inner"><div class="donut-percent text-success">98%</div></div>
-                            </div>
-                            <div class="mt-2 small fw-bold">서버 가동률</div>
-                        </div>
-                        <div class="col-6">
-                            <div style="position: relative; height: 100px; width: 100px; margin: 0 auto;">
-                                <canvas id="donut4"></canvas>
-                                <div class="donut-inner"><div class="donut-percent text-warning">45%</div></div>
-                            </div>
-                            <div class="mt-2 small fw-bold">광고 전환율</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 4. 하단 랭킹 영역 -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">🔥 Top Popular Stores (인기 식당)</div>
-                <div class="card-body">
-                    <canvas id="rankChart" height="60"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<!-- Script 영역 -->
+<!-- ★ 차트 스크립트 -->
 <script th:inline="javascript">
     /*<![CDATA[*/
     
-    // 1. 데이터 가져오기
+    // 1. 방문자 차트
+    // Thymeleaf 주석 문법을 사용하여 파싱 에러 방지
     const visitLabels = /*[[${visitLabels ?: {}}]]*/ [];
     const visitData = /*[[${visitData ?: {}}]]*/ [];
-    const rankLabels = /*[[${rankLabels ?: {}}]]*/ [];
-    const rankData = /*[[${rankData ?: {}}]]*/ [];
-
-    // 공통 컬러셋
-    const tealColor = '#008080';
-    const lightTeal = 'rgba(0, 128, 128, 0.2)';
-    const orangeColor = '#FF9F40';
-
-    // 2. 방문자 차트 (Area Chart 느낌)
+    
     if(visitLabels.length > 0) {
-        new Chart(document.getElementById('visitChart'), {
+        const ctxVisit = document.getElementById('visitChart').getContext('2d');
+        
+        const gradientVisit = ctxVisit.createLinearGradient(0, 0, 0, 400);
+        gradientVisit.addColorStop(0, 'rgba(0, 128, 128, 0.5)'); 
+        gradientVisit.addColorStop(1, 'rgba(0, 128, 128, 0.0)'); 
+
+        new Chart(ctxVisit, {
             type: 'line',
             data: {
                 labels: visitLabels,
                 datasets: [{
-                    label: 'Visits',
+                    label: '방문자 수',
                     data: visitData,
-                    borderColor: tealColor,
-                    backgroundColor: lightTeal,
+                    borderColor: '#008080',
+                    backgroundColor: gradientVisit,
                     borderWidth: 2,
-                    fill: true, // 영역 채우기
-                    tension: 0.4, // 부드러운 곡선
-                    pointRadius: 3
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#008080',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    tension: 0.4
                 }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { 
+                scales: {
                     x: { grid: { display: false } },
-                    y: { beginAtZero: true }
+                    y: { border: { display: false }, grid: { color: '#f0f0f0' }, beginAtZero: true }
                 }
             }
         });
     }
 
-    // 3. 인기 식당 차트 (Bar Chart)
+    // 2. 인기 식당 랭킹
+    const rankLabels = /*[[${rankLabels ?: {}}]]*/ [];
+    const rankData = /*[[${rankData ?: {}}]]*/ [];
+
     if(rankLabels.length > 0) {
         new Chart(document.getElementById('rankChart'), {
             type: 'bar',
             data: {
                 labels: rankLabels,
                 datasets: [{
-                    label: 'Views',
+                    label: '조회수',
                     data: rankData,
-                    backgroundColor: tealColor,
-                    borderRadius: 5 // 막대 둥글게
+                    backgroundColor: [
+                        '#008080', '#20c997', '#ffc107', '#fd7e14', '#dc3545'
+                    ],
+                    borderRadius: 5,
+                    barThickness: 20
                 }]
             },
             options: {
-                indexAxis: 'y', // 가로 막대
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { x: { grid: { display: false } } }
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { grid: { display: false } }
+                }
             }
         });
     }
 
-    // 4. 우측 상단 미니 바 차트 (Revenue) - 가짜 데이터
-    new Chart(document.getElementById('revenueChart'), {
-        type: 'bar',
-        data: {
-            labels: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
-            datasets: [
-                {
-                    label: 'Target',
-                    data: [12, 19, 3, 5, 2, 3, 10],
-                    backgroundColor: '#e9ecef',
-                    barThickness: 10
-                },
-                {
-                    label: 'Actual',
-                    data: [10, 15, 8, 12, 5, 6, 8],
-                    backgroundColor: orangeColor,
-                    barThickness: 10
-                }
-            ]
-        },
-        options: {
-            plugins: { legend: { display: false } },
-            scales: { x: { stacked: true, display: false }, y: { display: false } }
-        }
-    });
-
-    // 5. 도넛 차트 생성 함수
+    // 3. 도넛 차트
     function createDonut(id, value, color) {
-        new Chart(document.getElementById(id), {
+        const ctx = document.getElementById(id);
+        if(!ctx) return; // 캔버스가 없으면 중단
+
+        new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Done', 'Left'],
+                labels: ['달성', '미달성'],
                 datasets: [{
                     data: [value, 100 - value],
                     backgroundColor: [color, '#e9ecef'],
                     borderWidth: 0,
-                    cutout: '75%' // 가운데 구멍 크기
+                    cutout: '70%'
                 }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: { legend: { display: false }, tooltip: { enabled: false } }
             }
         });
     }
 
-    // 도넛 4개 그리기
-    createDonut('donut1', 73, tealColor);
-    createDonut('donut2', 12, '#dc3545'); // Red
-    createDonut('donut3', 98, '#198754'); // Green
-    createDonut('donut4', 45, '#ffc107'); // Yellow
+    createDonut('donut1', 73, '#008080'); 
+    createDonut('donut2', 12, '#dc3545'); 
+    createDonut('donut3', 98, '#198754'); 
 
     /*]]>*/
 </script>

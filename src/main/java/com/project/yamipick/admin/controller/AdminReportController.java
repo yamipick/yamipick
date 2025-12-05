@@ -27,7 +27,7 @@ public class AdminReportController {
     @GetMapping("/list")
     public String reportList(
             Model model,
-            @RequestParam(required = false, defaultValue = "ALL") String status,
+            @RequestParam(value = "status", required = false, defaultValue = "ALL") String status, // 이름 명시
             @PageableDefault(size = 10, sort = "seqReport", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<AdminReportDTO> reportPage = adminReportService.getReportList(status, pageable);
@@ -42,11 +42,11 @@ public class AdminReportController {
     // ★ [업데이트] 신고 처리 (상태변경 + 제재)
     @PostMapping("/process")
     public String processReport(
-            @RequestParam Long seqReport,
-            @RequestParam String comment,
-            @RequestParam(defaultValue = "NONE") String penaltyType,     // 제재 종류 (NONE, BLIND_USER, WITHDRAW_USER)
-            @RequestParam(defaultValue = "0") int penaltyDuration,       // 정지 기간 (일 단위)
-            @RequestParam(required = false, defaultValue = "ALL") String currentFilter
+            @RequestParam("seqReport") Long seqReport,       // ("이름") 명시
+            @RequestParam("comment") String comment,
+            @RequestParam(value = "penaltyType", defaultValue = "NONE") String penaltyType,
+            @RequestParam(value = "penaltyDuration", defaultValue = "0") int penaltyDuration,
+            @RequestParam(value = "currentFilter", required = false, defaultValue = "ALL") String currentFilter
     ) {
         // 서비스로 제재 정보까지 함께 전달
         adminReportService.processReport(seqReport, comment, penaltyType, penaltyDuration);

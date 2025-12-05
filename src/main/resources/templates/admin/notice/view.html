@@ -1,21 +1,67 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><title>공지사항 상세</title></head>
+<head>
+    <meta charset="UTF-8">
+    <title>공지사항 상세</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="/css/admin.css" rel="stylesheet">
+</head>
 <body>
-    <h2>📄 <span th:text="${notice.title}"></span></h2>
-    <hr>
-    <p>작성자: <span th:text="${notice.writer.name}"></span> | 조회수: <span th:text="${notice.viewCount}"></span></p>
-    <p>작성일: <span th:text="${notice.createdAt}"></span></p>
-    <hr>
-    <div style="min-height: 200px; padding: 10px; border: 1px solid #ccc;">
-        <span th:text="${notice.content}"></span>
-    </div>
-    
-    <div th:if="${notice.filePath != null}">
-        <p>첨부파일: <span th:text="${notice.filePath}"></span></p>
+
+<div class="admin-wrapper">
+    <div class="admin-sidebar">
+        <div th:replace="~{admin/common/sidebar :: sidebar}"></div>
     </div>
 
-    <hr>
-    <a href="/admin/notice/list">목록으로</a>
+    <div class="admin-content">
+        <div class="container-fluid">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">공지사항 상세</h2>
+                <a href="/admin/notice/list" class="btn btn-secondary"><i class="fas fa-list me-1"></i> 목록으로</a>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0 fw-bold" th:text="${notice.title}">제목</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between text-muted border-bottom pb-3 mb-3">
+                        <div>
+                            <span class="me-3"><i class="fas fa-user me-1"></i> <span th:text="${notice.writer.name}">작성자</span></span>
+                            <span><i class="fas fa-clock me-1"></i> <span th:text="${notice.createdAt}">날짜</span></span>
+                        </div>
+                        <div>
+                            <i class="fas fa-eye me-1"></i> <span th:text="${notice.viewCount}">0</span>
+                        </div>
+                    </div>
+
+                    <!-- 본문 내용 -->
+                    <div style="min-height: 300px; line-height: 1.6;">
+                        <span th:utext="${#strings.replace(notice.content, '
+', '<br>')}">내용</span>
+                    </div>
+
+                    <!-- 첨부파일 -->
+                    <div th:if="${notice.filePath != null}" class="mt-4 p-3 bg-light rounded border">
+                        <i class="fas fa-file-download me-2 text-primary"></i>
+                        <span class="fw-bold">첨부파일:</span>
+                        <a href="#" class="text-decoration-none ms-2" th:text="${notice.filePath}">file.jpg</a>
+                    </div>
+                </div>
+                <div class="card-footer bg-white text-end">
+                    <!-- 수정/삭제 기능 추가 시 버튼 활성화 -->
+                    <button class="btn btn-warning me-1">수정</button>
+                    <button class="btn btn-danger" onclick="confirmDelete()">삭제</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/admin.js"></script>
 </body>
 </html>
