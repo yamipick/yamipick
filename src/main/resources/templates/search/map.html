@@ -271,9 +271,7 @@
         <div class="modal-header-row">
             <div id="modalTitle" class="modal-title" style="margin-bottom: 0;">식당 이름</div>
             
-            <button id="bookmarkBtn" class="btn-bookmark" onclick="toggleBookmark(event)" title="찜하기">
-                ♥
-            </button>
+          <button id="bookmarkBtn" class="btn-bookmark" onclick="toggleBookmark(event)" title="찜하기"></button>
         </div>
         <div style="font-size:13px; color:#666; margin-bottom:15px;" id="modalCategory">카테고리</div>
         <div class="modal-row"><span class="modal-icon">⭐</span><span id="modalRating" style="font-weight:bold;">4.5</span> <span style="color:#ddd; margin:0 5px;">|</span>리뷰 <span id="modalReview">120</span>개</div>
@@ -697,43 +695,97 @@
             bubble.style.display = 'none';
         }
     }
-  // [신규 추가] 찜하기 버튼 클릭 시 실행되는 함수
-    function toggleBookmark(e) {
-        // 부모 요소(모달 배경 등)로 클릭 이벤트가 전파되는 것을 막음
-        e.stopPropagation(); 
-        
+  function toggleBookmark(e) {
+        e.stopPropagation(); // 이벤트 전파 방지
         var btn = document.getElementById('bookmarkBtn');
-        
-        // 버튼에 'active' 클래스가 있는지 확인하여 토글(켰다 껐다) 처리
-        if (btn.classList.contains('active')) {
-            btn.classList.remove('active');
-            // TODO: 나중에 이 부분에 [찜 취소 API]를 호출하는 코드가 들어갑니다.
-            showToast('찜이 해제되었습니다. 💔');
-        } else {
-            btn.classList.add('active');
-            // TODO: 나중에 이 부분에 [찜하기 API]를 호출하는 코드가 들어갑니다.
-            showToast('나만의 맛집으로 찜했습니다! ❤️');
+
+        // 방어 로직: 현재 선택된 가게 정보가 없으면 중단
+        if (!currentPlace) {
+            showToast('가게 정보를 불러오지 못했습니다.');
+            return;
         }
-        // 클릭 후 버튼에서 포커스 제거 (눌린 자국 없애기)
-        btn.blur(); 
+
+        // 1. 서버로 보낼 데이터 준비 (RestaurantDTO 규격에 맞춤)
+        var payload = {
+            id: currentPlace.id,              // 카카오 ID
+            name: currentPlace.name,          // 가게 이름
+            roadAddress: currentPlace.roadAddress, // 도로명 주소
+            phone: currentPlace.phone,        // 전화번호
+            category: currentPlace.category,  // 카테고리
+            x: currentPlace.x,                // 좌표 X
+            y: currentPlace.y,                // 좌표 Y
+            url: currentPlace.url             // 카카오맵 URL
+        };
+
+        // 2. AJAX 요청 (POST /bookmark/toggle)
+        fetch('/bookmark/toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            if (response.status === 401) {
+                // 로그인 안 된 상태면 (나중에 로그인 페이지로 튕기게 할 수 있음)
+                alert('로그인이 필요한 서비스입니다!'); 
+                return null;
+            }
+            return response.json(); // true(찜됨) or false(해제됨)
+        })
+        .then(isBookmarked => {
+            if (isBookmarked === null) return; // 에러난 경우 패스
+
+            if (isBookmarked) {
+                // 찜 성공 (하트 켜기)
+                btn.classList.add('active');
+                showToast('나만의 맛집으로 찜했습니다! ❤️');
+            } else {
+                // 찜 해제 (하트 끄기)
+                btn.classList.remove('active');
+                showToast('찜이 해제되었습니다. 💔');
+            }
+        })
+        .catch(err => {
+            console.error('찜하기 오류:', err);
+            showToast('서버 통신 중 오류가 발생했습니다.');
+        });
+
+        btn.blur(); // 포커스 해제
     }
 
-// [기존 함수 수정] 모달창 열 때 하트 상태 초기화
+    // [수정됨] 모달창 열기 (서버에서 찜 상태 확인 추가)
     function openModal(index) {
         var place = places[index];
         currentPlace = place; 
         
-        // (기존 데이터 바인딩 코드들...)
+        // 1. 기본 텍스트 정보 바인딩
         document.getElementById('modalTitle').innerText = place.name;
-        // ... 기타 정보 바인딩 ...
+        document.getElementById('modalCategory').innerText = place.category;
+        document.getElementById('modalRating').innerText = place.rating;
+        document.getElementById('modalReview').innerText = place.reviewCount;
+        document.getElementById('modalAddress').innerText = place.roadAddress;
+        document.getElementById('modalPhone').innerText = place.phone ? place.phone : '전화번호 없음';
 
-        // ★ [추가] 모달을 열 때마다 하트 버튼을 초기 상태(꺼진 상태)로 리셋
-        // 나중에는 여기서 DB를 조회해서, 사용자가 이미 찜한 식당이면 active 클래스를 추가해야 합니다.
-        document.getElementById('bookmarkBtn').classList.remove('active');
+        // 2. ★ 찜 상태 확인 (DB 조회)
+        var btn = document.getElementById('bookmarkBtn');
+        btn.classList.remove('active'); // 일단 꺼둠 (깜빡임 방지)
 
+        // GET 요청으로 현재 유저가 이 가게를 찜했는지 물어봄
+        fetch('/bookmark/status?id=' + place.id)
+            .then(res => res.json())
+            .then(isBookmarked => {
+                if (isBookmarked) {
+                    btn.classList.add('active'); // 찜 되어있으면 하트 켬
+                }
+            })
+            .catch(err => console.error('찜 상태 확인 실패:', err));
+
+        // 3. 모달 표시 및 트래킹
         document.getElementById('detailModal').style.display = 'flex';
         safeTrack('BUTTON', place.id, '상세보기 모달 열림');
         
+        // 4. 네이버 리뷰 로드
         loadNaverReviews(place.name);
     }
 </script>
