@@ -378,37 +378,57 @@ public Waiting register(Long userId, Long storeId, int size) {
  // [변경 후] List<StoreInfoDTO> 반환
     @Transactional(readOnly = true)
     public List<StoreInfoDTO> searchStores(String keyword) {
+        // 1. 매장 검색 (1회 Query)
         List<WaitingStore> stores = storeRepository.findByNameContaining(keyword);
+        if (stores.isEmpty()) return new java.util.ArrayList<>();
+
+        // 2. 검색된 모든 매장의 ID 수집
+        List<Long> storeIds = stores.stream()
+                .map(WaitingStore::getId)
+                .collect(Collectors.toList());
+                
         LocalDate today = LocalDate.now();
         int dbDay = today.getDayOfWeek().getValue() % 7; 
-
-        // ★ 반환할 결과 리스트 (DTO용)
-        List<StoreInfoDTO> dtos = new java.util.ArrayList<>();
-
-        for (WaitingStore store : stores) {
-            // 1. 영업 상태 계산
-            boolean isOpenNow = operationRepository.findByStoreIdAndOperationDate(store.getId(), today)
-                    .map(op -> "OPEN".equals(op.getStatus()))
-                    .orElse(false);
-
-            // 2. 영업 시간 텍스트 계산
-            String hoursText = scheduleRepository.findByStoreIdAndDayOfWeek(store.getId(), dbDay)
-                    .map(s -> {
-                        if ("N".equals(s.getIsOpen())) return "오늘은 휴무입니다";
-                        String txt = s.getOpenTime() + " ~ " + s.getCloseTime();
-                        if (s.getBreakStart() != null && !s.getBreakStart().isEmpty() &&
-                            s.getBreakEnd() != null && !s.getBreakEnd().isEmpty()) {
-                            txt += " (브레이크타임 " + s.getBreakStart() + "~" + s.getBreakEnd() + ")";
-                        }
-                        return txt;
-                    })
-                    .orElse("정보 없음");
-
-            // 3. ★ 여기서 store.set...을 하는 게 아니라 DTO에 담습니다.
-            dtos.add(new StoreInfoDTO(store, isOpenNow, hoursText));
-        }
         
-        return dtos;
+        // 3. 오늘 운영 상태 벌크 조회 (1회 Query)
+        Map<Long, WaitingOperation> opMap = operationRepository
+                .findAllByStoreIdInAndOperationDate(storeIds, today).stream()
+                .collect(Collectors.toMap(
+                        op -> op.getStore().getId(), 
+                        op -> op));
+
+        // 4. 오늘 스케줄 벌크 조회 (1회 Query)
+        Map<Long, StoreSchedule> schMap = scheduleRepository
+                .findAllByStoreIdInAndDayOfWeek(storeIds, dbDay).stream()
+                .collect(Collectors.toMap(
+                        sch -> sch.getStore().getId(), 
+                        sch -> sch));
+
+        // 5. 메모리 상에서 DTO 생성 (★ 쿼리 없이 Map 조회로 해결)
+        return stores.stream().map(store -> {
+            Long storeId = store.getId();
+            
+            // 운영 상태 확인
+            WaitingOperation op = opMap.get(storeId);
+            boolean isOpenNow = op != null && "OPEN".equals(op.getStatus());
+            
+            // 스케줄 확인 및 텍스트 생성
+            StoreSchedule schedule = schMap.get(storeId);
+            String hoursText = "정보 없음";
+            
+            if (schedule != null) {
+                if ("N".equals(schedule.getIsOpen())) {
+                    hoursText = "오늘은 휴무입니다";
+                } else {
+                    hoursText = schedule.getOpenTime() + " ~ " + schedule.getCloseTime();
+                    if (schedule.getBreakStart() != null && !schedule.getBreakStart().isEmpty()) {
+                        hoursText += " (브레이크타임 " + schedule.getBreakStart() + "~" + schedule.getBreakEnd() + ")";
+                    }
+                }
+            }
+
+            return new StoreInfoDTO(store, isOpenNow, hoursText);
+        }).collect(Collectors.toList());
     }
  /*
  // 매장 검색 (영업 상태 + 영업 시간 + ★브레이크 타임 포함)

@@ -60,49 +60,55 @@
         </div>
         
         <div class="section-box">
-            <h3 class="section-title">⏰ 영업 시간 설정</h3>
-            <div style="background: #fff; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
-                
-                <div style="margin-bottom: 15px;">
-                    <span style="font-weight:bold; margin-right: 10px;">요일 선택:</span>
-                    <label><input type="checkbox" name="days" value="1" checked> 월</label>
-                    <label><input type="checkbox" name="days" value="2" checked> 화</label>
-                    <label><input type="checkbox" name="days" value="3" checked> 수</label>
-                    <label><input type="checkbox" name="days" value="4" checked> 목</label>
-                    <label><input type="checkbox" name="days" value="5" checked> 금</label>
-                    <label><input type="checkbox" name="days" value="6"> 토</label>
-                    <label><input type="checkbox" name="days" value="0"> 일</label>
-                </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleSchedule()">
+                <h3 class="section-title">⏰ 영업 시간 설정</h3>
+                <span id="s-arrow">🔽</span>
+            </div>
 
-                <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
-                    <div>
-                        <div style="font-size: 0.9em; color: #666;">오픈 시간</div>
-                        <input type="time" id="sch-open" value="10:00">
+            <div id="schedule-body" style="display:none; margin-top: 15px;">
+                <div style="background: #fff; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
+                    
+                    <div style="margin-bottom: 15px;">
+                        <span style="font-weight:bold; margin-right: 10px;">요일 선택:</span>
+                        <label><input type="checkbox" name="days" value="1" checked> 월</label>
+                        <label><input type="checkbox" name="days" value="2" checked> 화</label>
+                        <label><input type="checkbox" name="days" value="3" checked> 수</label>
+                        <label><input type="checkbox" name="days" value="4" checked> 목</label>
+                        <label><input type="checkbox" name="days" value="5" checked> 금</label>
+                        <label><input type="checkbox" name="days" value="6"> 토</label>
+                        <label><input type="checkbox" name="days" value="0"> 일</label>
                     </div>
-                    <div>
-                        <div style="font-size: 0.9em; color: #666;">마감 시간</div>
-                        <input type="time" id="sch-close" value="22:00">
-                    </div>
-                    <div style="border-left: 1px solid #ddd; padding-left: 20px;">
-                        <div style="font-size: 0.9em; color: #666;">브레이크 타임 시작</div>
-                        <input type="time" id="sch-bs" value="15:00">
-                    </div>
-                    <div>
-                        <div style="font-size: 0.9em; color: #666;">브레이크 타임 끝</div>
-                        <input type="time" id="sch-be" value="17:00">
-                    </div>
-                </div>
 
-                <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
-                    <label style="cursor: pointer;">
-                        <input type="checkbox" id="sch-holiday"> ⛔ 해당일은 휴무(영업 안함)
-                    </label>
-                    <button class="btn-action" style="background-color: #0984e3;" onclick="saveSchedule()">설정 적용하기</button>
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+                        <div>
+                            <div style="font-size: 0.9em; color: #666;">오픈 시간</div>
+                            <input type="time" id="sch-open" value="10:00">
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9em; color: #666;">마감 시간</div>
+                            <input type="time" id="sch-close" value="22:00">
+                        </div>
+                        <div style="border-left: 1px solid #ddd; padding-left: 20px;">
+                            <div style="font-size: 0.9em; color: #666;">브레이크 타임 시작</div>
+                            <input type="time" id="sch-bs" value="15:00">
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9em; color: #666;">브레이크 타임 끝</div>
+                            <input type="time" id="sch-be" value="17:00">
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <label style="cursor: pointer;">
+                            <input type="checkbox" id="sch-holiday"> ⛔ 오늘은 휴무(영업 안함)
+                        </label>
+                        <button class="btn-action" style="background-color: #0984e3;" onclick="saveSchedule()">설정 적용하기</button>
+                    </div>
+                    
+                    <p style="font-size: 0.8em; color: #888; margin-top: 10px; margin-bottom: 0;">
+                        ※ 선택한 요일에 일괄 적용됩니다. 브레이크 타임이 없으면 비워두세요.
+                    </p>
                 </div>
-                
-                <p style="font-size: 0.8em; color: #888; margin-top: 10px; margin-bottom: 0;">
-                    ※ 선택한 요일에 일괄 적용됩니다. 브레이크 타임이 없으면 비워두세요.
-                </p>
             </div>
         </div>
 
@@ -366,6 +372,21 @@
                 if (res.ok) alert("영업 시간이 저장되었습니다.");
                 else alert("저장 실패");
             });
+        }
+        
+        
+        // --- ★ [추가] 영업 시간 설정 토글 함수 ---
+        function toggleSchedule() {
+            const body = document.getElementById('schedule-body');
+            const arrow = document.getElementById('s-arrow');
+            
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                arrow.innerText = '🔼';
+            } else {
+                body.style.display = 'none';
+                arrow.innerText = '🔽';
+            }
         }
     </script>
 </body>
