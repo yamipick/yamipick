@@ -52,4 +52,6 @@ public class Store {
 	@JoinColumn(name = "SEQUSER", nullable = false, unique = true)
 	private User user;
 	
+	
+	
 }
