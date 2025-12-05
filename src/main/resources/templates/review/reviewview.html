@@ -1,12 +1,172 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta charset="UTF-8">
-	<title>YamiPick</title>
+    <meta charset="UTF-8">
+    <title>YamiPick - 리뷰 보기</title>
+
+    <style>
+        body {
+            font-family: "Noto Sans KR", sans-serif;
+            background: #FAF4E8;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 1000px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 12px;
+            padding: 30px 40px;
+            border: 1px solid #e3d8c8;
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 26px;
+            color: #4A2D1A;
+        }
+
+        .row {
+            margin-bottom: 25px;
+        }
+
+        .label-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #4A2D1A;
+            margin-bottom: 8px;
+        }
+
+        .text-box {
+            width: 100%;
+            padding: 14px;
+            background: #fafafa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+            line-height: 1.6;
+            white-space: pre-line; /* 엔터 적용 */
+        }
+
+        .image-list {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .image-list img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        /* 태그 */
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .tag {
+            background: #F4E9D3;
+            border: 1px solid #C8B79E;
+            padding: 6px 12px;
+            border-radius: 18px;
+            font-size: 13px;
+            color: #4A2D1A;
+        }
+
+        /* 지도 영역 */
+        #map {
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            background: #eee;
+        }
+    </style>
 </head>
+
 <body>
-	<!-- .html -->
-	
-	
+
+<div class="container">
+
+    <h2 th:text="${review.title}">리뷰 제목</h2>
+
+    <!-- 내용 -->
+    <div class="row">
+        <div class="label-title">내용</div>
+        <div class="text-box" th:text="${review.reviewContent}">
+            리뷰 내용 출력 영역
+        </div>
+    </div>
+
+    <!-- 이미지 -->
+    <div class="row">
+        <div class="label-title">첨부 이미지</div>
+        <div class="image-list">
+            <img th:each="img : ${review.images}"
+                 th:src="@{/upload/review/{file}(file=${img})}" alt="첨부 이미지">
+        </div>
+    </div>
+
+    <!-- 태그 -->
+    <div class="row">
+        <div class="label-title">태그</div>
+        <div class="tag-list">
+            <div class="tag" th:each="t : ${review.tags}" th:text="'#' + ${t}">#맛집</div>
+        </div>
+    </div>
+
+    <!-- 주소 -->
+    <div class="row">
+        <div class="label-title">주소</div>
+        <div class="text-box" th:text="${review.address}">
+            서울특별시 00구 00로
+        </div>
+    </div>
+
+    <!-- 지도 -->
+    <div class="row">
+        <div class="label-title">위치</div>
+        <div id="map"></div>
+    </div>
+
+</div>
+
+<!-- Kakao 지도 -->
+<script type="text/javascript"
+        th:src="@{//dapi.kakao.com/v2/maps/sdk.js(appkey=${kakaoAppKey})}">
+</script>
+
+<script th:inline="javascript">
+	var lat = /*[[${review.lat}]]*/ 0;
+    var lng = /*[[${review.lng}]]*/ 0;
+
+    var container = document.getElementById('map');
+    var mapOption = {
+        center: new kakao.maps.LatLng(lat, lng),
+        level: 3
+    };
+
+    var map = new kakao.maps.Map(container, mapOption);
+
+    var marker = new kakao.maps.Marker({
+        position: new kakao.maps.LatLng(lat, lng),
+        image: new kakao.maps.MarkerImage(
+            '/img/marker-brown.png',
+            new kakao.maps.Size(45, 45),
+            { offset: new kakao.maps.Point(19.4, 35) }
+        )
+    });
+
+    marker.setMap(map);
+</script>
+
 </body>
 </html>

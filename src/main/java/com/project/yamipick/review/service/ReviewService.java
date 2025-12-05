@@ -17,4 +17,8 @@ public interface ReviewService {
 
     List<ScrapReviewDTO> getMyScraps(Long seqUser);
 
+	Long add(BoardReviewDTO dto);
+
+	BoardReviewDTO getReview(Long seqReview);
+
 }

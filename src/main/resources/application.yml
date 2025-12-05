@@ -40,6 +40,10 @@ spring:
   # 3. Thymeleaf 설정
   thymeleaf:
     cache: false
+    
+  config:
+    import: optional:kakao-map-api.properties
+
 
 # 4. MyBatis 설정
 mybatis:

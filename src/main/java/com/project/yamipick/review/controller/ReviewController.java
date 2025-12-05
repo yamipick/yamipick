@@ -2,12 +2,15 @@ package com.project.yamipick.review.controller;
 
 import java.security.Principal;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.project.yamipick.review.dto.BoardReviewDTO;
 import com.project.yamipick.review.service.ReviewService;
 
 import lombok.RequiredArgsConstructor;
@@ -75,22 +78,46 @@ public class ReviewController {
 
 	
 	@GetMapping("/review/reviewview")
-	public String reviewview() {
-		
-		return "review/reviewview";
+	public String reviewview(@RequestParam("seqReview") Long seqReview, Model model) {
+
+	    BoardReviewDTO dto = reviewService.getReview(seqReview); // DTO로 조회
+	    model.addAttribute("dto", dto);
+
+	    return "review/reviewview";
 	}
 	
+	@Value("${kakao.api.key}")
+	private String kakaoAppKey;
+
 	@GetMapping("/review/reviewadd")
-	public String reviewadd() {
+	public String reviewAdd(Model model) {
 		
-		return "review/reviewadd";
+	    model.addAttribute("kakaoAppKey", kakaoAppKey);
+	    
+	    return "review/reviewadd";
 	}
 	
 	@PostMapping("/review/reviewaddok")
-	public String reviewaddok() {
-		
-		return "review/reviewaddok";
+	public String reviewaddok(BoardReviewDTO dto, Principal principal) {
+
+	    Long id = (principal != null) ? Long.parseLong(principal.getName()) : 1L;
+	    dto.setSeqUser(id);
+
+	    MultipartFile file = dto.getFile(); // ✅ MultipartFile로 받아야 함
+	    String fileName = null;
+
+	    if (file != null && !file.isEmpty()) {
+	        fileName = file.getOriginalFilename();
+	        dto.setAttach(fileName); // attach 필드에 파일명 저장
+
+	        // 실제 저장: File savePath = new File(uploadDir, uuid + "_" + fileName);
+	        // file.transferTo(savePath);
+	    }
+
+	    Long newReviewId = reviewService.add(dto);
+	    return "review/reviewaddok";
 	}
+
 	
 	@GetMapping("/review/reviewedit")
 	public String reviewedit() {

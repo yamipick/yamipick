@@ -2,6 +2,8 @@ package com.project.yamipick.review.dto;
 
 import java.sql.Date;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.project.yamipick.review.entity.BoardReview;
 //import com.project.yamipick.store.entity.Store;
 import com.project.yamipick.user.entity.User;
@@ -28,6 +30,9 @@ public class BoardReviewDTO {
 	private Long seqUser;
 	private String reviewContent;
 	private String attach;
+	
+	private MultipartFile file;
+	
 	private String place;
 	private Date regdate;
 	private Integer readCount;
