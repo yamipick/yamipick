@@ -12,11 +12,12 @@
 </head>
 <body>
 <div th:replace="~{common/header :: headerFragment}"></div>
+
 <div class="container">
     <div class="sidebar">
         <h2 style="color:#6D4C41; margin-top: 0;">YamiPick 🍽️</h2>
-        
-       <form action="/map" method="get" class="search-box" onsubmit="handleSearchLog()">
+
+        <form action="/map" method="get" class="search-box" onsubmit="handleSearchLog()">
              <input type="hidden" name="category" id="categoryInput" th:value="${category}">
              <input type="hidden" name="vibe" id="vibeInput" th:value="${vibe}"> 
              <input type="hidden" name="filter" id="filterInput" th:value="${filter}">
@@ -100,7 +101,7 @@
                 <button class="region-sub-btn" onclick="selectRegion('동탄역')">동탄</button>
                 <button class="region-sub-btn" onclick="selectRegion('일산킨텍스')">일산</button>
                 <button class="region-sub-btn" onclick="selectRegion('가평역')">가평</button>
-			    <button class="region-sub-btn" onclick="selectRegion('의정부역')">의정부</button>
+                <button class="region-sub-btn" onclick="selectRegion('의정부역')">의정부</button>
             </div>
             <div id="sub-incheon" class="region-sub-container" style="display:none;">
                 <button class="region-sub-btn" onclick="selectRegion('인천시청')">인천 전체</button>
@@ -217,48 +218,53 @@
         <p style="font-size: 13px; color: #888;">총 [[${#lists.size(list)}]]개의 맛집을 찾았습니다.</p>
         <hr style="border: 0; border-top: 1px solid #eee;">
         
-        <div th:each="place, iterStat : ${list}" class="item" 
-             th:id="'place-item-' + ${iterStat.index}"
-             th:onclick="|moveMap(${iterStat.index})|">
-             <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">
-                [[${place.name}]] 
-                <span th:if="${place.reviewCount > 300}" class="badge">HOT</span>
-            </div>
-            <div style="font-size: 13px; color: #666; margin-bottom: 5px;">[[${place.category}]]</div>
-            
-            <div style="margin-bottom: 5px;">
-                <span th:each="tag : ${place.tags}" 
-                      th:text="'#' + ${tag}"
-                      style="color:#E65100; font-size:12px; margin-right:5px; background:#FFF3E0; padding:2px 6px; border-radius:4px; font-weight:600;">
-                </span>
-            </div>
+		<div th:each="place, iterStat : ${list}" class="item" 
+		             th:id="'place-item-' + ${iterStat.index}"
+		             th:onclick="|moveMap(${iterStat.index})|">
+		            
+		            <div class="item-head">
+		                <span class="place-name">[[${place.name}]]</span>
+		                <span th:if="${place.reviewCount > 300}" class="badge">HOT</span>
+		            </div>
 
-            <div style="font-size: 14px; margin-bottom: 5px;">
-                <span class="info-rating">★ [[${place.rating}]]</span> 
-                <span style="color:#ddd;">|</span> 
-                리뷰 [[${place.reviewCount}]]
-            </div>
-            <div style="font-size: 13px; color: #999;">[[${place.roadAddress}]]</div>
-            <a th:href="${place.url}" target="_blank" style="font-size: 12px; color: #007bff; text-decoration: none;">상세보기 ></a>
-        </div>
-    </div>
+		            <button class="btn-list-action" onclick="reserveLog(); event.stopPropagation();">
+		                예약하기
+		            </button>
 
-    <div id="map" class="map-area"></div>
+		            <div style="font-size: 13px; color: #666; margin-bottom: 5px;">[[${place.category}]]</div>
+		            
+		            <div style="margin-bottom: 5px;">
+		                <span th:each="tag : ${place.tags}" 
+		                      th:text="'#' + ${tag}"
+		                      style="color:#E65100; font-size:12px; margin-right:5px; background:#FFF3E0; padding:2px 6px; border-radius:4px; font-weight:600;">
+		                </span>
+		            </div>
+
+		            <div style="font-size: 14px; margin-bottom: 5px;">
+		                <span class="info-rating">★ [[${place.rating}]]</span> 
+		                <span style="color:#ddd;">|</span> 
+		                리뷰 [[${place.reviewCount}]]
+		            </div>
+		            <div style="font-size: 13px; color: #999;">[[${place.roadAddress}]]</div>
+		            <a th:href="${place.url}" target="_blank" style="font-size: 12px; color: #007bff; text-decoration: none;">상세보기 ></a>
+
+		        </div>
+    </div> 
+	<div id="map" class="map-area"></div>
     <button class="gps-btn" onclick="moveToCurrentLocation()" title="내 위치로 이동"><span class="gps-icon">⌖</span></button>
     <button class="retry-btn" onclick="searchInCurrentLocation()"><span class="retry-icon">↻</span> 이 지역에서 다시 검색</button>    
     <div id="toast" class="toast-box">메시지 내용</div>
     <div id="loading" class="loading-overlay"><div class="spinner"></div><div class="loading-text">맛집 찾는 중...</div></div>
-   <div class="weather-widget" th:if="${weatherMenu != null}">
+   
+    <div class="weather-widget" th:if="${weatherMenu != null}">
         <div class="weather-bubble" 
              th:data-menu="${weatherMenu}"
              onclick="searchFromWidget(this.getAttribute('data-menu')); event.stopPropagation();">
-            
             <span class="bubble-text">
                 오늘 날씨엔 <b>[[${weatherMenu}]]</b> 어때요? 😋
             </span>
             <button class="bubble-close" onclick="closeWidget(event)">×</button>
         </div>
-        
         <div class="weather-icon-btn" onclick="toggleBubble()">
             🐻
         </div>
@@ -270,8 +276,7 @@
         <button class="close-btn" onclick="closeModal()">×</button>
         <div class="modal-header-row">
             <div id="modalTitle" class="modal-title" style="margin-bottom: 0;">식당 이름</div>
-            
-          <button id="bookmarkBtn" class="btn-bookmark" onclick="toggleBookmark(event)" title="찜하기"></button>
+            <button id="bookmarkBtn" class="btn-bookmark" onclick="toggleBookmark(event)" title="찜하기"></button>
         </div>
         <div style="font-size:13px; color:#666; margin-bottom:15px;" id="modalCategory">카테고리</div>
         <div class="modal-row"><span class="modal-icon">⭐</span><span id="modalRating" style="font-weight:bold;">4.5</span> <span style="color:#ddd; margin:0 5px;">|</span>리뷰 <span id="modalReview">120</span>개</div>
@@ -283,8 +288,7 @@
                 <span>📝 생생 블로그 후기 (Naver)</span>
                 <span style="font-size:11px; color:#999;">실시간</span>
             </div>
-            <div id="reviewList" class="review-list">
-                </div>
+            <div id="reviewList" class="review-list"></div>
         </div>
 
         <div class="modal-actions">
@@ -293,8 +297,7 @@
         </div>
     </div>
 </div>
-
-<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=2088b946e4226ded525fe7c667b17cfa&libraries=services,clusterer"></script>
+<script type="text/javascript" th:src="'//dapi.kakao.com/v2/maps/sdk.js?appkey=' + ${kakaoJsKey} + '&libraries=services,clusterer'"></script>
 
 <script th:inline="javascript">
     function safeTrack(type, id, msg) { 
@@ -420,7 +423,10 @@
         safeTrack('MAP_MARKER', place.id, place.name + ' 클릭됨');
     }
 
-    function moveMap(index) { selectPlace(index); }
+	function moveMap(index) { 
+	    selectPlace(index); // 1. 지도 이동하고 마커 띄우기 (기존 기능)
+	    openModal(index);   // 2. ★ [추가] 상세 모달창도 같이 열기!
+	}
 
     function selectRegion(regionName) {
         ps.keywordSearch(regionName, function(data, status) {
