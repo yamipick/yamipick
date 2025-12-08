@@ -41,7 +41,6 @@ public class BoardReview {
 	@Column(nullable = false, length = 100)
 	private String title;
 	
-	@Column(nullable = false)
 	private Integer starRating;
 	
 	@ManyToOne
@@ -68,7 +67,7 @@ public class BoardReview {
 	private Integer favoriteCount;
 	
 	@Column(nullable = false, length = 20)
-	private String contentState = "일반글";
+	private String contentState;
 	
 	public BoardReviewDTO toDTO() {
 		
@@ -82,8 +81,6 @@ public class BoardReview {
 							.attach(this.attach)
 							.place(this.place)
 							.regdate(this.regdate)
-							.readCount(this.readCount)
-							.favoriteCount(this.favoriteCount)
 							.contentState(this.contentState)
 							.build();
 	}

@@ -39,7 +39,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .regdate(new Date(System.currentTimeMillis()))
                 .readCount(0)
                 .favoriteCount(0)
-                .contentState("일반글")
+                .contentState(dto.getContentState())
                 .build();
 
         BoardReview saved = boardReviewRepository.save(review);

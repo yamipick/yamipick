@@ -113,8 +113,15 @@ public class ReviewController {
 	        // 실제 저장: File savePath = new File(uploadDir, uuid + "_" + fileName);
 	        // file.transferTo(savePath);
 	    }
+	    
+	    if ("비밀글".equals(dto.getContentState())) {
+	        dto.setContentState("비밀글");
+	    } else {
+	        // 체크 안 했으면 DB 기본값(일반글) 사용
+	        dto.setContentState(null);
+	    }
 
-	    Long newReviewId = reviewService.add(dto);
+	    reviewService.add(dto);
 	    return "review/reviewaddok";
 	}
 
