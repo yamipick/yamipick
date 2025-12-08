@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -16,8 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class WeatherService {
 
-    // ★ 형님 OpenWeatherMap 키 유지하세요!
-    private static final String API_KEY ="13bb8c2a66fad2d40d64cb393bf58006"; 
+	@Value("${yamipick.api.weather.key}")
+    private String apiKey; 
     
     private static final double LAT = 37.5665; 
     private static final double LON = 126.9780;
@@ -29,7 +30,7 @@ public class WeatherService {
             URI uri = UriComponentsBuilder.fromHttpUrl(url)
                     .queryParam("lat", LAT)
                     .queryParam("lon", LON)
-                    .queryParam("appid", API_KEY)
+                    .queryParam("appid", apiKey)
                     .queryParam("units", "metric") // ★ 섭씨 온도로 받기
                     .build().toUri();
 
