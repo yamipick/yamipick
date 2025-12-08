@@ -20,5 +20,6 @@ public class ChatResponse {
     private LocalDateTime timestamp;
     
     private List<MenuRecommendResponse> recommends;
+
 }
 

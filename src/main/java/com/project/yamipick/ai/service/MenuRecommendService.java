@@ -1,11 +1,16 @@
 package com.project.yamipick.ai.service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.project.yamipick.ai.dto.AIRecommendDTO;
+import com.project.yamipick.ai.dto.ExtractedTags;
 import com.project.yamipick.ai.dto.MenuRecommendRequest;
 import com.project.yamipick.ai.dto.MenuRecommendResponse;
 import com.project.yamipick.ai.entity.Menu;
@@ -19,97 +24,198 @@ public class MenuRecommendService {
 
     private final MenuRepository menuRepository;
     private final AIRecommendService aiRecommendService;
-    private final GeminiService geminiService;
-
+    private final AIService aiService;
 
     public List<MenuRecommendResponse> recommend(MenuRecommendRequest req) {
 
-        // === [1] 태그 생성 (챗봇 추천의 경우 tags가 없으므로 userInput에서 태그 파싱 필요) ===
-        List<String> effectiveTags;
+    	// 1. 태그 로딩
+        List<String> positiveTags = req.getPositiveTags() != null
+                ? new ArrayList<>(req.getPositiveTags())
+                : new ArrayList<>();
 
-        if (req.getTags() != null && !req.getTags().isEmpty()) {
-            // 태그 기반 추천
-            effectiveTags = req.getTags();
-        } else {
-            // 챗봇 기반 추천이라 userInput 기반으로 태그 생성 필요
-            // ✔ 여기는 AI 모델을 사용해 userInput → 태그 변환하는 로직으로 변경 가능
-            effectiveTags = extractTagsFromUserInput(req.getUserInput());
+        List<String> negativeTags = req.getNegativeTags() != null
+                ? req.getNegativeTags()
+                : List.of();
+
+        List<String> contextTags = req.getContextTags() != null
+                ? req.getContextTags()
+                : List.of();
+
+        // 감정 기반 태그 무조건 합치기
+        if (req.getEmotion() != null) {
+            List<String> emotionTags = aiService.emotionToTags(req.getEmotion());
+            for (String e : emotionTags) {
+                if (!positiveTags.contains(e)) {
+                    positiveTags.add(e); // 중복 방지
+                }
+            }
+        }
+        
+        // 태그가 최종적으로 0개 → 완전 랜덤 추천
+        if (positiveTags.isEmpty()) {
+            return recommendRandom(req, negativeTags, contextTags);
         }
 
-        // === [2] 메뉴 전체 로드 ===
+        // 2. 메뉴 전체 로드
         List<Menu> menus = menuRepository.findAll();
 
-        // === [3] 태그 기반 스코어 계산 ===
+        // 3. 태그 기반 스코어 계산
         List<MenuRecommendResponse> result = menus.stream()
                 .map(menu -> {
 
-                    List<String> menuTags = List.of(menu.getFlavorTags().split(","));
+                	List<String> menuTags = menu.getFlavorTags() != null
+                            ? Arrays.stream(menu.getFlavorTags().split(","))
+                                .map(String::trim)
+                                .filter(s -> !s.isBlank())
+                                .toList()
+                            : List.of();
 
-                    List<String> matched = effectiveTags.stream()
+                    // 3-1. negative 태그 포함 메뉴는 제외
+                    for (String neg : negativeTags) {
+                        if (menuTags.contains(neg)) {
+                            return null;
+                        }
+                    }
+
+                    // 3-2. positive 매칭
+                    List<String> matchedPositive = positiveTags.stream()
                             .filter(menuTags::contains)
                             .collect(Collectors.toList());
+
+                    int score = matchedPositive.size();
+
+                    // 3-3. context 태그 보너스
+                    for (String ctx : contextTags) {
+                        if (menuTags.contains(ctx)) {
+                            score += 1;
+                        }
+                    }
+                    
+                    //감정 가중치
+                    String emotion = req.getEmotion();
+
+                    if ("sick".equals(emotion)) {
+                        if (menuTags.contains("soup")) score += 2;
+                        if (menuTags.contains("healthy")) score += 2;
+                    }
+                    if ("stressed".equals(emotion)) {
+                        if (menuTags.contains("spicy")) score += 2;
+                    }
+                    if ("tired".equals(emotion)) {
+                        if (menuTags.contains("healthy")) score += 1;
+                    }
+
+                    if (score == 0) return null;
 
                     return MenuRecommendResponse.builder()
                             .seqMenu(menu.getSeqMenu())
                             .menuName(menu.getMenuName())
                             .menuImage(menu.getMenuImage())
                             .menuDescription(menu.getMenuDescription())
-                            .matchedTags(matched)
-                            .score(matched.size())
+                            .matchedTags(matchedPositive)
+                            .score(score)
                             .build();
                 })
-                .filter(r -> r.getScore() > 0)
+                .filter(Objects::nonNull)
                 .sorted((a, b) -> b.getScore() - a.getScore())
                 .limit(3)
                 .collect(Collectors.toList());
+        
+        // 태그로 걸리는 메뉴가 하나도 없으면 → 랜덤 Fallback
+        if (result.isEmpty()) {
+            return recommendRandom(req, negativeTags, contextTags);
+        }
 
-        // 추천이 없으면 저장도 안 함
-        if (result.isEmpty()) return result;
-
-        // === [4] best 메뉴 1개 선택 ===
+        // 4. BEST 메뉴 1개
         MenuRecommendResponse best = result.get(0);
 
-        // === [5] 추천 이유 생성 ===
-        String prompt = String.format(
-                "너는 음식 추천 전문가야. 사용자가 선택한 태그를 기준으로 메뉴를 추천하는 이유를 부드럽고 자연스럽게 2~3줄로 설명해줘.\n\n" +
-                "조건은 다음과 같아:\n" +
-                "- 선택한 태그: %s\n" +
-                "- 추천 메뉴 이름: %s\n" +
-                "- 메뉴 설명: %s\n" +
-                "- 매칭된 태그: %s\n\n" +
-                "이 추천이 왜 적합한지 사용자가 이해하기 쉽게 설명해줘.\n" +
-                "주의: DB에 없는 음식 이름을 절대 언급하지 마.",
-                effectiveTags,
-                best.getMenuName(),
-                best.getMenuDescription(),
-                best.getMatchedTags()
-        );
+        // 5. 추천 이유 생성 (감정 포함)
+        ExtractedTags tagsObj = new ExtractedTags(positiveTags, negativeTags, contextTags);
 
-        // AI에게 explanation 요청
-        String reason = geminiService.generateText(prompt).block();
+        String reason = aiService.generateReason(
+                req.getUserInput(),
+                best,
+                tagsObj,
+                req.getEmotion()
+        );
         best.setReason(reason);
-        
-        // === [6] 추천 저장 (태그 기반도, 챗봇 기반도 둘 다 저장) ===
+
+        // 6. BEST 1개만 tblAIRecommend 저장
         aiRecommendService.saveRecommend(
                 AIRecommendDTO.builder()
                         .seqMenu(best.getSeqMenu())
-                        .userInput(
-                                req.getUserInput() != null ? req.getUserInput() 
-                                : String.join(",", effectiveTags)
-                        )
+                        .userInput(req.getUserInput())
                         .aiReason(reason)
-                        .seqSession(req.getSeqSession())   // 챗봇 추천이면 값 있음, 태그 추천이면 null
+                        .seqSession(req.getSeqSession())
+                        .build()
+        );
+
+        // 7. TOP3 반환 (화면 표시용)
+        return result;
+    }
+    
+    /** 태그가 정말 하나도 없을 때 쓰는 랜덤 추천 + DB 저장 */
+    private List<MenuRecommendResponse> recommendRandom(MenuRecommendRequest req,
+                                                        List<String> negativeTags,
+                                                        List<String> contextTags) {
+
+        List<Menu> menus = menuRepository.findAll();
+        if (menus.isEmpty()) return List.of();
+
+        // negative 태그는 그래도 제외
+        List<Menu> candidates = menus.stream()
+                .filter(menu -> {
+                    if (menu.getFlavorTags() == null) return true;
+                    List<String> menuTags = Arrays.stream(menu.getFlavorTags().split(","))
+                            .map(String::trim)
+                            .toList();
+                    for (String neg : negativeTags) {
+                        if (menuTags.contains(neg)) return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
+
+        if (candidates.isEmpty()) return List.of();
+
+        Collections.shuffle(candidates);
+
+        List<MenuRecommendResponse> result = candidates.stream()
+                .limit(3)
+                .map(m -> MenuRecommendResponse.builder()
+                        .seqMenu(m.getSeqMenu())
+                        .menuName(m.getMenuName())
+                        .menuImage(m.getMenuImage())
+                        .menuDescription(m.getMenuDescription())
+                        .matchedTags(List.of()) // 랜덤이라 매칭 태그는 없음
+                        .score(1)
+                        .build())
+                .collect(Collectors.toList());
+
+        // BEST = 첫 번째
+        MenuRecommendResponse best = result.get(0);
+
+        ExtractedTags tagsObj = new ExtractedTags(
+                List.of(), negativeTags, contextTags
+        );
+
+        String reason = aiService.generateReason(
+                req.getUserInput(),
+                best,
+                tagsObj,
+                req.getEmotion()
+        );
+        best.setReason(reason);
+
+        aiRecommendService.saveRecommend(
+                AIRecommendDTO.builder()
+                        .seqMenu(best.getSeqMenu())
+                        .userInput(req.getUserInput())
+                        .aiReason(reason)
+                        .seqSession(req.getSeqSession())
                         .build()
         );
 
         return result;
-    }
-
-    // === 간단한 태그 추출 메서드 (임시, 나중에 AI로 변경 가능) ===
-    private List<String> extractTagsFromUserInput(String input) {
-        // 기본 구현: 문장을 띄어쓰기로 나눠서 태그처럼 사용
-        // 나중에 AI 모델에게 태그 분석하게 바꾸면 됨
-        if (input == null || input.isBlank()) return List.of();
-        return List.of(input.split(" "));
     }
 }

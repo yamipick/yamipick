@@ -26,7 +26,11 @@ public class AIChatSessionService {
 
         return saved.getSeqSession();
     }
-
+    
+    // 세션 존재여부 확인
+    public boolean exists(Long seqSession) {
+        return sessionRepository.existsById(seqSession);
+    }
 
     // 세션 단건 조회
     public AIChatSessionDTO getSession(Long seqSession) {
@@ -40,4 +44,5 @@ public class AIChatSessionService {
                 .seqUser(session.getSeqUser())
                 .build();
     }
+    
 }

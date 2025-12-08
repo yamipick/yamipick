@@ -13,8 +13,12 @@ import lombok.NoArgsConstructor;
 @Builder
 public class MenuRecommendRequest {
 
-    private List<String> tags;       // 선택된 태그
+	private List<String> positiveTags;  // ExtractedTags에서 복사됨
+    private List<String> negativeTags;
+    private List<String> contextTags;
+	
     private String userInput;        // 챗봇 입력 문장
     private Long seqSession;         // 챗봇 세션 (태그 추천은 null)
+    private String emotion;
 }
 
