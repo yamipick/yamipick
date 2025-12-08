@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -22,9 +23,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class NaverSearchService {
 
-    // ★ 형님! 아까 발급받은 키를 여기에 붙여넣으세요!
-    private static final String NAVER_CLIENT_ID = "W375NhIg2kLnKvmC2Ps8"; 
-    private static final String NAVER_CLIENT_SECRET = "NL63uvVRAl";
+	@Value("${yamipick.api.naver.client-id}")
+    private String naverClientId;
+
+    @Value("${yamipick.api.naver.client-secret}")
+    private String naverClientSecret;
 
     private static final String NAVER_SEARCH_URL = "https://openapi.naver.com/v1/search/blog.json";
 
@@ -44,8 +47,8 @@ public class NaverSearchService {
 
             RequestEntity<Void> req = RequestEntity
                     .get(uri)
-                    .header("X-Naver-Client-Id", NAVER_CLIENT_ID)
-                    .header("X-Naver-Client-Secret", NAVER_CLIENT_SECRET)
+                    .header("X-Naver-Client-Id", naverClientId)
+                    .header("X-Naver-Client-Secret", naverClientSecret)
                     .build();
 
             RestTemplate restTemplate = new RestTemplate();

@@ -63,3 +63,6 @@ replay_pid*
 *.sql
 
 kakao-map-api.properties
+
+### Secret Config ###
+src/main/resources/application-secret.yml
