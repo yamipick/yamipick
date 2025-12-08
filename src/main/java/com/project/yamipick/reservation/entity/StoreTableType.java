@@ -49,4 +49,12 @@ public class StoreTableType {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "SEQSTORE", nullable = false)
     private Store store;
+    
+    public void updateTableType(String name,
+				            Integer capacity,
+				            Integer quantity) {
+		this.name = name;
+		this.capacity = capacity;
+		this.quantity = quantity;
+	}
 }

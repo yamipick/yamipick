@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>매장 대시보드</title>
+	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+</head>
+<body>
+<h1>매장 대시보드</h1>
+
+<p th:text="'매장 이름: ' + ${store.name}"></p>
+<p th:text="'주소: ' + ${store.address}"></p>
+<p th:text="'전화번호: ' + ${store.phone}"></p>
+
+<!-- 현재 영업시간 간단 표시 -->
+<h3>영업시간 / 브레이크타임</h3>
+<table border="1">
+    <tr>
+        <th>요일</th>
+        <th>영업 여부</th>
+        <th>시작</th>
+        <th>종료</th>
+        <th>브레이크 시작</th>
+        <th>브레이크 종료</th>
+    </tr>
+    <tr th:each="s : ${schedules}">
+        <td th:text="${s.dayOfWeekName}">0</td>
+        <td th:text="${s.isOpen}">Y</td>
+        <td th:text="${s.openTime}">10:00</td>
+        <td th:text="${s.closeTime}">22:00</td>
+        <td th:text="${s.breakStart}">15:00</td>
+        <td th:text="${s.breakEnd}">17:00</td>
+    </tr>
+</table>
+
+<a th:href="@{/store/schedule/edit}">영업시간 수정하기</a>
+
+<hr>
+
+<h3>테이블 타입</h3>
+<table border="1">
+    <tr>
+        <th>타입명</th>
+        <th>1테이블 최대 인원</th>
+        <th>테이블 개수</th>
+        <th>관리</th>
+    </tr>
+    <tr th:each="t : ${tableTypes}">
+        <td th:text="${t.name}">2인석</td>
+        <td th:text="${t.capacity}">2</td>
+        <td th:text="${t.quantity}">3</td>
+        <td>
+            <form th:action="@{|/store/table/delete/${t.seqStoreTable}|}" method="post"
+                  style="display:inline;">
+                <button type="submit">삭제</button>
+            </form>
+        </td>
+    </tr>
+</table>
+
+<a th:href="@{/store/table/edit}">테이블 타입 수정/추가</a>
+
+<a th:href="@{/logout}">로그아웃</a>
+
+</body>
+</html>

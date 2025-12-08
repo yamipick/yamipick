@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -43,8 +44,7 @@ public class SecurityConfig {
             .loginProcessingUrl("/loginProc") // HTML Form의 action 주소와 일치해야 함
             .usernameParameter("username")    // HTML input name="username"
             .passwordParameter("password")    // HTML input name="password"
-            //.defaultSuccessUrl("/", true)     // 로그인 성공 시 메인으로 이동
-            .defaultSuccessUrl("/reservation/main", true) 
+            .successHandler(customSuccessHandler())     // 로그인 성공 시 메인으로 이동
             .permitAll()
         );
 
@@ -56,5 +56,32 @@ public class SecurityConfig {
         );
 
         return http.build(); // [중요] 설정을 마무리하고 반환 (이게 빠져서 에러 났던 것)
+    }
+    
+ // ★ 로그인 성공 핸들러
+    @Bean
+    public AuthenticationSuccessHandler customSuccessHandler() {
+        return (request, response, authentication) -> {
+
+            var authorities = authentication.getAuthorities();
+            System.out.println("🔥 로그인 성공! 현재 권한: " + authorities);
+
+            boolean isAdmin = authorities.stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+            boolean isStore = authorities.stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_STORE"));
+
+            if (isAdmin) {
+                System.out.println("👉 관리자 페이지로 이동합니다.");
+                response.sendRedirect("/admin/dashboard"); // 네가 나중에 만들 관리자 메인
+            } else if (isStore) {
+                System.out.println("👉 매장 페이지로 이동합니다.");
+                response.sendRedirect("/store/main");      // 매장 메인
+            } else {
+                System.out.println("👉 예약 페이지로 이동합니다.");
+                response.sendRedirect("/reservation/main"); // 일반 유저 예약 메인
+            }
+        };
     }
 }

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>매장등록</title>
+	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+	
+	<!-- Kakao 지도 JS (★ JavaScript 키로 교체해야 함, REST 키 아님) -->
+    <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=7ef5d0a137417135a1ff1e08560fcc98&libraries=services"></script>
+</head>
+<body>
+<h1>매장 등록</h1>
+
+<!-- 1) 매장 검색 영역 -->
+<div>
+    <input type="text" id="keyword" placeholder="매장 이름 또는 주소를 입력하세요">
+    <button type="button" onclick="searchPlaces()">검색</button>
+</div>
+
+<div id="map" style="width: 600px; height: 400px; margin-top: 10px;"></div>
+
+<!-- 검색 결과 리스트 -->
+<ul id="search-result"></ul>
+
+<hr>
+
+<!-- 2) 선택된 매장 정보 + 추가 정보 입력 폼 -->
+<form th:action="@{/store/register}" method="post">
+
+    <!-- ★ Kakao에서 넘어온 값들을 담을 hidden / readonly 필드 -->
+    <div>
+        <label>장소 ID</label>
+        <input type="text" id="kakaoPlaceId" name="kakaoPlaceId" readonly required>
+    </div>
+
+    <div>
+        <label>매장 이름</label>
+        <input type="text" id="storeName" name="name" readonly required>
+    </div>
+
+    <div>
+        <label>주소</label>
+        <input type="text" id="storeAddress" name="address" readonly required>
+    </div>
+
+    <div>
+        <label>전화번호</label>
+        <input type="text" id="storePhone" name="phone">
+    </div>
+
+    <hr>
+
+    <!-- ========================= -->
+<!-- 영업 시간 / 브레이크 타임 -->
+<!-- ========================= -->
+<h3>영업 시간 설정</h3>
+
+<div>
+    <label>영업 시작 시간</label>
+    <input type="time" name="openTime" required>
+</div>
+
+<div>
+    <label>영업 종료 시간</label>
+    <input type="time" name="closeTime" required>
+</div>
+
+<div>
+    <label>브레이크 시작 시간</label>
+    <input type="time" name="breakStart">
+</div>
+
+<div>
+    <label>브레이크 종료 시간</label>
+    <input type="time" name="breakEnd">
+</div>
+
+<hr>
+
+<!-- ========================= -->
+<!-- 테이블 타입 / 인원 / 개수 -->
+<!-- ========================= -->
+	<h3>테이블 타입 설정</h3>
+
+		<div id="tableTypeContainer">
+		    <!-- 기본 1개 타입 -->
+		    <div class="table-type-row" style="margin-bottom: 8px;">
+		        <label>테이블 타입 이름</label>
+		        <input type="text" name="tableTypeName" placeholder="예: 2인석" required>
+		
+		        <label>테이블당 최대 인원</label>
+		        <input type="number" name="tableCapacity" min="1" value="2" required style="width:80px;">
+		
+		        <label>테이블 개수</label>
+		        <input type="number" name="tableQuantity" min="1" value="1" required style="width:80px;">
+		
+		        <button type="button"
+		                class="removeTableTypeBtn"
+		                onclick="removeTableTypeRow(this)">
+		            삭제
+		        </button>
+		    </div>
+		</div>
+		
+		<button type="button" onclick="addTableTypeRow()">테이블 타입 추가</button>
+
+    <button type="submit">매장 등록</button>
+</form>
+
+<script>
+    function addTableTypeRow() {
+        const container = document.getElementById('tableTypeContainer');
+        const firstRow = container.querySelector('.table-type-row');
+        const newRow = firstRow.cloneNode(true);
+
+        // 새 줄의 input 값들 초기화
+        newRow.querySelectorAll('input').forEach(input => {
+            if (input.type === 'number') {
+                input.value = input.name === 'tableCapacity' ? 2 : 1;
+            } else {
+                input.value = '';
+            }
+        });
+
+        container.appendChild(newRow);
+    }
+
+    function removeTableTypeRow(btn) {
+        const container = document.getElementById('tableTypeContainer');
+        const rows = container.querySelectorAll('.table-type-row');
+
+        if (rows.length === 1) {
+            alert('최소 1개 이상의 테이블 타입이 필요합니다.');
+            return;
+        }
+
+        btn.closest('.table-type-row').remove();
+    }
+</script>
+
+<script>
+    let map;
+    let markers = [];
+    let ps; // Places 서비스
+
+    // 지도 초기화
+    window.onload = function() {
+        const container = document.getElementById('map');
+        const options = {
+            center: new kakao.maps.LatLng(37.5665, 126.9780), // 기본: 서울 시청 근처
+            level: 5
+        };
+        map = new kakao.maps.Map(container, options);
+
+        ps = new kakao.maps.services.Places();
+    };
+
+    // 검색 버튼 클릭 시 호출
+    function searchPlaces() {
+        const keyword = document.getElementById('keyword').value.trim();
+        if (!keyword) {
+            alert('검색어를 입력하세요.');
+            return;
+        }
+
+        // 우리 서버로 AJAX 요청 -> KakaoSearchService 사용
+        fetch('/api/store/search?q=' + encodeURIComponent(keyword))
+            .then(res => res.json())
+            .then(data => {
+                // data = RestaurantDTO 리스트
+                displayPlaces(data);
+            })
+            .catch(err => {
+                console.error(err);
+                alert('검색 중 오류가 발생했습니다.');
+            });
+    }
+
+    // 검색 결과 표시 + 지도에 마커 찍기
+    function displayPlaces(places) {
+        // 이전 마커 제거
+        markers.forEach(m => m.setMap(null));
+        markers = [];
+
+        const listEl = document.getElementById('search-result');
+        listEl.innerHTML = '';
+
+        if (!places || places.length === 0) {
+            listEl.innerHTML = '<li>검색 결과가 없습니다.</li>';
+            return;
+        }
+
+        const bounds = new kakao.maps.LatLngBounds();
+
+        places.forEach((p, idx) => {
+            const lat = parseFloat(p.y);
+            const lng = parseFloat(p.x);
+            const position = new kakao.maps.LatLng(lat, lng);
+
+            const marker = new kakao.maps.Marker({
+                map: map,
+                position: position
+            });
+            markers.push(marker);
+            bounds.extend(position);
+
+            // 리스트 요소
+            const li = document.createElement('li');
+            li.style.cursor = 'pointer';
+            li.innerText = `${p.name} / ${p.address} ${p.phone ? ' / ' + p.phone : ''}`;
+
+            // 마커 & 리스트 클릭 시 해당 매장 선택
+            const clickHandler = function() {
+                selectPlace(p);
+                map.panTo(position);
+            };
+
+            kakao.maps.event.addListener(marker, 'click', clickHandler);
+            li.addEventListener('click', clickHandler);
+
+            listEl.appendChild(li);
+        });
+
+        // 지도 범위 조정
+        map.setBounds(bounds);
+    }
+
+    // 매장 선택 시 폼에 값 세팅
+    function selectPlace(p) {
+        document.getElementById('kakaoPlaceId').value = p.id;
+        document.getElementById('storeName').value = p.name;
+        document.getElementById('storeAddress').value = p.address;
+        document.getElementById('storePhone').value = p.phone || '';
+
+        alert('매장을 선택했습니다: ' + p.name);
+    }
+</script>
+</body>
+</html>

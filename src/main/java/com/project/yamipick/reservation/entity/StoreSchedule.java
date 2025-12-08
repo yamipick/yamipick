@@ -58,4 +58,32 @@ public class StoreSchedule {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "SEQSTORE", nullable = false)
     private Store store;
+    
+    public void updateSchedule(String isOpen,
+					            String openTime,
+					            String closeTime,
+					            String breakStart,
+					            String breakEnd) {
+		this.isOpen = isOpen;
+		this.openTime = openTime;
+		this.closeTime = closeTime;
+		this.breakStart = breakStart;
+		this.breakEnd = breakEnd;
+	}
+    
+ // 기존 필드들 밑에 추가
+    public String getDayOfWeekName() {
+        if (dayOfWeek == null) return "";
+
+        switch (dayOfWeek) {
+            case 0: return "일";
+            case 1: return "월";
+            case 2: return "화";
+            case 3: return "수";
+            case 4: return "목";
+            case 5: return "금";
+            case 6: return "토";
+            default: return "";
+        }
+    }
 }
