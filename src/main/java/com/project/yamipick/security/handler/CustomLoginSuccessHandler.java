@@ -1,4 +1,4 @@
-package com.project.yamipick.security.handler; // 패키지명 알맞게 수정
+package com.project.yamipick.security.handler; 
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
