@@ -2,8 +2,13 @@ server:
   port: 8080
 
 spring:
+  # ★ [추가됨] application-secret.yml 파일을 여기서 불러옵니다!
+  profiles:
+    include: secret
+
   application:
     name: yamipick
+
 
 #  # [추가됨] Redis 설정
 #  data:
