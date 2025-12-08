@@ -5,7 +5,17 @@ spring:
   application:
     name: yamipick
 
+<<<<<<< HEAD
 # 1. JDBC(+HikariCP) 설정 //아직 오라클 클라우드 설정을 안 해놧음 설정후 변경 예정
+=======
+#  # [추가됨] Redis 설정
+#  data:
+#    redis:
+#      host: localhost
+#      port: 6379
+
+  # 1. JDBC(+HikariCP) 설정 //아직 오라클 클라우드 설정을 안 해놧음 설정후 변경 예정
+>>>>>>> dev
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver
     url: jdbc:oracle:thin:@llgabbhp32n2794c_medium?TNS_ADMIN=C:/dev/Wallet_Yamipick 
@@ -35,11 +45,20 @@ spring:
   # 3. Thymeleaf 설정
   thymeleaf:
     cache: false
+    
+  # 카카오맵 api
+  config:
+    import: optional:kakao-map-api.properties
+  # 파일 크기 지정
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 # 4. MyBatis 설정
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
-  configuration:
+  configuration:  
     map-underscore-to-camel-case: true
 
 # 5. 로깅 설정
@@ -52,4 +71,4 @@ logging:
     
 gemini:
   api-key: ${GEMINI_API_KEY}
-  model: "gemini-2.5-flash"    
+  model: "gemini-2.5-flash"
