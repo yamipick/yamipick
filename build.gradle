@@ -67,13 +67,10 @@ dependencies {
     
     //7.웹소켓
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
-<<<<<<< HEAD
-=======
 
 	//6. Redis 라이브러리
 	//implementation 'org.springframework.boot:spring-boot-starter-data-redis' 추후 진행
 	
->>>>>>> dev
 }
 
 tasks.named('test') {

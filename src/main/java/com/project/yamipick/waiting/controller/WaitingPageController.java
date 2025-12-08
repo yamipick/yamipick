@@ -6,20 +6,20 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class WaitingPageController {
     @GetMapping("/waitinguser")
-    public String user() { return "userwaiting"; } // userwaiting.html
+    public String user() { return "/waiting/userwaiting"; } // userwaiting.html
 
     @GetMapping("/waitingstore")
-    public String store() { return "storewaiting"; } // storewaiting.html
+    public String store() { return "/waiting/storewaiting"; } // storewaiting.html
     
     @GetMapping("/waitingstore/history")
-    public String storeHistory() { return "storewaitinghistory"; }
+    public String storeHistory() { return "/waiting/storewaitinghistory"; }
     
     @GetMapping("/waitinguser/history")
-    public String userHistory() { return "userwaitinghistory"; }
+    public String userHistory() { return "/waiting/userwaitinghistory"; }
     
     @GetMapping("/waitingsearch")
     public String searchForm() {
-        return "waitingsearch"; // waitingsearch.html 파일을 보여줌
+        return "/waiting/waitingsearch"; // waitingsearch.html 파일을 보여줌
     }
     
     
