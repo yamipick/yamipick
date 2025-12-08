@@ -2,6 +2,7 @@ package com.project.yamipick.waiting.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -255,6 +256,16 @@ public Waiting register(Long userId, Long storeId, int size) {
         }
 
         WaitingOperation op = waiting.getOperation();
+        
+        
+     // ★ [추가된 로직] 내가 이미 마지막 순서인지 확인
+        // 내 번호가 현재 발권된 마지막 번호와 같다면, 내 뒤에 아무도 없다는 뜻입니다.
+        if (waiting.getWaitingNumber() == op.getLastWaitingNum()) {
+            throw new IllegalStateException("현재 가장 마지막 순서라 미룰 수 없습니다.");
+        }
+        
+        
+        
         int nextNum = op.getLastWaitingNum() + 1;
         op.setLastWaitingNum(nextNum); 
         
@@ -492,6 +503,42 @@ public Waiting register(Long userId, Long storeId, int size) {
 
             scheduleRepository.save(schedule);
         }
+    }
+    
+    @Transactional(readOnly = true)
+    public StoreScheduleDTO getScheduleInfo(Long storeId, int day) {
+        return scheduleRepository.findByStoreIdAndDayOfWeek(storeId, day)
+                .map(entity -> {
+                    StoreScheduleDTO dto = new StoreScheduleDTO();
+                    dto.setStoreId(entity.getStore().getId());
+                    dto.setOpenTime(entity.getOpenTime());
+                    dto.setCloseTime(entity.getCloseTime());
+                    dto.setBreakStart(entity.getBreakStart());
+                    dto.setBreakEnd(entity.getBreakEnd());
+                    dto.setIsOpen(entity.getIsOpen());
+                    return dto;
+                })
+                .orElse(null); // 설정이 없으면 null 반환
+    }
+    
+ // ★ [추가] 일주일 스케줄 전체 조회
+    @Transactional(readOnly = true)
+    public List<StoreScheduleDTO> getAllSchedules(Long storeId) {
+        return scheduleRepository.findAllByStoreId(storeId).stream()
+                .map(s -> {
+                    StoreScheduleDTO dto = new StoreScheduleDTO();
+                    dto.setDayOfWeek(s.getDayOfWeek()); // 요일 정보 담기
+                    dto.setOpenTime(s.getOpenTime());
+                    dto.setCloseTime(s.getCloseTime());
+                    dto.setBreakStart(s.getBreakStart());
+                    dto.setBreakEnd(s.getBreakEnd());
+                    dto.setIsOpen(s.getIsOpen());
+                    return dto;
+                })
+                // 요일 순서대로 정렬 (일:0 ~ 토:6) 또는 (월:1 ~ 일:0) 취향껏
+                // 여기선 단순 오름차순(일~토)
+                .sorted(Comparator.comparingInt(StoreScheduleDTO::getDayOfWeek)) 
+                .collect(Collectors.toList());
     }
     
 // // ★ [추가] 매장 검색 (영업 상태 포함)

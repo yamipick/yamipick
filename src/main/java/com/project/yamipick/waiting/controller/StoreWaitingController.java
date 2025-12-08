@@ -3,6 +3,7 @@ package com.project.yamipick.waiting.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -112,5 +113,23 @@ public class StoreWaitingController {
         waitingService.updateSchedule(dto);
         return "ok";
     }
+    
+    @GetMapping("/waiting/schedule/all")
+    public List<StoreScheduleDTO> getAllSchedules(@RequestParam("storeId") Long storeId) {
+        return waitingService.getAllSchedules(storeId);
+    }
+    
+ // ★ [추가] 특정 요일의 스케줄 상세 조회 (설정창 채우기용)
+    @GetMapping("/waiting/schedule/info")
+    public ResponseEntity<?> getScheduleInfo(
+            @RequestParam("storeId") Long storeId,
+            @RequestParam("day") int day // 0:일 ~ 6:토
+    ) {
+        // 서비스에 메소드 추가가 필요하지만, 간단하게 Repository 직접 호출 혹은 서비스 위임
+        // 여기서는 서비스에 위임하는 정석 코드로 작성하겠습니다.
+        return ResponseEntity.ok(waitingService.getScheduleInfo(storeId, day));
+    }
+    
+    
     
 }

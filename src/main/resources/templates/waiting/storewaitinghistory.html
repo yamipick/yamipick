@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <title>매장 웨이팅 기록</title>
     <style>
         /* -------------------------------------------------------
@@ -9,59 +10,108 @@
         ------------------------------------------------------- */
         :root {
             --primary: #6D4C41;   /* 진한 갈색 */
+            --primary-hover: #5D4037;
             --secondary: #8D6E63; /* 라떼색 */
             --bg-body: #F5F5F5;   /* 배경 */
             --text-main: #3E2723; /* 텍스트 */
             --border: #D7CCC8;
-            --card-shadow: 0 4px 15px rgba(109, 76, 65, 0.08);
             
             /* 통계 박스 색상 */
-            --stat-enter: #6D4C41;  /* 입장 (메인) */
-            --stat-call: #8D6E63;   /* 호출 (보조) */
-            --stat-cancel: #E57373; /* 취소 (소프트 레드) */
+            --stat-enter: #6D4C41;  
+            --stat-call: #8D6E63;   
+            --stat-cancel: #E57373; 
         }
 
         body { 
             font-family: 'Pretendard', sans-serif; 
-            padding: 20px; 
             background-color: var(--bg-body); 
-            max-width: 800px; 
-            margin: 0 auto; 
-            
-            /* ★ 핵심: 헤더 간격 확보 */
-            padding-top: 60px; 
+            color: var(--text-main); 
+            padding: 15px; 
+            padding-top: 80px; /* 헤더 간격 */
+            margin: 0;
         }
 
         .card { 
+            width: 95%;
+            max-width: 800px;
+            margin: 0 auto 20px auto; /* 중앙 정렬 및 하단 여백 */
             background: white; 
-            padding: 30px; 
-            border-radius: 15px; 
-            box-shadow: var(--card-shadow); 
-            margin-bottom: 25px; 
-            margin-top: 20px;
+            padding: 20px; 
+            border-radius: 20px; 
+            box-shadow: 0 4px 15px rgba(109, 76, 65, 0.08); 
+            box-sizing: border-box;
         }
         
-        h2 { margin-top: 0; color: var(--primary); font-weight: 800; letter-spacing: -0.5px; } 
-        h3 { color: var(--secondary); margin-bottom: 15px; }
+        /* 헤더 영역 (제목 + 뒤로가기) */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        h2 { margin: 0; color: var(--primary); font-size: 1.4em; font-weight: 800; letter-spacing: -0.5px; } 
+        h3 { color: var(--secondary); margin-bottom: 15px; font-size: 1.1em; }
 
-        /* 날짜 조회 영역 */
-        .date-control { margin: 25px 0; display: flex; align-items: center; gap: 10px; }
-        input[type="date"] {
-            padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; color: var(--text-main);
-        }
-        .btn-search {
-            background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;
-        }
-        .btn-search:hover { background-color: #5D4037; transform: translateY(-1px); }
         .btn-home {
-             background: var(--secondary); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.9em; cursor: pointer; text-decoration: none; font-weight: bold;
+             background: var(--secondary); 
+             color: white; 
+             border: none; 
+             padding: 8px 14px; 
+             border-radius: 20px; 
+             font-size: 0.85em; 
+             cursor: pointer; 
+             text-decoration: none; 
+             font-weight: bold;
+             white-space: nowrap; /* 텍스트 줄바꿈 방지 */
         }
 
-        /* 통계 박스 스타일 */
-        .stat-box { display: flex; gap: 15px; margin-bottom: 10px; }
+        /* 날짜 조회 컨트롤 */
+        .date-control { 
+            background: #FAFAFA; 
+            padding: 15px; 
+            border-radius: 12px; 
+            border: 1px solid #EFEBE9;
+            margin-bottom: 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            justify-content: space-between; /* 양끝 정렬 */
+        }
+        
+        .date-label { font-weight: bold; color: #5D4037; font-size: 0.9em; white-space: nowrap; }
+        
+        input[type="date"] {
+            flex: 1; /* 남은 공간 차지 */
+            padding: 10px; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            font-family: inherit; 
+            color: var(--text-main);
+            background: #fff;
+            font-size: 0.95em;
+        }
+        
+        .btn-search {
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 10px 18px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        /* 통계 박스 (반응형 그리드) */
+        .stat-box { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 10px; 
+        }
         .stat-item { 
-            flex: 1; 
-            padding: 20px; 
+            flex: 1; /* 공간 균등 분배 */
+            padding: 15px 10px; 
             border-radius: 12px; 
             text-align: center; 
             color: white; 
@@ -72,73 +122,102 @@
         .bg-call { background-color: var(--stat-call); } 
         .bg-cancel { background-color: var(--stat-cancel); } 
         
-        .stat-title { display: block; font-size: 0.9em; opacity: 0.9; margin-bottom: 5px; }
-        .stat-num { font-size: 2em; display: block; }
+        .stat-title { display: block; font-size: 0.8em; opacity: 0.9; margin-bottom: 5px; }
+        .stat-num { font-size: 1.6em; display: block; line-height: 1; }
 
-        /* 테이블 스타일 */
-        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 10px; border: 1px solid #EFEBE9; border-radius: 10px; overflow: hidden; }
+        /* 테이블 스타일 (모바일 최적화) */
+        table { 
+            width: 100%; 
+            border-collapse: separate; 
+            border-spacing: 0; 
+            margin-top: 10px; 
+            border: 1px solid #EFEBE9; 
+            border-radius: 10px; 
+            overflow: hidden; 
+            table-layout: fixed; /* ★ 컬럼 너비 고정 */
+        }
+        
         th { 
             background: var(--primary); 
             color: white; 
-            padding: 15px; 
-            text-align: left; 
+            padding: 12px 5px; 
+            text-align: center; 
             font-weight: 600; 
+            font-size: 0.85em;
         }
+        
         td { 
-            padding: 15px; 
+            padding: 12px 5px; 
             border-bottom: 1px solid #EFEBE9; 
             color: #4E342E; 
+            text-align: center;
+            font-size: 0.85em;
+            word-break: break-all; /* 긴 텍스트 줄바꿈 */
         }
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background-color: #FFF8E1; /* 호버시 연한 크림색 */ }
         
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.85em; color: white; display: inline-block; min-width: 60px; text-align: center; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: #FFF8E1; }
+        
+        .badge { 
+            padding: 4px 6px; 
+            border-radius: 6px; 
+            font-size: 0.8em; 
+            color: white; 
+            display: inline-block; 
+            min-width: 40px; 
+            text-align: center; 
+        }
+
+        /* 내용(Log Message) 컬럼은 왼쪽 정렬 */
+        td.msg-col { text-align: left; padding-left: 10px; }
     </style>
 </head>
 <body>
 <div th:replace="~{common/header :: headerFragment}"></div>
 
     <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2>📅 일별 운영 기록</h2>
-            <button class="btn-home" onclick="location.href='/waitingstore'">🍴 매장 관리로</button>
+        <div class="page-header">
+            <h2>📅 운영 기록</h2>
+            <button class="btn-home" onclick="location.href='/waitingstore'">🍴 매장 관리</button>
         </div>
         
         <div class="date-control">
-            <label style="font-weight: bold; color: #5D4037;">날짜 선택</label>
+            <span class="date-label">날짜</span>
             <input type="date" id="date-picker">
             <button class="btn-search" onclick="loadDailyLog()">조회</button>
         </div>
 
         <div class="stat-box">
             <div class="stat-item bg-enter">
-                <span class="stat-title">입장 완료</span>
+                <span class="stat-title">입장</span>
                 <span id="s-enter" class="stat-num">0</span>
             </div>
             <div class="stat-item bg-call">
-                <span class="stat-title">호출 횟수</span>
+                <span class="stat-title">호출</span>
                 <span id="s-call" class="stat-num">0</span>
             </div>
             <div class="stat-item bg-cancel">
-                <span class="stat-title">취소/거절</span>
+                <span class="stat-title">취소</span>
                 <span id="s-cancel" class="stat-num">0</span>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <h3>📜 상세 활동 로그</h3>
+        <h3>📜 상세 로그</h3>
         <table>
+            <colgroup>
+                <col style="width: 20%"> <col style="width: 15%"> <col style="width: 18%"> <col style="width: 47%"> </colgroup>
             <thead>
                 <tr>
-                    <th width="20%">시간</th>
-                    <th width="15%">인원</th> 
-                    <th width="15%">구분</th>
+                    <th>시간</th>
+                    <th>인원</th> 
+                    <th>구분</th>
                     <th>내용</th>
                 </tr>
             </thead>
             <tbody id="log-body">
-                <tr><td colspan="4" style="text-align:center; padding: 30px; color: #aaa;">날짜를 선택하고 조회하세요.</td></tr>
+                <tr><td colspan="4" style="text-align:center; padding: 30px; color: #aaa;">날짜를 선택하세요.</td></tr>
             </tbody>
         </table>
     </div>
@@ -177,18 +256,19 @@
                         else if(log.actionType === 'CALL') { badgeColor = '#8D6E63'; badgeText = '호출'; }
                         else if(log.actionType === 'CANCEL') { badgeColor = '#E57373'; badgeText = '취소'; }
                         else if(log.actionType === 'TOGGLE') { badgeColor = '#FFB74D'; badgeText = '설정'; }
+                        else if(log.actionType === 'NOTICE') { badgeColor = '#4E342E'; badgeText = '공지'; } // 공지사항 수정 로그 등
                         
-                        // 날짜 포맷팅
+                        // 날짜 포맷팅 (시간만 표시: HH:mm:ss)
                         const timeStr = log.regDate ? log.regDate.replace('T', ' ').substring(11, 19) : '-';
                         
-                        const sizeStr = log.teamSize > 0 ? `<b style="color:#3E2723">${log.teamSize}</b>명` : '<span style="color:#ccc">-</span>';
+                        const sizeStr = log.teamSize > 0 ? `<b style="color:#3E2723">${log.teamSize}</b>` : '<span style="color:#ccc">-</span>';
 
                         const row = `
                             <tr>
                                 <td>${timeStr}</td>
                                 <td>${sizeStr}</td>
                                 <td><span class="badge" style="background-color: ${badgeColor}">${badgeText}</span></td>
-                                <td style="color:#5D4037;">${log.logMessage}</td>
+                                <td class="msg-col">${log.logMessage}</td>
                             </tr>
                         `;
                         tbody.innerHTML += row;

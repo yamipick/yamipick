@@ -11,6 +11,7 @@ import com.project.yamipick.waiting.domain.StoreSchedule;
 
 public interface StoreScheduleRepository extends JpaRepository<StoreSchedule, Long> {
     
+	
     // 특정 매장의 특정 요일(0~6) 스케줄 찾기
     Optional<StoreSchedule> findByStoreIdAndDayOfWeek(Long storeId, int dayOfWeek);
     
@@ -19,4 +20,6 @@ public interface StoreScheduleRepository extends JpaRepository<StoreSchedule, Lo
     List<StoreSchedule> findAllByStoreIdInAndDayOfWeek(
             @Param("storeIds") List<Long> storeIds, 
             @Param("dayOfWeek") int dayOfWeek);
+    
+    List<StoreSchedule> findAllByStoreId(Long storeId);
 }
