@@ -1,0 +1,207 @@
+@charset "UTF-8";
+
+/* -------------------------------------------------------
+   YamiPick Theme: Warm Choco & Cream (지도 디자인과 통일)
+------------------------------------------------------- */
+:root {
+    /* [메인] 따뜻한 밀크 초콜릿 색상 */
+    --primary: #6D4C41; 
+    
+    /* [호버] 더 진한 브라운 */
+    --primary-hover: #5D4037;
+
+    /* [서브] 부드러운 라떼 브라운 */
+    --secondary: #8D6E63;
+    
+    /* [배경] 따뜻한 크림색 (지도 배경과 동일) */
+    --bg-cream: #FFFDF7;         
+    
+    /* [강조 배경] 조금 더 진한 크림 */
+    --bg-dark-cream: #EFE5D5;
+
+    /* [텍스트] 진한 고동색 */
+    --text-main: #3E2723;        
+    --text-sub: #8D6E63;         
+
+    --white: #ffffff;
+    --border: #D7CCC8;           /* 연한 코코아색 테두리 */
+
+    --point-red: #A1887F;        
+}
+
+/* -------------------------------------------------------
+   기본 스타일
+------------------------------------------------------- */
+body {
+    margin: 0;
+    padding: 0;
+    padding-top: 60px; /* 헤더 높이만큼 띄움 */
+    font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+    background-color: var(--bg-cream);
+    color: var(--text-main);
+}
+
+a { text-decoration: none; color: inherit; }
+button { font-family: inherit; }
+ul { list-style: none; padding: 0; margin: 0; }
+
+/* -------------------------------------------------------
+   Header (디자인 전면 수정)
+------------------------------------------------------- */
+header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    
+    /* 지도 사이드바와 같은 밝은 크림색 배경 */
+    background-color: #FFFCF5; 
+    
+    /* 테두리는 아주 연하게 */
+    border-bottom: 1px solid #EFEBE9;
+    
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 25px; /* 좌우 여백 넉넉하게 */
+    z-index: 1000;
+    
+    /* 그림자도 따뜻한 톤으로 은은하게 */
+    box-shadow: 0 4px 20px rgba(109, 76, 65, 0.05); 
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--primary); /* 밀크 초콜릿색 */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: -0.5px;
+    transition: 0.2s;
+}
+
+.logo:hover {
+    transform: scale(1.02); /* 로고에 마우스 올리면 살짝 커짐 */
+}
+
+.nav-menu { display: flex; gap: 10px; } /* 메뉴 간격 조정 */
+
+.nav-item a {
+    font-size: 15px;
+    font-weight: 600;
+    color: #6D4C41; /* 기본 글자색: 초코 */
+    padding: 8px 16px; /* 버튼처럼 보이게 패딩 추가 */
+    border-radius: 20px; /* 둥근 알약 모양 */
+    transition: 0.25s;
+}
+
+/* 메뉴에 마우스 올렸을 때: 연한 라떼색 배경 */
+.nav-item a:hover { 
+    background-color: #EFEBE9; 
+    color: #3E2723; /* 글자는 더 진하게 */
+    transform: translateY(-1px);
+}
+
+.hamburger {
+    display: none;
+    font-size: 24px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: var(--primary);
+    padding: 5px;
+}
+
+/* 모바일 메뉴 */
+@media screen and (max-width: 768px) {
+    header { padding: 0 20px; }
+    
+    .nav-menu {
+        display: none;
+        position: absolute;
+        top: 60px; left: 0;
+        width: 100%;
+        background-color: #FFFCF5; /* 모바일 메뉴 배경도 크림색 */
+        flex-direction: column;
+        border-bottom: 1px solid var(--border);
+        box-shadow: 0 10px 20px rgba(109, 76, 65, 0.1);
+        padding: 10px 0;
+        gap: 0;
+    }
+    .hamburger { display: block; }
+    
+    .nav-item { width: 100%; text-align: center; }
+    .nav-item a { 
+        display: block; 
+        padding: 15px 0; 
+        border-radius: 0; /* 모바일은 네모낳게 */
+    }
+    .nav-item a:hover {
+        background-color: #FFF3E0; /* 모바일 호버는 살짝 오렌지빛 도는 크림 */
+    }
+    
+    .nav-menu.active { display: flex; }
+}
+
+/* -------------------------------------------------------
+   Loading Spinner
+------------------------------------------------------- */
+.loading-overlay {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(255, 252, 245, 0.9); /* 배경 불투명도 조절 */
+    z-index: 2000;
+    display: none;
+    justify-content: center; align-items: center;
+    flex-direction: column;
+}
+
+.spinner {
+    width: 40px; height: 40px;
+    border: 4px solid #EFEBE9;
+    border-top: 4px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loading-text {
+    margin-top: 14px;
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 14px;
+}
+
+@keyframes spin { 
+    0% { transform: rotate(0deg); } 
+    100% { transform: rotate(360deg); } 
+}
+
+/* -------------------------------------------------------
+   Toast Message
+------------------------------------------------------- */
+.toast-box {
+    position: fixed;
+    bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    
+    /* 토스트 메시지도 초코색 */
+    background-color: var(--primary);
+    color: #FAF3E0; /* 글자는 크림색 */
+    
+    padding: 14px 28px;
+    border-radius: 30px; /* 더 둥글게 */
+
+    font-size: 14px;
+    font-weight: 700;
+    opacity: 0;
+    pointer-events: none;
+
+    transition: all 0.33s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* 톡 튀어나오는 효과 */
+    box-shadow: 0 5px 15px rgba(62, 39, 35, 0.3);
+    z-index: 3000;
+}
+
+.toast-box.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0px);
+}	
