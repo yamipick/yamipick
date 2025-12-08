@@ -5,38 +5,148 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>야미픽 - 맛집 찾기</title>
     <style>
-        body { font-family: 'Pretendard', sans-serif; padding: 20px; text-align: center; max-width: 420px; margin: 0 auto; background-color: #f1f2f6; color: #333; }
-        .container { background: white; padding: 30px 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 500px; }
+        /* -------------------------------------------------------
+           YamiPick Theme: Warm Choco & Cream
+        ------------------------------------------------------- */
+        :root {
+            --primary: #6D4C41;   /* 진한 갈색 */
+            --primary-hover: #5D4037;
+            --secondary: #8D6E63; /* 라떼색 */
+            --bg-body: #F5F5F5;   /* 배경 */
+            --text-main: #3E2723; /* 텍스트 */
+            --text-sub: #8D6E63;  /* 보조 텍스트 */
+            --border: #D7CCC8;    /* 테두리 */
+            --card-shadow: 0 4px 15px rgba(109, 76, 65, 0.08);
+        }
+
+        body { 
+            font-family: 'Pretendard', sans-serif; 
+            padding: 20px; 
+            text-align: center; 
+            max-width: 420px; 
+            margin: 0 auto; 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            padding-top: 60px; 
+        }
+
+        .container { 
+            background: white; 
+            padding: 30px 20px; 
+            border-radius: 20px; 
+            box-shadow: var(--card-shadow); 
+            min-height: 500px; 
+            margin-top: 20px;
+        }
         
-        h1 { color: #00b894; margin-bottom: 30px; }
+        h1 { 
+            color: var(--primary); 
+            margin-bottom: 25px; 
+            font-size: 1.6em; 
+            font-weight: 800; 
+            letter-spacing: -0.5px;
+        } 
         
         /* 검색창 스타일 */
-        .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
-        input { flex: 1; padding: 12px; border: 2px solid #dfe6e9; border-radius: 8px; font-size: 1em; outline: none; transition: 0.2s; }
-        input:focus { border-color: #00b894; }
-        button { background: #2d3436; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .search-box { display: flex; gap: 8px; margin-bottom: 30px; }
+        
+        input { 
+            flex: 1; 
+            padding: 14px; 
+            border: 2px solid #EFEBE9; 
+            border-radius: 12px; 
+            font-size: 1em; 
+            outline: none; 
+            transition: 0.2s; 
+            background: #FAFAFA;
+            color: var(--text-main);
+        }
+        input:focus { 
+            border-color: var(--primary); 
+            background: #fff; 
+            box-shadow: 0 0 0 3px rgba(109, 76, 65, 0.1); 
+        }
+        
+        button { 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 14px 20px; 
+            border-radius: 12px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        button:hover { background: var(--primary-hover); transform: translateY(-2px); }
+        button:active { transform: scale(0.95); }
 
         /* 결과 리스트 스타일 */
         #result-list { list-style: none; padding: 0; margin: 0; text-align: left; }
-        .store-item { background: #fff; border-bottom: 1px solid #eee; padding: 15px 10px; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; }
-        .store-item:hover { background: #f8f9fa; }
         
-        .s-info { display: flex; flex-direction: column; flex: 1; padding-right: 10px; }
-        .s-name { font-weight: bold; font-size: 1.1em; color: #2d3436; }
-        .s-addr { font-size: 0.85em; color: #b2bec3; margin-top: 4px; }
+        /* 카드형 리스트 아이템 */
+        .store-item { 
+            background: #fff; 
+            border: 1px solid #EFEBE9; 
+            padding: 20px; 
+            border-radius: 15px; 
+            margin-bottom: 15px;
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .store-item:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 5px 15px rgba(109, 76, 65, 0.1); 
+            border-color: var(--border);
+        }
         
-        /* ★ [수정] 긴 텍스트(브레이크 타임 포함)가 잘 보이도록 스타일 조정 */
-        .s-hours { font-size: 0.8em; color: #0984e3; margin-top: 5px; font-weight: bold; line-height: 1.4; word-break: keep-all; }
+        .s-info { display: flex; flex-direction: column; flex: 1; padding-right: 15px; }
+        .s-name { font-weight: bold; font-size: 1.15em; color: var(--text-main); margin-bottom: 5px; }
+        .s-addr { font-size: 0.9em; color: #8D6E63; margin-bottom: 8px; }
         
-        .btn-go { background: #00b894; color: white; padding: 10px 12px; border-radius: 6px; font-size: 0.85em; text-decoration: none; font-weight: bold; white-space: nowrap; }
-        .btn-go.closed { background: #b2bec3; cursor: not-allowed; }
+        /* ★ [수정] 영업 시간 스타일: 배경 제거 및 깔끔하게 정리 */
+        .s-hours { 
+            font-size: 0.9em; 
+            color: #5D4037; /* 진한 갈색으로 가독성 확보 */
+            line-height: 1.6; 
+            word-break: keep-all; 
+            /* 배경 관련 속성 모두 제거 */
+            display: block; 
+            margin-top: 5px;
+        }
+        
+        /* 줄서기 버튼 */
+        .btn-go { 
+            background: var(--primary); 
+            color: white; 
+            padding: 12px 16px; 
+            border-radius: 10px; 
+            font-size: 0.9em; 
+            text-decoration: none; 
+            font-weight: bold; 
+            white-space: nowrap; 
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .btn-go.closed { 
+            background: #D7CCC8; 
+            color: #fff;
+            cursor: not-allowed; 
+            box-shadow: none;
+        }
     </style>
 </head>
 <body>
+<div th:replace="~{common/header :: headerFragment}"></div>
 
     <div class="container">
-        <h1>🔍 맛집 찾기</h1>
-        <p style="color:#aaa; margin-bottom: 20px; font-size: 0.9em;">가고 싶은 매장 이름을 검색해보세요.</p>
+        <h1>🔍 웨이팅 맛집 찾기</h1>
+        <p style="color:#8D6E63; margin-bottom: 25px; font-size: 0.95em;">가고 싶은 매장 이름을 검색해보세요.</p>
 
         <div class="search-box">
             <input type="text" id="keyword" placeholder="예: 야미, 초밥" onkeypress="if(event.keyCode==13) doSearch()">
@@ -44,7 +154,10 @@
         </div>
 
         <ul id="result-list">
-            <li style="text-align:center; color:#ccc; margin-top: 50px;">검색 결과가 여기에 표시됩니다.</li>
+            <li style="text-align:center; color:#BCAAA4; margin-top: 80px;">
+                <span style="font-size:3em; display:block; margin-bottom:10px;">🍽️</span>
+                검색 결과가 여기에 표시됩니다.
+            </li>
         </ul>
     </div>
 
@@ -60,7 +173,7 @@
                     ul.innerHTML = "";
                     
                     if(list.length === 0) {
-                        ul.innerHTML = "<li style='text-align:center; color:#aaa; margin-top:30px;'>검색 결과가 없습니다. 😥</li>";
+                        ul.innerHTML = "<li style='text-align:center; color:#BCAAA4; margin-top:50px;'>검색 결과가 없습니다. 😥</li>";
                         return;
                     }
 
@@ -73,14 +186,33 @@
                             btnText = '마감됨';
                         }
 
-                        const hours = store.todayHours || '정보 없음';
+                        let hours = store.todayHours || '정보 없음';
+                        
+                        // ★ [수정] 줄바꿈 처리 및 서브 텍스트 스타일링 (배경 없이)
+                        if(hours.includes('(')) {
+                            // 괄호 앞을 끊어서 줄바꿈 + 들여쓰기 효과
+                            const parts = hours.split('(');
+                            // 첫 번째 파트 (시간)
+                            let mainTime = parts[0].trim();
+                            // 두 번째 파트 (브레이크 타임) - 괄호 다시 붙이고 연하게 처리
+                            let subTime = `(${parts[1]}`;
+                            
+                            // HTML 조합: 메인 시간은 굵게, 서브 시간은 작고 연하게
+                            hours = `
+                                <span style="font-weight:bold;">⏰ ${mainTime}</span><br>
+                                <span style="font-size:0.85em; color:#8D6E63; margin-left: 22px;">└ ${subTime}</span>
+                            `;
+                        } else {
+                            // 브레이크 타임 없을 때
+                            hours = `<span>⏰ ${hours}</span>`;
+                        }
 
                         ul.innerHTML += `
                             <div class="store-item" onclick="tryEnter(${store.id}, ${store.waitingOpen})">
                                 <div class="s-info">
                                     <span class="s-name">${store.name}</span>
                                     <div class="s-addr">📍 ${store.address}</div>
-                                    <div class="s-hours">⏰ ${hours}</div>
+                                    <div class="s-hours">${hours}</div>
                                 </div>
                                 <span class="${btnClass}">${btnText}</span>
                             </div>
@@ -103,115 +235,3 @@
     </script>
 </body>
 </html>
-
-
-<!-- <!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>웨이팅 가게 찾기</title>
-    <style>
-        body { font-family: 'Pretendard', sans-serif; padding: 20px; text-align: center; max-width: 420px; margin: 0 auto; background-color: #f1f2f6; color: #333; }
-        .container { background: white; padding: 30px 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 500px; }
-        
-        h1 { color: #00b894; margin-bottom: 30px; }
-        
-        /* 검색창 스타일 */
-        .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
-        input { flex: 1; padding: 12px; border: 2px solid #dfe6e9; border-radius: 8px; font-size: 1em; outline: none; transition: 0.2s; }
-        input:focus { border-color: #00b894; }
-        button { background: #2d3436; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
-        /* 결과 리스트 스타일 */
-        #result-list { list-style: none; padding: 0; margin: 0; text-align: left; }
-        .store-item { background: #fff; border-bottom: 1px solid #eee; padding: 15px 10px; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; }
-        .store-item:hover { background: #f8f9fa; }
-        
-        .s-info { display: flex; flex-direction: column; }
-        .s-name { font-weight: bold; font-size: 1.1em; color: #2d3436; }
-        .s-addr { font-size: 0.85em; color: #b2bec3; margin-top: 4px; }
-        
-        .btn-go { background: #00b894; color: white; padding: 8px 12px; border-radius: 6px; font-size: 0.8em; text-decoration: none; font-weight: bold; }
-        
-        /* 마감된 상태 스타일 */
-        .btn-go.closed { background: #b2bec3; cursor: not-allowed; }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <h1>🔍 웨이팅 가게 찾기</h1>
-        <p style="color:#aaa; margin-bottom: 20px; font-size: 0.9em;">매장 이름을 검색해보세요.</p>
-
-        <div class="search-box">
-            <input type="text" id="keyword" placeholder="예: 야미, 초밥" onkeypress="if(event.keyCode==13) doSearch()">
-            <button onclick="doSearch()">검색</button>
-        </div>
-
-        <ul id="result-list">
-            <li style="text-align:center; color:#ccc; margin-top: 50px;">검색 결과가 여기에 표시됩니다.</li>
-        </ul>
-    </div>
-
-    <script>
-        function doSearch() {
-            const keyword = document.getElementById('keyword').value;
-            if(!keyword) return alert("검색어를 입력하세요");
-
-            // 서버에서 검색 결과 가져오기 (매장 정보 + waitingOpen 여부)
-            fetch(`/waiting/search?keyword=${keyword}`)
-                .then(res => res.json())
-                .then(list => {
-                    const ul = document.getElementById('result-list');
-                    ul.innerHTML = "";
-                    
-                    if(list.length === 0) {
-                        ul.innerHTML = "<li style='text-align:center; color:#aaa; margin-top:30px;'>검색 결과가 없습니다. 😥</li>";
-                        return;
-                    }
-
-                    list.forEach(store => {
-                        // 1. 영업 상태에 따라 버튼 스타일과 텍스트 결정
-                        let btnClass = 'btn-go';
-                        let btnText = '줄서기 >';
-                        
-                        // 영업 마감(false)이면 회색 버튼 + 텍스트 변경
-                        if (!store.waitingOpen) {
-                            btnClass = 'btn-go closed';
-                            btnText = '마감됨';
-                        }
-
-                        // 2. HTML 생성
-                        // onclick="tryEnter(번호, 상태)" 함수를 호출하도록 단순화하여 따옴표 오류 방지
-                        ul.innerHTML += `
-                            <div class="store-item" onclick="tryEnter(${store.id}, ${store.waitingOpen})">
-                                <div class="s-info">
-                                    <span class="s-name">${store.name}</span>
-                                    <div class="s-addr">📍 ${store.address}</div>
-                                </div>
-                                <span class="${btnClass}">${btnText}</span>
-                            </div>
-                        `;
-                    });
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert("검색 중 오류가 발생했습니다.");
-                });
-        }
-
-        // ★ 입장 시도 함수 (클릭 시 실행)
-        function tryEnter(storeId, isOpen) {
-            // 1. 마감된 매장이면 경고창 띄우고 끝냄 (이동 X)
-            if (!isOpen) {
-                alert("⛔ 현재 웨이팅 접수가 마감된 매장입니다.");
-                return;
-            }
-            
-            // 2. 영업 중이면 웨이팅 신청 페이지로 이동
-            location.href = `/waitinguser?storeId=${storeId}`;
-        }
-    </script>
-</body>
-</html> -->

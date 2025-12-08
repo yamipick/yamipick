@@ -9,11 +9,6 @@ spring:
   application:
     name: yamipick
 
-<<<<<<< HEAD
-# 1. JDBC(+HikariCP) 설정 //아직 오라클 클라우드 설정을 안 해놧음 설정후 변경 예정
-=======
-
->>>>>>> da2735c53089a98e824640a9409179321f21887c
 #  # [추가됨] Redis 설정
 #  data:
 #    redis:
