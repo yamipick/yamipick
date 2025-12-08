@@ -43,7 +43,8 @@ public class SecurityConfig {
             .loginProcessingUrl("/loginProc") // HTML Form의 action 주소와 일치해야 함
             .usernameParameter("username")    // HTML input name="username"
             .passwordParameter("password")    // HTML input name="password"
-            .defaultSuccessUrl("/", true)     // 로그인 성공 시 메인으로 이동
+            //.defaultSuccessUrl("/", true)     // 로그인 성공 시 메인으로 이동
+            .defaultSuccessUrl("/reservation/main", true) 
             .permitAll()
         );
 

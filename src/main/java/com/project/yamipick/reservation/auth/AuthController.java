@@ -42,10 +42,4 @@ public class AuthController {
         return "reservation/login";  // templates/reservation/login.html
     }
     
-    // 로그아웃
-    @GetMapping("/logout")
-    public String logout() {
-        session.invalidate();
-        return "redirect:/reservation/auth/login";
-    }
 }
