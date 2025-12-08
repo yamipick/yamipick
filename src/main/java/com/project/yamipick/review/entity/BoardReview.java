@@ -1,6 +1,8 @@
 package com.project.yamipick.review.entity;
 
 import java.sql.Date;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.project.yamipick.review.dto.BoardReviewDTO;
 //import com.project.yamipick.store.entity.Store;
@@ -14,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -68,6 +71,9 @@ public class BoardReview {
 	
 	@Column(nullable = false, length = 20)
 	private String contentState;
+	
+	@OneToMany(mappedBy = "review")
+	private List<Tagging> taggings = new ArrayList<>();
 	
 	public BoardReviewDTO toDTO() {
 		

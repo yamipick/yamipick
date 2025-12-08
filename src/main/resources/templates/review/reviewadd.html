@@ -273,8 +273,16 @@
 		.btn:hover {
 		    background: #3A2315;
 		}
-		        
-
+		
+		.tag-prefix {
+		    font-size: 15px;
+		    color: #4A2D1A;
+		    margin-right: 3px;
+		    font-weight: 600;
+		    position: relative;
+		    top: -1px;
+		}
+		
     </style>
 </head>
 <body>
@@ -326,6 +334,7 @@
             <label>위치 선택</label>
             <div class="map-notice">지도를 클릭하면 위치가 자동으로 저장됩니다.</div>
 			<div id="map" style="width:500px;height:400px;"></div>
+			<input type="hidden" name="place" id="place">
         </div>
 
         <!-- 태그 -->
@@ -333,7 +342,8 @@
             <label>태그</label>
             <div class="tag-box">
 			    <div id="tagList" class="tag-list"></div>
-			    <input type="text" id="tagText" placeholder="#태그 입력">
+			    <span class="tag-prefix">#</span>
+			    <input type="text" id="tagText" placeholder="태그 입력">
 			</div>
 			<input type="hidden" name="tags" id="tagsHidden">
         </div>
@@ -451,6 +461,9 @@
 
         marker.setMap(map);
         marker.setPosition(latlng);
+        
+        document.getElementById("place").value = 
+        latlng.getLat() + "," + latlng.getLng();
 
         geocoder.coord2Address(latlng.getLat(), latlng.getLng(), function(result, status) {
             if (status === kakao.maps.services.Status.OK) {
@@ -472,6 +485,9 @@
                 marker.setMap(map);
                 marker.setPosition(coords);
                 map.setCenter(coords);
+                
+                document.getElementById("place").value = lat + "," + lng;
+                
             } else {
                 alert("주소를 찾을 수 없습니다.");
             }

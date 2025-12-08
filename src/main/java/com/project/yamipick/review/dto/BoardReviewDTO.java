@@ -39,6 +39,8 @@ public class BoardReviewDTO {
 	private Integer favoriteCount;
 	private String contentState;
 	
+	private String tags;
+	
 	public BoardReview toEntity(User user) {
 		
 		return BoardReview.builder()
