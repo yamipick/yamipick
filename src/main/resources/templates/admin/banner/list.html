@@ -32,7 +32,6 @@
                             <th>No</th>
                             <th>이미지</th>
                             <th>제목</th>
-                            <th>등록일</th>
                             <th>상태</th>
                             <th>관리</th>
                         </tr>
@@ -45,7 +44,6 @@
                             <td th:text="${banner.seqBanner}">1</td>
                             <td><img th:src="${banner.imgPath}" class="banner-img-preview"></td>
                             <td class="fw-bold" th:text="${banner.title}">제목</td>
-                            <td th:text="${#temporals.format(banner.createdAt, 'yyyy-MM-dd')}">날짜</td>
                             <td>
                                 <form action="/admin/banner/toggle" method="post" class="d-inline">
                                     <input type="hidden" name="seqBanner" th:value="${banner.seqBanner}">

@@ -2,17 +2,15 @@ package com.project.yamipick.admin.controller;
 
 import com.project.yamipick.banner.entity.Banner;
 import com.project.yamipick.banner.repository.BannerRepository;
+import com.project.yamipick.aws.S3Uploader; // ★ 아까 만든 Uploader import 확인!
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
 
 @Controller
 @RequestMapping("/admin/banner")
@@ -21,50 +19,47 @@ import java.util.UUID;
 public class AdminBannerController {
 
     private final BannerRepository bannerRepository;
-
-    @Value("${file.upload.path:C:/yamipick/upload/}")
-    private String uploadPath;
+    private final S3Uploader s3Uploader; // ★ 로컬 경로(String uploadPath) 대신 이거 씀!
 
     // 목록 페이지
     @GetMapping("/list")
     public String list(Model model) {
-        // 최신순 정렬로 변경
         model.addAttribute("list", bannerRepository.findAllByOrderBySeqBannerDesc());
         model.addAttribute("menu", "banner");
         return "admin/banner/list";
     }
 
-    // 등록 처리
+    // 등록 처리 (S3 버전)
     @PostMapping("/add")
     public String add(
             @RequestParam String title,
-            // @RequestParam String linkUrl, (ERD에 없어서 삭제)
-            // @RequestParam Integer orderNo, (ERD에 없어서 삭제)
             @RequestParam MultipartFile file
-    ) throws IOException {
+    ) { // throws IOException 제거 (try-catch로 잡음)
 
         if (file.isEmpty()) {
             return "redirect:/admin/banner/list?error=no_file";
         }
 
-        // 파일 저장
-        String originalName = file.getOriginalFilename();
-        String saveName = UUID.randomUUID() + "_" + originalName;
-        String savePath = uploadPath + "banner/";
+        try {
+            // ★ 핵심 변경: 로컬 저장 로직 삭제 -> S3Uploader 호출
+            // "banner"는 S3 버킷 안에 생길 폴더 이름입니다.
+            String uploadedUrl = s3Uploader.upload(file, "banner");
+            
+            log.info("S3 업로드 성공: {}", uploadedUrl);
 
-        File folder = new File(savePath);
-        if (!folder.exists()) folder.mkdirs();
+            // DB 저장 (S3 URL 그대로 저장)
+            Banner banner = Banner.builder()
+                    .title(title)
+                    .imgPath(uploadedUrl) // 예: https://yamipick.s3.../banner/abc.jpg
+                    .isVisible("Y")
+                    .build();
 
-        file.transferTo(new File(savePath + saveName));
+            bannerRepository.save(banner);
 
-        // DB 저장 (컬럼 줄어듦)
-        Banner banner = Banner.builder()
-                .title(title)
-                .imgPath("/upload/banner/" + saveName)
-                .isVisible("Y") // 기본 노출
-                .build();
-
-        bannerRepository.save(banner);
+        } catch (IOException e) {
+            log.error("배너 이미지 업로드 실패", e);
+            return "redirect:/admin/banner/list?error=upload_fail";
+        }
 
         return "redirect:/admin/banner/list";
     }
@@ -72,14 +67,15 @@ public class AdminBannerController {
     // 삭제
     @PostMapping("/delete")
     public String delete(@RequestParam Long seqBanner) {
+        // 심화: 여기서 s3Uploader.delete(imgPath) 를 호출해서 S3 파일도 지워주면 베스트!
+        // 일단은 DB만 지워도 무방합니다.
         bannerRepository.deleteById(seqBanner);
         return "redirect:/admin/banner/list";
     }
     
-    // 노출 여부 토글
+    // 노출 여부 토글 (기존 유지)
     @PostMapping("/toggle")
     public String toggle(@RequestParam Long seqBanner, @RequestParam String isVisible) {
-        // ... (이전과 동일 로직, 엔티티 updateInfo 사용 권장)
         Banner banner = bannerRepository.findById(seqBanner).orElseThrow();
         banner.updateInfo(banner.getTitle(), isVisible);
         bannerRepository.save(banner);
