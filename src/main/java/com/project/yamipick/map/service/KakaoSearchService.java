@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.springframework.beans.factory.annotation.Value;
 //import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -26,7 +27,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class KakaoSearchService {
 
-    private static final String KAKAO_REST_API_KEY = "c46ba799390d0dd28c7adc89aa77bc40"; 
+	@Value("${yamipick.api.kakao.key}")
+    private String kakaoRestApiKey;
     
     private static final String KAKAO_KEYWORD_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
     private static final String KAKAO_CATEGORY_URL = "https://dapi.kakao.com/v2/local/search/category.json";
@@ -44,7 +46,7 @@ public class KakaoSearchService {
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "KakaoAK " + KAKAO_REST_API_KEY.trim());
+        headers.set("Authorization", "KakaoAK " + kakaoRestApiKey.trim());
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         List<RestaurantDTO> finalResultList = new ArrayList<>();

@@ -2,8 +2,13 @@ server:
   port: 8080
 
 spring:
+  # ★ [추가됨] application-secret.yml 파일을 여기서 불러옵니다!
+  profiles:
+    include: secret
+
   application:
     name: yamipick
+
 
 #  # [추가됨] Redis 설정
 #  data:
@@ -40,6 +45,15 @@ spring:
   # 3. Thymeleaf 설정
   thymeleaf:
     cache: false
+    
+  # 카카오맵 api
+  config:
+    import: optional:kakao-map-api.properties
+  # 파일 크기 지정
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 # 4. MyBatis 설정
 mybatis:

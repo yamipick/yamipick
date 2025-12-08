@@ -2,6 +2,7 @@ package com.project.yamipick.map.controller;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,9 @@ public class MapController {
     private final NaverSearchService naverSearchService; // ★ 형님! 이 줄이 빠져 있었습니다! 추가 완료.
     private final WeatherService weatherService;
     
+    
+    @Value("${yamipick.api.kakao.js-key}")
+    private String kakaoJsKey;
     
     @GetMapping("/map")
     public String map(Model model, 
@@ -69,6 +73,8 @@ public class MapController {
         
         String weatherMenu = weatherService.getRecommnedMenu();
         model.addAttribute("weatherMenu", weatherMenu);
+        
+        model.addAttribute("kakaoJsKey", kakaoJsKey);
         
         return "search/map"; 
     }
