@@ -1,8 +1,11 @@
 package com.project.yamipick.admin.dto;
 
+import java.util.List;
+
+import com.project.yamipick.notice.entity.Notice;
+
 import lombok.Builder;
 import lombok.Data;
-import java.util.List;
 
 @Data
 @Builder
@@ -16,6 +19,7 @@ public class DashboardDTO {
     private List<Long> visitData;
     private List<String> rankLabels;
     private List<Long> rankData;
+    private List<Notice> noticeList;
 
     // 3. [Dummy] 나중에 팀원이 채워줄 데이터 (예약, 결제 등)
     // 이 변수명들을 보고 팀원들이 "아, 이 데이터를 줘야 하는구나" 하고 알게 됩니다.

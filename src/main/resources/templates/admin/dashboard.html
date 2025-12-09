@@ -158,19 +158,49 @@
                 </div>
                 
                 <!-- 인기 식당 랭킹 -->
-                <div class="col-lg-4">
-                    <div class="card stat-card h-100">
-                        <div class="card-header border-0 bg-white pt-4 px-4">
-                            <h5 class="fw-bold mb-0"><i class="fas fa-fire me-2 text-danger"></i>핫플레이스 TOP 5</h5>
-                        </div>
-                        <div class="card-body px-4 pb-4">
-                            <div class="chart-container" style="height: 300px;">
-                                <canvas id="rankChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+				<div class="col-lg-4">
+				    <div class="card stat-card h-100">
+				        <div class="card-header border-0 bg-white pt-4 px-4">
+				            <h5 class="fw-bold mb-0"><i class="fas fa-fire me-2 text-danger"></i>핫플레이스 TOP 5</h5>
+				        </div>
+				        
+				        <div class="card-body px-4 pb-4">
+				            
+				            <div class="list-group list-group-flush">
+				                
+				                <div th:if="${rankLabels != null}" th:each="label, stat : ${rankLabels}" 
+				                     class="list-group-item border-0 px-0 py-3">
+				                    
+				                    <div class="d-flex justify-content-between align-items-center mb-1">
+				                        <div class="d-flex align-items-center">
+				                            <span class="badge rounded-pill me-2" 
+				                                  th:classappend="${stat.index < 3 ? 'bg-primary' : 'bg-secondary'}"
+				                                  th:text="${stat.count}">1</span>
+				                            
+				                            <span class="fw-bold text-dark" th:text="${label}">식당이름</span>
+				                        </div>
+				                        <span class="text-muted small">
+				                            <i class="fas fa-mouse-pointer me-1"></i>
+				                            <span th:text="${rankData[stat.index]}">0</span>회
+				                        </span>
+				                    </div>
+				
+				                    <div class="progress" style="height: 6px;">
+				                        <div class="progress-bar rounded" role="progressbar" 
+				                             th:style="'width: ' + (${rankData[stat.index]} * 100.0 / ${rankData[0]}) + '%; background-color: #008080; opacity: ' + (1 - ${stat.index} * 0.15)"
+				                             aria-valuemin="0" aria-valuemax="100"></div>
+				                    </div>
+				                </div>
+				                
+				                <div th:if="${rankLabels == null or rankLabels.isEmpty()}" class="text-center py-5 text-muted">
+				                    <i class="fas fa-exclamation-circle mb-2"></i><br>
+				                    집계된 데이터가 없습니다.
+				                </div>
+				
+				            </div>
+				            </div>
+				    </div>
+				</div>
 
             <!-- 3. 하단 상세 정보 -->
             <div class="row g-4">
@@ -187,15 +217,19 @@
                                     <div style="width: 120px; margin: 0 auto;">
                                         <canvas id="donut1"></canvas>
                                     </div>
-                                    <div class="mt-3 fw-bold">예약 이행률</div>
-                                    <div class="small text-muted">73% 달성</div>
+                                 	<div class="mt-3 fw-bold">예약 이행률</div>
+									<div class="small text-muted">
+									    <span th:text="${reservationRate}">0</span>% 달성
+									</div>
                                 </div>
                                 <div class="col-4 border-start border-end">
                                     <div style="width: 120px; margin: 0 auto;">
                                         <canvas id="donut2"></canvas>
                                     </div>
                                     <div class="mt-3 fw-bold text-danger">노쇼 비율</div>
-                                    <div class="small text-muted">12% 발생</div>
+									<div class="small text-muted">
+									    <span th:text="${noShowRate}">0</span>% 발생
+									</div>
                                 </div>
                                 <div class="col-4">
                                     <div style="width: 120px; margin: 0 auto;">
@@ -300,38 +334,6 @@
         });
     }
 
-    // 2. 인기 식당 랭킹
-    const rankLabels = /*[[${rankLabels ?: {}}]]*/ [];
-    const rankData = /*[[${rankData ?: {}}]]*/ [];
-
-    if(rankLabels.length > 0) {
-        new Chart(document.getElementById('rankChart'), {
-            type: 'bar',
-            data: {
-                labels: rankLabels,
-                datasets: [{
-                    label: '조회수',
-                    data: rankData,
-                    backgroundColor: [
-                        '#008080', '#20c997', '#ffc107', '#fd7e14', '#dc3545'
-                    ],
-                    borderRadius: 5,
-                    barThickness: 20
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false } },
-                    y: { grid: { display: false } }
-                }
-            }
-        });
-    }
-
     // 3. 도넛 차트
     function createDonut(id, value, color) {
         const ctx = document.getElementById(id);
@@ -356,11 +358,17 @@
         });
     }
 
-    createDonut('donut1', 73, '#008080'); 
-    createDonut('donut2', 12, '#dc3545'); 
-    createDonut('donut3', 98, '#198754'); 
+   	const reservationRate = /*[[${reservationRate ?: 0}]]*/ 0;
+    const noShowRate = /*[[${noShowRate ?: 0}]]*/ 0;
 
-    /*]]>*/
+    // 변수 넣기
+    createDonut('donut1', reservationRate, '#008080'); 
+    createDonut('donut2', noShowRate, '#dc3545'); 
+    
+    // 가동률은 아직 데이터가 없으므로 98 고정 유지 (혹은 나중에 추가)
+    createDonut('donut3', 98, '#198754');
+
+    /*]]>*/	
 </script>
 
 </body>

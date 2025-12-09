@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>공지사항 - 야미픽</title>
+    </head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">📢 공지사항</h2>
+        <div class="list-group">
+            <a th:each="notice : ${list}" 
+               th:href="@{/notice/view(seq=${notice.seqNotice})}" 
+               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <div>
+                    <span th:if="${notice.topFixed}" class="badge bg-danger me-2">필독</span>
+                    <span th:text="${notice.title}" class="fw-bold">제목</span>
+                </div>
+                <small class="text-muted" th:text="${#temporals.format(notice.createdAt, 'yyyy-MM-dd')}">날짜</small>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

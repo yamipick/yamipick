@@ -44,6 +44,7 @@ public class AdminController {
         model.addAttribute("targetRevenue", data.getTargetRevenue());
         model.addAttribute("reservationRate", data.getReservationRate());
         model.addAttribute("noShowRate", data.getNoShowRate());
+        model.addAttribute("noticeList", data.getNoticeList());	
         
         // 사이드바 활성화용
         model.addAttribute("menu", "dashboard");

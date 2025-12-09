@@ -8,4 +8,6 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
     
     // 최신순으로 전체 조회 (SELECT * FROM tblNotice ORDER BY createdAt DESC)
     List<Notice> findAllByOrderByCreatedAtDesc();
+
+	List<Notice> findTop5ByOrderByCreatedAtDesc();
 }
