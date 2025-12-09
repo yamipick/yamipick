@@ -72,18 +72,45 @@
 
         /* 공지사항 게시판 */
         .notice-board { margin: 25px 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
+        
+        .latest-notice-box {
+            background-color: #FFF3E0; 
+            padding: 20px;
+            border-bottom: 1px dashed #D7CCC8;
+            text-align: left;
+        }
+
+        .latest-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #D84315;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .latest-content {
+            font-size: 1em;
+            color: #3E2723;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
         .notice-header { 
-            background: #FFF8E1; /* 연한 크림색 */
-            color: #5D4037;
-            padding: 15px; 
+            background: #FAFAFA; 
+            color: #8D6E63;
+            padding: 12px 15px; 
             font-weight: bold; 
             cursor: pointer; 
             display: flex; 
-            justify-content: space-between; 
+            justify-content: center; 
             align-items: center; 
             transition: 0.2s;
+            gap: 5px;
+            font-size: 0.9em;
         }
-        .notice-header:hover { background: #FFECB3; }
+        .notice-header:hover { background: #F5F5F5; color: var(--primary); }
 
         .notice-list { display: none; padding: 0; margin: 0; list-style: none; text-align: left; }
         .notice-item { padding: 15px; border-bottom: 1px solid #EFEBE9; }
@@ -156,17 +183,34 @@
         <div id="alert-area"></div>
 
         <div class="notice-board">
-            <div class="notice-header" onclick="toggleNotice()">
-                <span>📢 매장 공지사항 확인</span>
+            <div id="latest-notice-area" class="latest-notice-box" style="display:none;">
+                <div class="latest-title">
+                    <span id="l-badge">📢</span> <span id="l-title">제목</span>
+                </div>
+                <div id="l-content" class="latest-content">내용</div>
+                <div id="l-date" style="text-align: right; font-size: 0.8em; color: #aaa; margin-top: 10px;">날짜</div>
+            </div>
+
+            <div id="notice-toggle-btn" class="notice-header" onclick="toggleNotice()" style="display:none;">
+                <span>➕ 지난 공지사항 더보기</span>
                 <span id="notice-arrow">🔽</span>
             </div>
-            <ul id="notice-list" class="notice-list">
-                </ul>
+
+            <ul id="notice-list" class="notice-list"></ul>
+
+            <div id="no-notice-msg" style="display:none; padding:20px; text-align:center; color:#aaa;">
+                등록된 공지사항이 없습니다.
+            </div>
         </div>
 
         <div id="reg-box">
             <h2 style="margin-top:10px;">🍽️ 대기 접수</h2>
+            
             <p id="store-status-text" style="color: #A1887F;">매장 상태 확인 중...</p>
+            
+            <p id="store-hours-text" style="color: #5D4037; font-size: 0.95em; margin-top: -10px; margin-bottom: 25px; font-weight: bold;">
+                ⏳ 시간 정보 불러오는 중...
+            </p>
             
             <div style="margin: 40px 0;">
                 <label style="display:block; margin-bottom:15px; font-weight:bold; color:#5D4037;">총 방문 인원</label>
@@ -225,45 +269,86 @@
             loadNotices();
         }
 
-        // --- 공지사항 ---
         function loadNotices() {
             fetch(`/waiting/notices?storeId=${storeId}`)
                 .then(r => r.json())
                 .then(list => {
+                    const latestArea = document.getElementById('latest-notice-area');
+                    const toggleBtn = document.getElementById('notice-toggle-btn');
                     const ul = document.getElementById('notice-list');
+                    const noMsg = document.getElementById('no-notice-msg');
+
+                    latestArea.style.display = 'none';
+                    toggleBtn.style.display = 'none';
+                    ul.style.display = 'none';
+                    noMsg.style.display = 'none';
                     ul.innerHTML = "";
+
                     if (list.length === 0) {
-                        ul.innerHTML = "<li class='notice-item' style='text-align:center; color:#aaa;'>등록된 공지가 없습니다.</li>";
+                        noMsg.style.display = 'block';
                         return;
                     }
-                    list.forEach(item => {
-                        const pinnedClass = item.pinned ? 'pinned' : '';
-                        const badge = item.pinned ? '<span class="n-badge">[필독]</span>' : '';
-                        const date = item.regDate ? item.regDate.replace('T', ' ').substring(0, 16) : ''; 
 
-                        ul.innerHTML += `
-                            <li class="notice-item ${pinnedClass}">
-                                <span class="n-title">${badge}${item.title}</span>
-                                <div class="n-content">${item.content}</div>
-                                <div class="n-date">${date}</div>
-                            </li>
-                        `;
-                    });
+                    const latest = list[0];
+                    latestArea.style.display = 'block';
+                    
+                    const badgeIcon = latest.pinned ? '🚨 필독' : '📢 알림';
+                    const dateStr = latest.regDate ? latest.regDate.replace('T', ' ').substring(0, 16) : '';
+
+                    document.getElementById('l-badge').innerText = badgeIcon;
+                    document.getElementById('l-title').innerText = latest.title;
+                    document.getElementById('l-content').innerText = latest.content;
+                    document.getElementById('l-date').innerText = dateStr;
+
+                    if (list.length > 1) {
+                        toggleBtn.style.display = 'flex';
+                        for (let i = 1; i < list.length; i++) {
+                            const item = list[i];
+                            const pinnedClass = item.pinned ? 'pinned' : '';
+                            const subBadge = item.pinned ? '<span class="n-badge">[필독]</span>' : '';
+                            const subDate = item.regDate ? item.regDate.substring(0, 10) : '';
+
+                            ul.innerHTML += `
+                                <li class="notice-item ${pinnedClass}">
+                                    <span class="n-title">${subBadge}${item.title}</span>
+                                    <div class="n-content">${item.content}</div>
+                                    <div class="n-date">${subDate}</div>
+                                </li>
+                            `;
+                        }
+                    }
                 });
         }
 
         function toggleNotice() {
             const ul = document.getElementById('notice-list');
             const arrow = document.getElementById('notice-arrow');
-            if(ul.style.display === 'block') { ul.style.display = 'none'; arrow.innerText = '🔽'; } 
-            else { ul.style.display = 'block'; arrow.innerText = '🔼'; }
+            const btnText = document.querySelector('#notice-toggle-btn span:first-child');
+
+            if(ul.style.display === 'block') { 
+                ul.style.display = 'none'; 
+                arrow.innerText = '🔽';
+                btnText.innerText = '➕ 지난 공지사항 더보기';
+            } else { 
+                ul.style.display = 'block'; 
+                arrow.innerText = '🔼';
+                btnText.innerText = '➖ 접기';
+            }
         }
 
-        // --- 기본 로직 ---
         function checkStoreStatus() {
             fetch(`/waiting/store-info?storeId=${storeId}`).then(r => r.json()).then(store => {
                 const txt = document.getElementById('store-status-text');
                 const btn = document.getElementById('btn-reg');
+                
+                // ★ [추가됨] 운영 시간 업데이트
+                const hoursBox = document.getElementById('store-hours-text');
+                if (store.todayHours) {
+                    hoursBox.innerText = "⏰ " + store.todayHours;
+                } else {
+                    hoursBox.innerText = "⏰ 운영 시간 정보 없음";
+                }
+
                 if (store.waitingOpen) {
                     txt.innerHTML = "🟢 <b style='color:#3E2723'>현재 대기 접수 중</b>"; 
                     btn.disabled = false;
@@ -285,8 +370,6 @@
         function register() {
             const btn = document.getElementById('btn-reg');
             const size = document.getElementById('size').value;
-
-            // 버튼 즉시 비활성화 (중복 클릭 방지)
             btn.disabled = true;
             btn.innerText = "처리 중...";
             

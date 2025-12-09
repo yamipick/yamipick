@@ -24,7 +24,7 @@
             background-color: var(--bg-body); 
             color: var(--text-main); 
             padding: 15px; 
-            padding-top: 80px; 
+            padding-top: 60px; 
             margin: 0;
         }
 
@@ -36,7 +36,9 @@
             padding: 25px; 
             border-radius: 20px; 
             box-shadow: 0 4px 20px rgba(109, 76, 65, 0.08); 
-            box-sizing: border-box; 
+            box-sizing: border-box;
+            margin-top: 20px;
+            
         }
         
         .header { 
@@ -100,6 +102,8 @@
     </style>
 </head>
 <body>
+<div th:replace="~{common/header :: headerFragment}"></div>
+
     <div class="container">
         <div class="header">
             <h1>웨이팅 관리</h1>

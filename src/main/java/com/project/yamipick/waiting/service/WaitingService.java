@@ -161,24 +161,42 @@ public Waiting register(Long userId, Long storeId, int size) {
         return !isOpen;
     }
     
- // [변경 후] DTO를 반환하도록 수정
+ // WaitingService.java 내부
+
     @Transactional(readOnly = true)
     public StoreInfoDTO getStoreInfo(Long storeId) {
-        // 1. 매장 조회 (DB)
+        // 1. 매장 조회
         WaitingStore store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new IllegalArgumentException("매장 정보 없음"));
         
-        // 2. 영업 상태 계산 (로직 동일)
-        boolean isOpen = operationRepository.findByStoreIdAndOperationDate(storeId, LocalDate.now())
+        // 2. 날짜/요일 계산
+        LocalDate today = LocalDate.now();
+        int dayOfWeek = today.getDayOfWeek().getValue() % 7; // 0(일) ~ 6(토)
+        
+        // 3. 영업 상태 계산 (OPEN/CLOSED)
+        boolean isOpen = operationRepository.findByStoreIdAndOperationDate(storeId, today)
                 .map(op -> "OPEN".equals(op.getStatus()))
                 .orElse(false);
 
-        // 3. (단건 조회시 영업시간 텍스트가 필요 없다면 빈 문자열 or 로직 추가)
-        // 매장 관리 페이지에서는 보통 영업중 여부만 쓰므로 일단 빈 문자열 처리하거나,
-        // 필요하다면 아래 searchStores의 시간 계산 로직을 함수로 추출해서 쓰면 됩니다.
-        String hoursText = ""; 
+        // 4. ★ [수정] 영업 시간 텍스트 생성 (스케줄 조회)
+        String hoursText = "영업 정보 없음";
+        
+        // 스케줄 DB 조회
+        StoreSchedule schedule = scheduleRepository.findByStoreIdAndDayOfWeek(storeId, dayOfWeek).orElse(null);
+        
+        if (schedule != null) {
+            if ("N".equals(schedule.getIsOpen())) {
+                hoursText = "⛔ 오늘은 휴무입니다";
+            } else {
+                hoursText = schedule.getOpenTime() + " ~ " + schedule.getCloseTime();
+                // 브레이크 타임이 있으면 표시
+                if (schedule.getBreakStart() != null && !schedule.getBreakStart().isEmpty()) {
+                    hoursText += " (브레이크: " + schedule.getBreakStart() + "~" + schedule.getBreakEnd() + ")";
+                }
+            }
+        }
 
-        // 4. ★ 엔티티에 set 하는 게 아니라, DTO를 만들어서 리턴!
+        // 5. DTO 리턴
         return new StoreInfoDTO(store, isOpen, hoursText);
     }
 
