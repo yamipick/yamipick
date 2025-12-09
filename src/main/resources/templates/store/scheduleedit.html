@@ -1,70 +1,78 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta charset="UTF-8">
-	<title>영업 시간 수정</title>
-	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+<meta charset="UTF-8">
+<title>영업 시간 수정</title>
+<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
 </head>
 <body>
 
-<h1>영업 시간 수정</h1>
+	<h1>영업 시간 수정</h1>
 
-<form th:action="@{/store/schedule/edit}" method="post">
+	<form th:action="@{/store/schedule/edit}" method="post">
 
-    <table border="1">
-        <thead>
-        <tr>
-            <th>요일</th>
-            <th>영업 여부</th>
-            <th>시작 시간</th>
-            <th>종료 시간</th>
-            <th>브레이크 시작</th>
-            <th>브레이크 종료</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="s : ${schedules}">
-            <!-- ★ 여기! 각 행마다 seqSchedule hidden으로 보냄 -->
-            <input type="hidden" name="seqSchedule"
-                   th:value="${s.seqSchedule}"/>
+		<table border="1">
+			<thead>
+				<tr>
+					<th>요일</th>
+					<th>영업 여부</th>
+					<th>시작 시간</th>
+					<th>종료 시간</th>
+					<th>브레이크 시작</th>
+					<th>브레이크 종료</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="s : ${schedules}">
+					<!-- ★ 여기! 각 행마다 seqSchedule hidden으로 보냄 -->
+					<input type="hidden" name="seqSchedule" th:value="${s.seqSchedule}" />
 
-            <td th:text="${s.dayOfWeekName}">월</td>
+					<td th:text="${s.dayOfWeekName}">월</td>
 
-            <td>
-                <select name="isOpen">
-                    <option value="Y" th:selected="${s.isOpen == 'Y'}">영업</option>
-                    <option value="N" th:selected="${s.isOpen == 'N'}">휴무</option>
-                </select>
-            </td>
+					<td><select name="isOpen">
+							<option value="Y" th:selected="${s.isOpen == 'Y'}">영업</option>
+							<option value="N" th:selected="${s.isOpen == 'N'}">휴무</option>
+					</select></td>
+					<td><select name="openTime">
+							<option th:each="h : ${#numbers.sequence(0,23)}"
+								th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+								th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+								th:selected="${s.openTime == ((h < 10 ? '0' + h : '' + h) + ':00')}">
+							</option>
+					</select></td>
 
-            <td>
-                <input type="time" name="openTime"
-                       th:value="${s.openTime}"/>
-            </td>
+					<td><select name="closeTime">
+							<option th:each="h : ${#numbers.sequence(0,23)}"
+								th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+								th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+								th:selected="${s.closeTime == ((h < 10 ? '0' + h : '' + h) + ':00')}">
+							</option>
+					</select></td>
 
-            <td>
-                <input type="time" name="closeTime"
-                       th:value="${s.closeTime}"/>
-            </td>
+					<td><select name="breakStart">
+							<option th:each="h : ${#numbers.sequence(0,23)}"
+								th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+								th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+								th:selected="${s.breakStart == ((h < 10 ? '0' + h : '' + h) + ':00')}">
+							</option>
+					</select></td>
 
-            <td>
-                <input type="time" name="breakStart"
-                       th:value="${s.breakStart}"/>
-            </td>
+					<td><select name="breakEnd">
+							<option th:each="h : ${#numbers.sequence(0,23)}"
+								th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+								th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+								th:selected="${s.breakEnd == ((h < 10 ? '0' + h : '' + h) + ':00')}">
+							</option>
+					</select></td>
+				</tr>
+			</tbody>
+		</table>
 
-            <td>
-                <input type="time" name="breakEnd"
-                       th:value="${s.breakEnd}"/>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+		<button type="submit">저장</button>
+		<a th:href="@{/store/dashboard}">취소</a>
+	</form>
 
-    <button type="submit">저장</button>
-    <a th:href="@{/store/dashboard}">취소</a>
-</form>
-
-<a th:href="@{/store/dashboard}">대시보드로 돌아가기</a>
+	<a th:href="@{/store/dashboard}">대시보드로 돌아가기</a>
 
 </body>
 </html>

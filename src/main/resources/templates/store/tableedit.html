@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>테이블 타입 수정</title>
+	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+</head>
+<body>
+<h2>테이블 타입 수정 / 추가</h2>
+
+<form th:action="@{/store/table/edit}" method="post">
+    <table border="1">
+        <thead>
+        <tr>
+            <th>테이블명</th>
+            <th>정원</th>
+            <th>수량</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="t : ${tableTypes}">
+            <!-- seqStoreTable: 숨김 필드 -->
+            <input type="hidden" name="seqStoreTable"
+                   th:value="${t.seqStoreTable}"/>
+
+            <td>
+                <input type="text" name="name"
+                       th:value="${t.name}"/>
+            </td>
+            <td>
+                <input type="number" name="capacity"
+                       th:value="${t.capacity}"/>
+            </td>
+            <td>
+                <input type="number" name="quantity"
+                       th:value="${t.quantity}"/>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <button type="submit">수정 저장</button>
+    <a th:href="@{/store/dashboard}">대시보드로 돌아가기</a>
+</form>
+
+</body>
+</html>

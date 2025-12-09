@@ -55,25 +55,45 @@
 <!-- ========================= -->
 <h3>영업 시간 설정</h3>
 
-<div>
-    <label>영업 시작 시간</label>
-    <input type="time" name="openTime" required>
-</div>
+<label>영업 시작 시간</label><br>
+<select name="openTime">
+    <option th:each="h : ${#numbers.sequence(0,23)}"
+            th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+            th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
+    </option>
+</select>
 
-<div>
-    <label>영업 종료 시간</label>
-    <input type="time" name="closeTime" required>
-</div>
+<br><br>
 
-<div>
-    <label>브레이크 시작 시간</label>
-    <input type="time" name="breakStart">
-</div>
+<label>영업 종료 시간</label><br>
+<select name="closeTime">
+    <option th:each="h : ${#numbers.sequence(0,23)}"
+            th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+            th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
+    </option>
+</select>
 
-<div>
-    <label>브레이크 종료 시간</label>
-    <input type="time" name="breakEnd">
-</div>
+<br><br>
+
+<label>브레이크 시작 시간</label><br>
+<select name="breakStart">
+    <option value="">— 없음 —</option>
+    <option th:each="h : ${#numbers.sequence(0,23)}"
+            th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+            th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
+    </option>
+</select>
+
+<br><br>
+
+<label>브레이크 종료 시간</label><br>
+<select name="breakEnd">
+    <option value="">— 없음 —</option>
+    <option th:each="h : ${#numbers.sequence(0,23)}"
+            th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+            th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
+    </option>
+</select>
 
 <hr>
 
@@ -103,7 +123,11 @@
 		</div>
 		
 		<button type="button" onclick="addTableTypeRow()">테이블 타입 추가</button>
-
+	
+	<div th:if="${errorMessage}" style="color:red;">
+	    [[${errorMessage}]]
+	</div>
+	
     <button type="submit">매장 등록</button>
 </form>
 
@@ -234,6 +258,27 @@
 
         alert('매장을 선택했습니다: ' + p.name);
     }
+</script>
+<script>
+	document.querySelector("form").addEventListener("submit", function (e) {
+	    const openTime = document.querySelector("input[name='openTime']").value;
+	    const closeTime = document.querySelector("input[name='closeTime']").value;
+	    const breakStart = document.querySelector("input[name='breakStart']").value;
+	    const breakEnd = document.querySelector("input[name='breakEnd']").value;
+	
+	    if (!openTime || !closeTime) {
+	        alert("영업 시작 / 종료 시간은 반드시 설정해야 합니다.");
+	        e.preventDefault();
+	        return;
+	    }
+	
+	    // 브레이크 하나만 입력한 경우 차단
+	    if ((breakStart && !breakEnd) || (!breakStart && breakEnd)) {
+	        alert("브레이크 타임은 시작과 종료를 모두 입력해야 합니다.");
+	        e.preventDefault();
+	        return;
+	    }
+	});
 </script>
 </body>
 </html>

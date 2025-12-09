@@ -67,8 +67,8 @@ public class StoreSchedule {
 		this.isOpen = isOpen;
 		this.openTime = openTime;
 		this.closeTime = closeTime;
-		this.breakStart = breakStart;
-		this.breakEnd = breakEnd;
+		this.breakStart = (breakStart == null || breakStart.isBlank()) ? null : breakStart;
+	    this.breakEnd = (breakEnd == null || breakEnd.isBlank()) ? null : breakEnd;
 	}
     
  // 기존 필드들 밑에 추가

@@ -33,7 +33,7 @@
     </tr>
 </table>
 
-<a th:href="@{/store/schedule/edit}">영업시간 수정하기</a>
+<a th:href="@{/store/schedule/edit}">영업시간 수정 및 생성</a>
 
 <hr>
 
@@ -41,7 +41,7 @@
 <table border="1">
     <tr>
         <th>타입명</th>
-        <th>1테이블 최대 인원</th>
+        <th>테이블 최대 인원</th>
         <th>테이블 개수</th>
         <th>관리</th>
     </tr>
@@ -58,7 +58,9 @@
     </tr>
 </table>
 
-<a th:href="@{/store/table/edit}">테이블 타입 수정/추가</a>
+<a th:href="@{/store/table/edit}" class="btn btn-secondary">테이블수정</a>
+
+<a th:href="@{/store/table/add}" class="btn btn-secondary">테이블추가</a>
 
 <a th:href="@{/logout}">로그아웃</a>
 

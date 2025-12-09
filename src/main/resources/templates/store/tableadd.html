@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>Thymeleaf</title>
+	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+	<script>
+        // 행 추가용 간단 JS
+        function addRow() {
+            const tbody = document.getElementById('newTableBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" name="newTableTypeName" placeholder="테이블명"></td>
+                <td><input type="number" name="newTableCapacity" placeholder="정원"></td>
+                <td><input type="number" name="newTableQuantity" placeholder="수량"></td>
+                <td><button type="button" onclick="removeRow(this)">삭제</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function removeRow(btn) {
+            const tr = btn.parentElement.parentElement;
+            tr.remove();
+        }
+    </script>
+</head>
+<body>
+
+	<h2>매장 테이블 추가</h2>
+<form th:action="@{/store/table/add}" method="post">
+    <table border="1">
+        <thead>
+        <tr>
+            <th>테이블명</th>
+            <th>정원</th>
+            <th>수량</th>
+            <th>관리</th>
+        </tr>
+        </thead>
+        <tbody id="newTableBody">
+        <!-- 기본 한 줄 -->
+        <tr>
+            <td><input type="text" name="newTableTypeName" placeholder="테이블명"></td>
+            <td><input type="number" name="newTableCapacity" placeholder="정원"></td>
+            <td><input type="number" name="newTableQuantity" placeholder="수량"></td>
+            <td><button type="button" onclick="removeRow(this)">삭제</button></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <button type="button" onclick="addRow()">행 추가</button>
+    <button type="submit">추가 저장</button>
+    <a th:href="@{/store/dashboard}">대시보드로 돌아가기</a>
+</form>
+	
+</body>
+</html>
