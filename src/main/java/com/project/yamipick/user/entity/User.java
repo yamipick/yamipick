@@ -1,6 +1,7 @@
 package com.project.yamipick.user.entity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
@@ -68,9 +69,13 @@ public class User {
     @Column(name = "createdAt", updatable = false)
     private LocalDate createdAt;
     
-    // 비즈니스 로직 (상태 변경)
-    public void changeStatus(String status) {
-        this.statusUser = status;
+    @Column(name = "suspendedUntil")
+    private LocalDateTime suspendedUntil; 
+
+    // [편의 메소드] 상태 변경 로직
+    public void changeStatus(String newStatus, LocalDateTime until) {
+        this.statusUser = newStatus;
+        this.suspendedUntil = until; // 정지 날짜 설정 (없으면 null)
     }
     
     // 비즈니스 로직 (벌점 부여 - 필요시 사용)
