@@ -292,7 +292,7 @@
                     const latest = list[0];
                     latestArea.style.display = 'block';
                     
-                    const badgeIcon = latest.pinned ? '🚨 필독' : '📢 알림';
+                    const badgeIcon = latest.pinned ? '🚨' : '📢 알림';
                     const dateStr = latest.regDate ? latest.regDate.replace('T', ' ').substring(0, 16) : '';
 
                     document.getElementById('l-badge').innerText = badgeIcon;
@@ -305,7 +305,7 @@
                         for (let i = 1; i < list.length; i++) {
                             const item = list[i];
                             const pinnedClass = item.pinned ? 'pinned' : '';
-                            const subBadge = item.pinned ? '<span class="n-badge">[필독]</span>' : '';
+                            const subBadge = item.pinned ? '<span class="n-badge">🚨</span>' : '';
                             const subDate = item.regDate ? item.regDate.substring(0, 10) : '';
 
                             ul.innerHTML += `
