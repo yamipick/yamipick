@@ -1,8 +1,8 @@
 package com.project.yamipick.admin.service;
 
 import com.project.yamipick.admin.dto.AdminUserDTO;
-import com.project.yamipick.log.entity.BusinessLog; // BanLog 대신 이거 사용!
-import com.project.yamipick.log.repository.BusinessLogRepository; // 기존 레포지토리 사용
+import com.project.yamipick.log.entity.BusinessLog;
+import com.project.yamipick.log.repository.BusinessLogRepository;
 import com.project.yamipick.user.entity.User;
 import com.project.yamipick.user.repository.UserQueryRepository;
 import com.project.yamipick.user.repository.UserRepository;
@@ -13,66 +13,65 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class AdminUserService {
 
     private final UserQueryRepository userQueryRepository;
     private final UserRepository userRepository;
-    private final BusinessLogRepository businessLogRepository; // ★ 교체됨
+    private final BusinessLogRepository businessLogRepository;
 
-    // 회원 목록 조회
+    // 목록 조회
+    @Transactional(readOnly = true)
     public Page<AdminUserDTO> getUserList(String keyword, Pageable pageable) {
-        Page<User> userPage = userQueryRepository.searchUsers(keyword, pageable);
-        return userPage.map(user -> AdminUserDTO.builder()
-                .seqUser(user.getSeqUser())
-                .userId(user.getUserId())
-                .name(user.getName())
-                .nickname(user.getNickname())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .statusUser(user.getStatusUser())
-                .penaltyScore(user.getPenaltyScore())
-                .createdAt(user.getCreatedAt())
-                .build());
+        return userQueryRepository.searchUsers(keyword, pageable)
+                .map(user -> AdminUserDTO.builder()
+                        .seqUser(user.getSeqUser())
+                        .userId(user.getUserId())
+                        .name(user.getName())
+                        .nickname(user.getNickname())
+                        .statusUser(user.getStatusUser())
+                        .createdAt(user.getCreatedAt()) 
+                        .suspendedUntil(user.getSuspendedUntil() != null ? user.getSuspendedUntil().toLocalDate() : null)
+                        
+                        .build());
     }
 
-    // 회원 상태 변경 및 통합 로그(BusinessLog) 기록
-    @Transactional
-    public void updateUserStatus(Long seqUser, String status, String reason) {
-        // 1. 회원(타겟) 찾기
+    // 상태 변경 로직 (기존 유지)
+    public void updateUserStatus(Long seqUser, String status, int durationDays, String reason) {
         User targetUser = userRepository.findById(seqUser)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("회원 없음"));
 
-        // 2. 상태 변경
-        targetUser.changeStatus(status);
+        LocalDateTime suspendUntil = null;
 
-        // 3. ★ 통합 로그(tblBusinessLog)에 기록
-        String adminId = getCurrentAdminId(); // 처리한 관리자 ID 가져오기
-        
-        if (reason == null || reason.trim().isEmpty()) {
-            reason = "관리자(" + adminId + ")에 의한 상태 변경";
+        if ("SUSPENDED".equals(status)) {
+            if (durationDays >= 999) {
+                suspendUntil = LocalDateTime.now().plusYears(100);
+            } else if (durationDays > 0) {
+                suspendUntil = LocalDateTime.now().plusDays(durationDays);
+            } else {
+                suspendUntil = LocalDateTime.now().plusDays(30);
+            }
         }
 
-        BusinessLog log = BusinessLog.builder()
-                .actionType("CHANGE_STATUS")      // 행동 유형 (상태 변경)
-                .targetType("USER")               // 대상 유형 (회원)
-                .targetId(targetUser.getUserId()) // 대상 ID (정지당한 사람)
-                .userId(adminId)                  // 수행자 ID (관리자)
-                .message("상태변경: " + status + " / 사유: " + reason) // 상세 내용
-                .ipAddr("0.0.0.0")                // 관리자 IP (필요 시 request에서 추출)
-                .build();
-
-        businessLogRepository.save(log);
+        targetUser.changeStatus(status, suspendUntil);
+        saveAdminLog(targetUser.getUserId(), status, reason);
     }
 
-    // 현재 로그인한 관리자 ID 가져오는 유틸 메서드
-    private String getCurrentAdminId() {
-        try {
-            return SecurityContextHolder.getContext().getAuthentication().getName();
-        } catch (Exception e) {
-            return "system"; // 로그인 정보 없으면 system으로 기록
-        }
+    private void saveAdminLog(String targetId, String status, String reason) {
+        String adminId = "system";
+        try { adminId = SecurityContextHolder.getContext().getAuthentication().getName(); } catch(Exception e){}
+        
+        businessLogRepository.save(BusinessLog.builder()
+                .actionType("CHANGE_STATUS")
+                .targetType("USER")
+                .targetId(targetId)
+                .userId(adminId)
+                .message("상태: " + status + " / 사유: " + reason)
+                .ipAddr("0.0.0.0")
+                .build());
     }
 }

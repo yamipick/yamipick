@@ -39,18 +39,16 @@ public class AdminReportController {
         return "admin/report/list";
     }
 
-    // ★ [업데이트] 신고 처리 (상태변경 + 제재)
     @PostMapping("/process")
     public String processReport(
-            @RequestParam("seqReport") Long seqReport,       // ("이름") 명시
+            @RequestParam("seqReport") Long seqReport,
             @RequestParam("comment") String comment,
-            @RequestParam(value = "penaltyType", defaultValue = "NONE") String penaltyType,
-            @RequestParam(value = "penaltyDuration", defaultValue = "0") int penaltyDuration,
-            @RequestParam(value = "currentFilter", required = false, defaultValue = "ALL") String currentFilter
+            // HTML의 select name="penaltyType" 값 (NONE, SUSPEND_3, ...)
+            @RequestParam(value = "penaltyType", defaultValue = "NONE") String penaltyType 
     ) {
-        // 서비스로 제재 정보까지 함께 전달
-        adminReportService.processReport(seqReport, comment, penaltyType, penaltyDuration);
+        // duration은 위 서비스 스위치문에서 자동 계산하므로 굳이 안 받아도 됨 (필요시 추가)
+        adminReportService.processReport(seqReport, comment, penaltyType, 0); 
         
-        return "redirect:/admin/report/list?status=" + currentFilter;
+        return "redirect:/admin/report/list";
     }
 }

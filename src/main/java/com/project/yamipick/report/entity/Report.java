@@ -10,6 +10,7 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "tblReport")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -44,12 +45,9 @@ public class Report {
     @Column(name = "createdAt", updatable = false)
     private LocalDate createdAt;
     
-    /**
-     * [비즈니스 로직] 신고 처리 완료
-     * @param comment 관리자 처리 내용 (예: "욕설 확인되어 블라인드 처리함")
-     */
-    public void completeProcess(String comment) {
+    // [추가] 처리 완료 편의 메소드
+    public void completeProcess(String adminComment) {
         this.status = "PROCESSED";
-        this.adminComment = comment;
+        this.adminComment = adminComment;
     }
 }

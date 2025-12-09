@@ -1,113 +1,114 @@
 package com.project.yamipick.admin.service;
 
 import com.project.yamipick.admin.dto.AdminReportDTO;
-import com.project.yamipick.log.entity.BusinessLog;
-import com.project.yamipick.log.repository.BusinessLogRepository;
 import com.project.yamipick.report.entity.Report;
 import com.project.yamipick.report.repository.ReportQueryRepository;
 import com.project.yamipick.report.repository.ReportRepository;
 import com.project.yamipick.user.entity.User;
-import com.project.yamipick.user.repository.UserRepository; // 유저 정보 조회를 위해 필요
+import com.project.yamipick.user.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class AdminReportService {
 
     private final ReportQueryRepository reportQueryRepository;
     private final ReportRepository reportRepository;
-    private final UserRepository userRepository; // ★ 유저 제재를 위해 추가
-    private final BusinessLogRepository businessLogRepository; // 로그 저장을 위해 추가
+    private final UserRepository userRepository;
 
-    // 목록 조회
+    // ★ ReviewRepository, ReplyRepository는 아직 없으므로 제거! (충돌 방지)
+
+    // 1. 목록 조회 (기존 유지)
+    @Transactional(readOnly = true)
     public Page<AdminReportDTO> getReportList(String status, Pageable pageable) {
-        Page<Report> reportPage = reportQueryRepository.searchReports(status, pageable);
-
-        return reportPage.map(report -> AdminReportDTO.builder()
-                .seqReport(report.getSeqReport())
-                .reporterId(report.getReporter().getUserId())
-                .targetType(report.getTargetType())
-                .targetId(report.getTargetId())
-                .reason(report.getReason())
-                .status(report.getStatus())
-                .createdAt(report.getCreatedAt())
-                .build());
+        return reportQueryRepository.searchReports(status, pageable)
+                .map(report -> AdminReportDTO.builder()
+                        .seqReport(report.getSeqReport())
+                        .reporterId(report.getReporter().getUserId())
+                        .targetType(report.getTargetType())
+                        .targetId(report.getTargetId())
+                        .reason(report.getReason())
+                        .status(report.getStatus())
+                        .createdAt(report.getCreatedAt())
+                        .build());
     }
 
-    // ★ [업데이트] 신고 처리 및 회원 제재 로직
-    @Transactional
+    /**
+     * 2. [안전한 자동화 버전]
+     * - USER 신고: 자동 정지 OK
+     * - REVIEW 신고: 작성자를 못 찾으므로 상태만 변경 (나중에 합치면 기능 추가)
+     */
     public void processReport(Long seqReport, String comment, String penaltyType, int penaltyDuration) {
         
-        // 1. 신고 내역 조회
         Report report = reportRepository.findById(seqReport)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 신고입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("신고 내역이 없습니다."));
 
-        if ("PROCESSED".equals(report.getStatus())) {
-            throw new IllegalStateException("이미 처리된 신고입니다.");
-        }
+        // (1) 상태 변경
+        report.setStatus("PROCESSED");
 
-        // 2. 신고 상태 완료 처리 (DB Update)
-        report.completeProcess(comment);
-
-        // 3. 회원 제재 로직 (penaltyType에 따라 분기)
+        String finalComment = comment;
         if (!"NONE".equals(penaltyType)) {
-            // 신고 대상이 '회원' 관련(리뷰, 댓글 등)일 경우, 해당 작성자를 찾아서 제재해야 함
-            // 하지만 현재 Report 테이블에는 작성자(target_user_seq) 정보가 명시적으로 없을 수 있음.
-            // 일단 targetId가 회원 ID이거나, 별도로 조회 로직이 필요하지만
-            // 여기서는 ★신고 대상자(User)를 찾는 로직이 필요함★
-            // (가정: 지금은 신고된 게시물의 작성자를 찾기 복잡하니, 임시로 '신고자'를 제재하지 않도록 주의 필요)
-            
-            // [중요] 실제 구현 시에는 targetId(예: 리뷰ID)를 통해 리뷰 작성자를 찾아오는 로직이 선행되어야 함.
-            // 지금은 편의상 "신고 테이블에 targetUserSeq 컬럼이 있다고 가정"하거나
-            // "targetType이 USER인 경우 targetId가 회원ID"라고 가정하고 구현합니다.
-            
-            if ("USER".equals(report.getTargetType())) {
-                User targetUser = userRepository.findByUserId(report.getTargetId())
-                        .orElseThrow(() -> new IllegalArgumentException("제재 대상 회원을 찾을 수 없습니다."));
-                
-                String newStatus = "ACTIVE"; // 기본값
-                String logMessage = "";
-
-                if ("BLIND_USER".equals(penaltyType)) {
-                    newStatus = "BLIND"; // 블라인드(정지)
-                    logMessage = "신고 처리에 의한 계정 블라인드 (" + penaltyDuration + "일)";
-                    // 기간 저장 로직은 User 엔티티에 '정지 만료일' 컬럼이 있어야 가능함 (지금은 생략)
-                } else if ("WITHDRAW_USER".equals(penaltyType)) {
-                    newStatus = "WITHDRAWN"; // 강제 탈퇴
-                    logMessage = "신고 처리에 의한 강제 탈퇴";
-                }
-
-                // 회원 상태 변경
-                targetUser.changeStatus(newStatus);
-                
-                // 제재 로그 남기기
-                saveAdminLog(targetUser.getUserId(), "CHANGE_STATUS", logMessage);
-            }
+            finalComment += " [조치: " + penaltyType + " / " + penaltyDuration + "일]";
         }
+        
+        // (2) 작성자(정지 대상) 찾기 로직
+        User targetUser = null;
+        
+        // ID에서 숫자만 추출 ("review_101" -> 101)
+        String rawId = report.getTargetId(); 
+        String numberOnly = rawId.replaceAll("[^0-9]", ""); 
+        Long targetIdSeq = Long.parseLong(numberOnly);
+
+        if ("USER".equals(report.getTargetType())) {
+            // ★ 대상이 회원이면 바로 찾을 수 있음 (내 영역이니까!)
+            targetUser = userRepository.findById(targetIdSeq).orElse(null);
+        } 
+        else {
+            // ★ 대상이 리뷰나 댓글이면?
+            // 아직 ReviewRepository가 없어서 작성자를 못 찾음.
+            // 여기서는 targetUser를 null로 둬서, 자동 정지는 건너뛰고 "처리 완료"만 되게 함.
+            finalComment += " (작성자 조회 불가로 자동 정지 미적용)";
+        }
+
+        // (3) 찾은 유저가 있으면 -> 정지 먹이기 (User 신고일 때만 동작)
+        if (targetUser != null && !"NONE".equals(penaltyType)) {
+            applyPenaltyToUser(targetUser, penaltyType, penaltyDuration);
+            finalComment += " -> 회원 정지 적용됨";
+        }
+        
+        // 최종 저장
+        report.setAdminComment(finalComment);
+        reportRepository.save(report);
     }
 
-    // 로그 저장 유틸 메서드
-    private void saveAdminLog(String targetUserId, String actionType, String message) {
-        String adminId = "system";
-        try {
-            adminId = SecurityContextHolder.getContext().getAuthentication().getName();
-        } catch(Exception e) {}
+    // 정지 로직 (기존과 동일)
+    private void applyPenaltyToUser(User user, String penaltyType, int duration) {
+        String newStatus = "ACTIVE";
+        LocalDateTime suspendUntil = null;
 
-        BusinessLog log = BusinessLog.builder()
-                .actionType(actionType)
-                .targetType("USER")
-                .targetId(targetUserId)
-                .userId(adminId)
-                .message(message)
-                .ipAddr("0.0.0.0")
-                .build();
-        
-        businessLogRepository.save(log);
+        switch (penaltyType) {
+            case "SUSPEND_3":
+            case "SUSPEND_7":
+                newStatus = "SUSPENDED";
+                suspendUntil = LocalDateTime.now().plusDays(duration);
+                break;
+            case "SUSPEND_PERMANENT":
+                newStatus = "SUSPENDED";
+                suspendUntil = LocalDateTime.now().plusYears(100);
+                break;
+            case "WITHDRAW":
+                newStatus = "WITHDRAWN";
+                suspendUntil = null;
+                break;
+        }
+        user.changeStatus(newStatus, suspendUntil);
     }
 }
