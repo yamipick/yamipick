@@ -28,6 +28,8 @@ public class CommentDTO {
 	private String content;
 	private Date regdate;
 	
+	private String nickname;
+	
 	public Comment toEntity(BoardReview review, User user, Comment parent) {
 		
 		return Comment.builder()

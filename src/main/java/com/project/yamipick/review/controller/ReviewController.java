@@ -1,6 +1,8 @@
 package com.project.yamipick.review.controller;
 
+import java.io.IOException;
 import java.security.Principal;
+import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -10,8 +12,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.project.yamipick.aws.S3Uploader;
 import com.project.yamipick.review.dto.BoardReviewDTO;
+import com.project.yamipick.review.dto.CommentDTO;
 import com.project.yamipick.review.service.ReviewService;
+import com.project.yamipick.store.service.ReviewStoreService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,7 +24,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ReviewController {
 	
+	private final S3Uploader s3Uploader;
 	private final ReviewService reviewService;
+	private final ReviewStoreService reviewStoreService;
 	
 	@GetMapping("/review/reviewmain")
 	public String reviewmain() {
@@ -74,14 +81,45 @@ public class ReviewController {
 
 	    return "review/activity"; // 하나의 템플릿만 사용
 	}
-
-
 	
 	@GetMapping("/review/reviewview")
 	public String reviewview(@RequestParam("seqReview") Long seqReview, Model model) {
 
-	    BoardReviewDTO dto = reviewService.getReview(seqReview); // DTO로 조회
-	    model.addAttribute("dto", dto);
+	    BoardReviewDTO dto = reviewService.getReview(seqReview);
+	    model.addAttribute("review", dto);
+	    model.addAttribute("kakaoAppKey", kakaoAppKey);
+
+	    Double lat = null;
+	    Double lng = null;
+	    String placeName = null;
+	    String kakaoPlaceId = null;
+
+	    // 1) place 문자열 파싱
+	    String placeStr = dto.getPlace();
+	    if (placeStr != null && !placeStr.isBlank()) {
+	        if (placeStr.contains("|")) {
+	            String[] arr = placeStr.split("\\|");
+	            placeName = arr[0];
+	            lat = Double.parseDouble(arr[1]);
+	            lng = Double.parseDouble(arr[2]);
+	            if (arr.length > 3) {
+	                kakaoPlaceId = arr[3];
+	            }
+	        } else if (placeStr.contains(",")) { // 예전 데이터 대비
+	            String[] arr = placeStr.split(",");
+	            lat = Double.parseDouble(arr[0]);
+	            lng = Double.parseDouble(arr[1]);
+	        }
+	    }
+
+	    if (lat != null && lng != null) {
+	        model.addAttribute("lat", lat);
+	        model.addAttribute("lng", lng);
+	    }
+	    model.addAttribute("name", placeName);
+	    model.addAttribute("kakaoPlaceId", kakaoPlaceId);
+	    
+	    model.addAttribute("comments", reviewService.getComments(seqReview));
 
 	    return "review/reviewview";
 	}
@@ -97,21 +135,36 @@ public class ReviewController {
 	    return "review/reviewadd";
 	}
 	
+	@PostMapping("/review/comment/add")
+	public String addComment(CommentDTO dto, Principal principal) {
+
+	    Long id = (principal != null) ? Long.parseLong(principal.getName()) : 1L;
+	    dto.setSeqUser(id);
+
+	    reviewService.addComment(dto);
+
+	    return "redirect:/review/reviewview?seqReview=" + dto.getSeqReview();
+	}
+	
 	@PostMapping("/review/reviewaddok")
-	public String reviewaddok(BoardReviewDTO dto, Principal principal) {
+	public String reviewaddok(BoardReviewDTO dto, Principal principal, Model model) {
 
 	    Long id = (principal != null) ? Long.parseLong(principal.getName()) : 1L;
 	    dto.setSeqUser(id);
 
 	    MultipartFile file = dto.getFile(); // ✅ MultipartFile로 받아야 함
-	    String fileName = null;
 
 	    if (file != null && !file.isEmpty()) {
-	        fileName = file.getOriginalFilename();
-	        dto.setAttach(fileName); // attach 필드에 파일명 저장
+	    	String imageUrl = null;
+			try {
+				imageUrl = s3Uploader.upload(file, "review");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
-	        // 실제 저장: File savePath = new File(uploadDir, uuid + "_" + fileName);
-	        // file.transferTo(savePath);
+	        // ★ DB에 저장할 attach -> 이제 파일명 말고 "URL"
+	        dto.setAttach(imageUrl);
 	    }
 	    
 	    if ("비밀글".equals(dto.getContentState())) {
@@ -120,9 +173,14 @@ public class ReviewController {
 	        // 체크 안 했으면 DB 기본값(일반글) 사용
 	        dto.setContentState(null);
 	    }
+	    
+	    // 태그
+	    if (dto.getTags() != null) {
+	        dto.setTagList(Arrays.asList(dto.getTags().split(",")));
+	    }
 
-	    reviewService.add(dto);
-	    return "review/reviewaddok";
+	    Long seq = reviewService.add(dto);
+	    return "redirect:/review/reviewview?seqReview=" + seq;
 	}
 
 	

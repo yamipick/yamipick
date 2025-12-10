@@ -1,18 +1,22 @@
 package com.project.yamipick.review.service;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.project.yamipick.review.dto.BoardReviewDTO;
 import com.project.yamipick.review.dto.CommentDTO;
 import com.project.yamipick.review.dto.FavoriteReviewDTO;
 import com.project.yamipick.review.dto.ScrapReviewDTO;
 import com.project.yamipick.review.entity.BoardReview;
+import com.project.yamipick.review.entity.Comment;
 import com.project.yamipick.review.entity.Hashtag;
 import com.project.yamipick.review.entity.Tagging;
 import com.project.yamipick.review.repository.BoardReviewRepository;
+import com.project.yamipick.review.repository.CommentRepository;
 import com.project.yamipick.review.repository.HashtagRepository;
 import com.project.yamipick.review.repository.TaggingRepository;
 import com.project.yamipick.user.entity.User;
@@ -28,41 +32,47 @@ public class ReviewServiceImpl implements ReviewService {
     private final UserRepository userRepository; // 사용자 정보 가져올 때 필요
     private final HashtagRepository hashtagRepository;
     private final TaggingRepository taggingRepository;
+    private final CommentRepository commentRepository;
 
     @Override
     public Long add(BoardReviewDTO dto) {
-    	
-    	String state = dto.getContentState();
-    	if (state == null || state.isEmpty()) {
-    	    state = "일반글";
-    	}
 
+        // 0. 글 유형 기본값 처리
+        String state = dto.getContentState();
+        if (state == null || state.isEmpty()) {
+            state = "일반글";
+        }
+
+        // 1. 작성자 조회 (orElseGet 안 씀)
         User user = userRepository.findById(dto.getSeqUser())
-                                  .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
+                .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
 
+        // 2. 리뷰 엔티티 생성 (Store는 지금 단계에서 안 건드림)
         BoardReview review = BoardReview.builder()
                 .title(dto.getTitle())
                 .starRating(dto.getStarRating())
-                .user(user)
+                .user(user)                     // FK: 작성자
                 .reviewContent(dto.getReviewContent())
                 .attach(dto.getAttach())
-                .place(dto.getPlace())
+                .place(dto.getPlace())          // "이름|위도|경도|placeId" 그대로 저장
                 .regdate(new Date(System.currentTimeMillis()))
                 .readCount(0)
                 .favoriteCount(0)
                 .contentState(state)
                 .build();
 
+        // 3. 리뷰 저장
         BoardReview saved = boardReviewRepository.save(review);
-        
-        String tags = dto.getTags();  // "매운맛,데이트,분위기좋음" 이런 문자열
+
+        // 4. 태그 저장
+        String tags = dto.getTags();
         if (tags != null && !tags.isBlank()) {
 
             for (String raw : tags.split(",")) {
                 String name = raw.trim();
                 if (name.isEmpty()) continue;
 
-                // 1) 기존 태그 있으면 조회, 없으면 생성
+                // orElseGet 안 쓰는 버전
                 Hashtag hashtag = hashtagRepository.findByHashtag(name)
                         .orElse(null);
 
@@ -74,18 +84,39 @@ public class ReviewServiceImpl implements ReviewService {
                     );
                 }
 
-                // 2) 매핑(Tagging) 생성
-                Tagging tagging = Tagging.builder()
-                        .review(saved)
-                        .hashtag(hashtag)
-                        .build();
-
-                taggingRepository.save(tagging);
+                taggingRepository.save(
+                        Tagging.builder()
+                                .review(saved)
+                                .hashtag(hashtag)
+                                .build()
+                );
             }
         }
 
+        return saved.getSeqReview();
+    }
+    
+    @Override
+    public List<CommentDTO> getComments(Long seqReview) {
+        return commentRepository.findByReviewSeqReviewOrderByRegdateAsc(seqReview)
+                                .stream()
+                                .map(Comment::toDTO)
+                                .toList();
+    }
+    
+    @Override
+    @Transactional
+    public void addComment(CommentDTO dto) {
 
-        return saved.getSeqReview(); // ID 반환
+        Comment comment = Comment.builder()
+                .content(dto.getContent())
+                .regdate(Date.valueOf(LocalDate.now()))
+                .user(userRepository.findById(dto.getSeqUser()).orElseThrow())
+                .review(boardReviewRepository.findById(dto.getSeqReview()).orElseThrow())
+                .parentComment(null)   // 대댓글 기능은 나중에
+                .build();
+
+        commentRepository.save(comment);
     }
 	
 	@Override
@@ -114,10 +145,31 @@ public class ReviewServiceImpl implements ReviewService {
 
 	@Override
 	public BoardReviewDTO getReview(Long seqReview) {
-		// TODO Auto-generated method stub
-		return null;
+
+	    // 1. 리뷰 엔티티 조회
+	    BoardReview review = boardReviewRepository.findById(seqReview)
+	            .orElseThrow(() -> new IllegalArgumentException("리뷰 없음"));
+
+	    // 2. 조회수 증가
+	    review.setReadCount(review.getReadCount() + 1);
+	    boardReviewRepository.save(review);
+
+	    // 3. 엔티티 → DTO 변환
+	    BoardReviewDTO dto = review.toDTO();
+	    
+	    // ★ 조회수 증가 후 값을 다시 DTO에 넣기 (안 넣으면 null 또는 이전값)
+	    dto.setReadCount(review.getReadCount());
+
+	    // 4. 태그 리스트 삽입
+	    dto.setTagList(
+	            taggingRepository.findByReview(review)
+	                    .stream()
+	                    .map(t -> t.getHashtag().getHashtag())
+	                    .toList()
+	    );
+
+	    return dto;
 	}
-	
 	
 
 }

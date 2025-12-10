@@ -13,10 +13,10 @@
 
         .container {
             width: 1000px;
-            margin: 40px auto;
+            margin: 50px auto 20px auto;
             background: #fff;
-            border-radius: 12px;
-            padding: 30px 40px;
+            border-radius: 14px;
+            padding: 40px 50px;
             border: 1px solid #e3d8c8;
         }
 
@@ -53,6 +53,12 @@
 		    box-shadow: 0 0 5px rgba(200, 183, 158, 0.5);
 		}
         
+        input[type="text"],
+		textarea,
+		.tag-box {
+		    box-sizing: border-box;
+		    width: 100%;
+		}
 
         textarea {
             height: 200px;
@@ -246,7 +252,7 @@
         /* 지도 영역 */
         #map {
             width: 100%;
-            height: 250px;
+            height: 400px;
             background: #eee;
             border-radius: 10px;
             margin-bottom: 15px;
@@ -325,7 +331,7 @@
 		    <label>주소 직접 입력</label>
 		    <div style="display:flex; gap:10px;">
 		        <input type="text" id="addressInput" placeholder="주소를 입력하거나 붙여넣으세요">
-		        <button type="button" class="btn" onclick="searchAddress()">검색</button>
+		        <button type="button" class="btn" onclick="searchPlace()">검색</button>
 		    </div>
 		</div>
 
@@ -333,7 +339,7 @@
         <div class="row">
             <label>위치 선택</label>
             <div class="map-notice">지도를 클릭하면 위치가 자동으로 저장됩니다.</div>
-			<div id="map" style="width:500px;height:400px;"></div>
+			<div id="map"></div>
 			<input type="hidden" name="place" id="place">
         </div>
 
@@ -456,43 +462,86 @@
 	    )
 	});
 
-    kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
-        var latlng = mouseEvent.latLng;
+	kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
+	
+	    // ★ 1) 장소(POI) 클릭인지 일반 지도 클릭인지 체크
+	    var place = mouseEvent.place;  // POI 클릭 시에만 값이 존재
+	
+	    if (place) {
 
-        marker.setMap(map);
-        marker.setPosition(latlng);
-        
-        document.getElementById("place").value = 
-        latlng.getLat() + "," + latlng.getLng();
+		    let lat = place.y;
+		    let lng = place.x;
+		    let name = place.place_name;
+		    let id = place.id;   // ★★ 장소 고유 ID ★★
+		
+		    marker.setMap(map);
+		    marker.setPosition(new kakao.maps.LatLng(lat, lng));
+		    map.setCenter(new kakao.maps.LatLng(lat, lng));
+		
+		    // ★★ 장소 정보 전부 저장 (id 포함)
+		    document.getElementById("place").value =
+		        name + "|" + lat + "|" + lng + "|" + id;
+		
+		    document.getElementById("addressInput").value =
+		        place.address_name || place.road_address_name || name;
+		
+		    return;
+		}
 
-        geocoder.coord2Address(latlng.getLat(), latlng.getLng(), function(result, status) {
-            if (status === kakao.maps.services.Status.OK) {
-                var addr = result[0].address.address_name;
-            }
-        });
-    });
+	
+	    // ★ 2) 일반 지도 클릭이면 기존 로직 수행
+	    var latlng = mouseEvent.latLng;
+	
+	    marker.setMap(map);
+	    marker.setPosition(latlng);
+	
+	    document.getElementById("place").value =
+	        latlng.getLat() + "," + latlng.getLng();
+	
+	    // 주소 역검색
+	    geocoder.coord2Address(latlng.getLat(), latlng.getLng(), function(result, status) {
+	        if (status === kakao.maps.services.Status.OK) {
+	            var addr = result[0].address.address_name;
+	            document.getElementById("addressInput").value = addr;
+	        }
+	    });
+	});
 
-    function searchAddress() {
-        const addr = document.getElementById("addressInput").value.trim();
-        if (addr === "") return;
 
-        geocoder.addressSearch(addr, function(result, status) {
-            if (status === kakao.maps.services.Status.OK) {
-                const lat = result[0].y;
-                const lng = result[0].x;
-                const coords = new kakao.maps.LatLng(lat, lng);
+	function searchPlace() {
+	    let keyword = document.getElementById("addressInput").value.trim();
+	    if (keyword === "") return;
+	
+	    var ps = new kakao.maps.services.Places();
+	
+	    ps.keywordSearch(keyword, function(data, status) {
+	
+	        if (status !== kakao.maps.services.Status.OK) {
+	            alert("장소를 찾을 수 없습니다.");
+	            return;
+	        }
+	
+	        let place = data[0]; // 검색 결과 중 첫 번째
+	
+	        let lat = place.y;
+	        let lng = place.x;
+	        let name = place.place_name;
+	        let id  = place.id; // ★ placeId
+	
+	        // 지도 이동 + 마커 표시
+	        marker.setMap(map);
+	        marker.setPosition(new kakao.maps.LatLng(lat, lng));
+	        map.setCenter(new kakao.maps.LatLng(lat, lng));
+	
+	        /** 
+	         * ⭐ 장소 기반 저장 (placeId 존재)
+	         * "이름|lat|lng|placeId"
+	         */
+	        document.getElementById("place").value =
+	            name + "|" + lat + "|" + lng + "|" + id;
+	    });
+	}
 
-                marker.setMap(map);
-                marker.setPosition(coords);
-                map.setCenter(coords);
-                
-                document.getElementById("place").value = lat + "," + lng;
-                
-            } else {
-                alert("주소를 찾을 수 없습니다.");
-            }
-        });
-    }
 
     // 태그 스크립트
     let tagArr = [];

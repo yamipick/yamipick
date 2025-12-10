@@ -1,6 +1,7 @@
 package com.project.yamipick.review.dto;
 
 import java.sql.Date;
+import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,7 +40,9 @@ public class BoardReviewDTO {
 	private Integer favoriteCount;
 	private String contentState;
 	
+	private String nickname;
 	private String tags;
+	private List<String> tagList;
 	
 	public BoardReview toEntity(User user) {
 		

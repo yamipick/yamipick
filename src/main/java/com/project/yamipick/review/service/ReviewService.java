@@ -21,4 +21,8 @@ public interface ReviewService {
 
 	BoardReviewDTO getReview(Long seqReview);
 
+	List<CommentDTO> getComments(Long seqReview);
+
+	void addComment(CommentDTO dto);
+
 }

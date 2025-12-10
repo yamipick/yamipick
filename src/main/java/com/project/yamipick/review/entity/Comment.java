@@ -62,6 +62,7 @@ public class Comment {
 						.seqUser(this.user.getSeqUser())
 						.content(this.content)
 						.regdate(this.regdate)
+						.nickname(this.user.getNickname())
 						.build();
 		
 	}

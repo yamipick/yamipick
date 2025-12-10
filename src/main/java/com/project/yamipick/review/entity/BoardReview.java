@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.project.yamipick.review.dto.BoardReviewDTO;
+import com.project.yamipick.store.entity.Store;
 //import com.project.yamipick.store.entity.Store;
 import com.project.yamipick.user.entity.User;
 
@@ -23,10 +24,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "tblBoardReview")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -43,6 +46,10 @@ public class BoardReview {
 	
 	@Column(nullable = false, length = 100)
 	private String title;
+	
+	@ManyToOne
+	@JoinColumn(name = "seqStore")
+	private Store store;
 	
 	private Integer starRating;
 	
@@ -83,6 +90,7 @@ public class BoardReview {
 							.title(this.title)
 							.starRating(this.starRating)
 							.seqUser(this.user.getSeqUser())
+							.nickname(this.user.getNickname())
 							.reviewContent(this.reviewContent)
 							.attach(this.attach)
 							.place(this.place)
