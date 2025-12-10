@@ -1,4 +1,4 @@
-package com.project.yamipick.ai.controller;
+package com.project.yamipick.ai.restcontroller;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

@@ -22,4 +22,8 @@ public class MenuRecommendResponse {
     
     private String menuDescription;
     private String reason;
+    
+    private List<String> allTags;
+    
+
 }

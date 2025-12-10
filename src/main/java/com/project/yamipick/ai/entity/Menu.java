@@ -35,4 +35,8 @@ public class Menu {
 
     @Column(name = "menuImage", length = 500)
     private String menuImage;
+    
+    @Column(name = "menuEnglish")
+    private String menuEnglish;
+
 }

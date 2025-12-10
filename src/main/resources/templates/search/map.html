@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YamiPick</title>
+    
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/map.css}">
+    
+    <script src="/js/analytics.js"></script>
+</head>
+<body>
+<div th:replace="~{common/header :: headerFragment}"></div>
+
+<div class="container">
+    <div class="sidebar">
+        <h2 style="color:#6D4C41; margin-top: 0;">YamiPick 🍽️</h2>
+
+        <form action="/map" method="get" class="search-box" onsubmit="handleSearchLog()">
+             <input type="hidden" name="category" id="categoryInput" th:value="${category}">
+             <input type="hidden" name="vibe" id="vibeInput" th:value="${vibe}"> 
+             <input type="hidden" name="filter" id="filterInput" th:value="${filter}">
+             <input type="hidden" name="parking" id="parkingInput" th:value="${parking}">
+             <input type="hidden" name="reservable" id="reservableInput" th:value="${reservable}">
+             <input type="hidden" name="corkage" id="corkageInput" th:value="${corkage}">
+             <input type="hidden" name="price" id="priceInput" th:value="${price}">
+             <input type="hidden" name="radius" id="radiusInput" th:value="${radius}">             
+             
+            <input type="text" name="q" id="searchInput" th:value="${query}" placeholder="지역 + 메뉴 (예: 행궁동 파스타)">
+            <button type="submit">검색</button>
+        </form>
+        
+        <div class="master-wrapper">
+            <button type="button" class="nav-btn prev" onclick="scrollSection('masterScroll', -1)">‹</button>
+            <div class="master-filter-container" id="masterScroll">
+                <button type="button" class="chip-btn" id="btn-region" onclick="toggleFilterSection('region')">지역 ▾</button>
+
+                <button type="button" class="chip-btn" id="btn-sort" onclick="toggleFilterSection('sort')">
+                    <span th:text="${filter == 'reviews' ? '🔥 리뷰많은순' : (filter == 'rating' ? '⭐ 별점높은순' : '추천순')}">추천순</span> ▾
+                </button>
+
+                <button type="button" class="chip-btn" id="btn-radius" 
+                        th:classappend="${radius != null and radius != 1000} ? 'active'"
+                        onclick="toggleFilterSection('radius')">
+                    <span th:text="${radius != null and radius != 1000 ? (radius >= 1000 ? (radius / 1000) + 'km' : radius + 'm') : '거리'}">거리</span> ▾
+                </button>
+
+                <button type="button" class="chip-btn" id="btn-category" 
+                        th:classappend="${category != null and category != ''} ? 'active'"
+                        onclick="toggleFilterSection('category')">
+                    <span th:text="${category != null and category != '' ? category : '음식 종류'}">음식 종류</span> ▾
+                </button>
+                
+                <button type="button" class="chip-btn" id="btn-vibe"
+                        th:classappend="${vibe != null and vibe != ''} ? 'active'"
+                        onclick="toggleFilterSection('vibe')">
+                    <span th:text="${vibe != null and vibe != '' ? vibe : '분위기'}">분위기</span> ▾
+                </button>
+                
+                <button type="button" class="chip-btn" id="btn-reservable" th:classappend="${reservable} ? 'active'" onclick="toggleBoolFilter('reservable')">예약가능</button>
+                <button type="button" class="chip-btn" id="btn-parking" th:classappend="${parking} ? 'active'" onclick="toggleBoolFilter('parking')">주차가능</button>
+                <button type="button" class="chip-btn" id="btn-corkage" th:classappend="${corkage} ? 'active'" onclick="toggleBoolFilter('corkage')">콜키지프리</button>
+                <button type="button" class="chip-btn" id="btn-price" th:classappend="${price != null and price != ''} ? 'active'" onclick="toggleFilterSection('price')"><span th:text="${price != null and price != '' ? price : '가격대'}">가격대</span> ▾</button>
+            </div>
+            <button type="button" class="nav-btn next" onclick="scrollSection('masterScroll', 1)">›</button>
+        </div>
+
+        <div id="section-region" class="expand-section" style="display:none; padding:20px 25px;">
+            <div class="region-wrapper">
+                <button type="button" class="nav-btn prev" onclick="scrollSection('regionScroll', -1)">‹</button>
+                <div class="region-tabs" id="regionScroll">
+                    <button type="button" class="region-tab-btn active" id="tab-seoul" onclick="switchRegionTab('seoul')">서울</button>
+                    <button type="button" class="region-tab-btn" id="tab-gyeonggi" onclick="switchRegionTab('gyeonggi')">경기</button>
+                    <button type="button" class="region-tab-btn" id="tab-incheon" onclick="switchRegionTab('incheon')">인천</button>
+                    <button type="button" class="region-tab-btn" id="tab-busan" onclick="switchRegionTab('busan')">부산</button>
+                    <button type="button" class="region-tab-btn" id="tab-jeju" onclick="switchRegionTab('jeju')">제주</button>
+                    <button type="button" class="region-tab-btn" id="tab-daejeon" onclick="switchRegionTab('daejeon')">대전</button>
+                    <button type="button" class="region-tab-btn" id="tab-gangwon" onclick="switchRegionTab('gangwon')">강원</button>
+                </div>
+                <button type="button" class="nav-btn next" onclick="scrollSection('regionScroll', 1)">›</button>
+            </div>
+            <div id="sub-seoul" class="region-sub-container" style="display:flex;">
+                <button class="region-sub-btn" onclick="selectRegion('서울역')">서울 전체</button>
+                <button class="region-sub-btn" onclick="selectRegion('강남역')">강남</button>
+                <button class="region-sub-btn" onclick="selectRegion('서초역')">서초</button>
+                <button class="region-sub-btn" onclick="selectRegion('롯데월드타워')">잠실/송파</button>
+                <button class="region-sub-btn" onclick="selectRegion('방이동 먹자골목')">방이</button>
+                <button class="region-sub-btn" onclick="selectRegion('더현대서울')">여의도</button>
+                <button class="region-sub-btn" onclick="selectRegion('건대입구역')">건대/성수</button>
+                <button class="region-sub-btn" onclick="selectRegion('종로3가역')">종로/중구</button>
+                <button class="region-sub-btn" onclick="selectRegion('홍대입구역')">홍대/합정</button>
+                <button class="region-sub-btn" onclick="selectRegion('이태원역')">이태원</button>
+                <button class="region-sub-btn" onclick="selectRegion('혜화역')">대학로</button>
+                <button class="region-sub-btn" onclick="selectRegion('샤로수길')">관악/봉천</button>
+            </div>
+            <div id="sub-gyeonggi" class="region-sub-container" style="display:none;">
+                <button class="region-sub-btn" onclick="selectRegion('경기도')">경기 전체</button>
+                <button class="region-sub-btn" onclick="selectRegion('서현역')">분당/판교</button>
+                <button class="region-sub-btn" onclick="selectRegion('행궁동')">수원</button>
+                <button class="region-sub-btn" onclick="selectRegion('동탄역')">동탄</button>
+                <button class="region-sub-btn" onclick="selectRegion('일산킨텍스')">일산</button>
+                <button class="region-sub-btn" onclick="selectRegion('가평역')">가평</button>
+                <button class="region-sub-btn" onclick="selectRegion('의정부역')">의정부</button>
+            </div>
+            <div id="sub-incheon" class="region-sub-container" style="display:none;">
+                <button class="region-sub-btn" onclick="selectRegion('인천시청')">인천 전체</button>
+                <button class="region-sub-btn" onclick="selectRegion('부평역')">부평</button>
+                <button class="region-sub-btn" onclick="selectRegion('송도 센트럴파크')">송도</button>
+                <button class="region-sub-btn" onclick="selectRegion('구월동 로데오')">구월동</button>
+                <button class="region-sub-btn" onclick="selectRegion('을왕리 해수욕장')">을왕리</button>
+            </div>
+             <div id="sub-busan" class="region-sub-container" style="display:none;">
+                <button class="region-sub-btn" onclick="selectRegion('부산역')">부산 전체</button>
+                <button class="region-sub-btn" onclick="selectRegion('서면역')">서면</button>
+                <button class="region-sub-btn" onclick="selectRegion('해운대 해수욕장')">해운대</button>
+                <button class="region-sub-btn" onclick="selectRegion('광안리 해수욕장')">광안리</button>
+            </div>
+             <div id="sub-jeju" class="region-sub-container" style="display:none;">
+                <button class="region-sub-btn" onclick="selectRegion('제주도청')">제주 전체</button>
+                <button class="region-sub-btn" onclick="selectRegion('제주시청')">제주시내</button>
+                <button class="region-sub-btn" onclick="selectRegion('애월 카페거리')">애월</button>
+                <button class="region-sub-btn" onclick="selectRegion('서귀포시청')">서귀포</button>
+                <button class="region-sub-btn" onclick="selectRegion('함덕해수욕장')">함덕</button>
+            </div>
+             <div id="sub-daejeon" class="region-sub-container" style="display:none;">
+                <button class="region-sub-btn" onclick="selectRegion('대전시청')">대전 전체</button>
+                <button class="region-sub-btn" onclick="selectRegion('둔산동')">둔산동</button>
+                <button class="region-sub-btn" onclick="selectRegion('은행동 으능정이')">은행동</button>
+                <button class="region-sub-btn" onclick="selectRegion('유성온천역')">유성</button>
+            </div>
+             <div id="sub-gangwon" class="region-sub-container" style="display:none;">
+                <button class="region-sub-btn" onclick="selectRegion('강원도청')">강원 전체</button>
+                <button class="region-sub-btn" onclick="selectRegion('강릉 중앙시장')">강릉</button>
+                <button class="region-sub-btn" onclick="selectRegion('속초 중앙시장')">속초</button>
+                <button class="region-sub-btn" onclick="selectRegion('양양 서피비치')">양양</button>
+                <button class="region-sub-btn" onclick="selectRegion('춘천 명동')">춘천</button>
+            </div>
+        </div>
+
+        <div id="section-sort" class="expand-section" style="display:none;">
+            <div class="filter-group">
+                <button type="button" class="filter-btn" onclick="applyFilter('')">기본순</button>
+                <button type="button" class="filter-btn" onclick="applyFilter('reviews')">🔥 리뷰많은순</button>
+                <button type="button" class="filter-btn" onclick="applyFilter('rating')">⭐ 별점높은순</button>
+            </div>
+        </div>
+
+        <div id="section-radius" class="expand-section" style="display:none;">
+             <div class="category-wrapper">
+                <div class="category-container" id="radiusScroll">
+                    <button type="button" class="cat-btn" onclick="selectRadius('')">📍 자동(화면기준)</button>
+                    <button type="button" class="cat-btn" onclick="selectRadius(300)">🏃 5분 (300m)</button>
+                    <button type="button" class="cat-btn" onclick="selectRadius(500)">🚶 10분 (500m)</button>
+                    <button type="button" class="cat-btn" onclick="selectRadius(1000)">👟 1km</button>
+                    <button type="button" class="cat-btn" onclick="selectRadius(2000)">🚕 2km</button>
+                    <button type="button" class="cat-btn" onclick="selectRadius(3000)">🚌 3km</button>
+                    <button type="button" class="cat-btn" onclick="selectRadius(5000)">🚗 5km</button>
+                    <button type="button" class="cat-btn" onclick="selectRadius(10000)">🚀 10km</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-category" class="expand-section" style="display:none;">
+            <div class="category-wrapper">
+                <div class="category-container" id="categoryScroll">
+                    <button type="button" class="cat-btn" onclick="selectCategory('')">🍽️ 전체</button>
+                    <button type="button" class="cat-btn" onclick="selectCategory('한식')">🍚 한식</button>
+                    <button type="button" class="cat-btn" onclick="selectCategory('중식')">🥟 중식</button>
+                    <button type="button" class="cat-btn" onclick="selectCategory('일식')">🍣 일식</button>
+                    <button type="button" class="cat-btn" onclick="selectCategory('양식')">🍝 양식</button>
+                    <button type="button" class="cat-btn" onclick="selectCategory('카페')">☕ 카페</button>
+                    <button type="button" class="cat-btn" onclick="selectCategory('술집')">🍺 술집</button>
+                    <button type="button" class="cat-btn" onclick="selectCategory('이탈리아음식')">🍕 이탈리아</button>
+                    <button type="button" class="cat-btn" onclick="selectCategory('프랑스음식')">🇫🇷 프랑스</button>
+                    <button type="button" class="cat-btn" onclick="selectCategory('스페인음식')">🇪🇸 스페인</button>
+                    <button type="button" class="cat-btn" onclick="selectCategory('아메리칸음식')">🍔 미국식</button>
+                    <button type="button" class="cat-btn" onclick="selectCategory('베트남음식')">🍜 베트남</button>
+                    <button type="button" class="cat-btn" onclick="selectCategory('태국음식')">🇹🇭 태국</button>
+                    <button type="button" class="cat-btn" onclick="selectCategory('인도음식')">🍛 인도</button>
+                    <button type="button" class="cat-btn" onclick="selectCategory('멕시코음식')">🌮 멕시코/남미</button>
+                    <button type="button" class="cat-btn" onclick="selectCategory('이자카야')">🍶 이자카야</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-vibe" class="expand-section" style="display:none;">
+            <div class="category-wrapper">
+                <div class="category-container" id="vibeScroll">
+                    <button type="button" class="cat-btn" onclick="selectVibe('')">🌈 전체</button>
+                    <button type="button" class="cat-btn" onclick="selectVibe('데이트')">💖 데이트</button>
+                    <button type="button" class="cat-btn" onclick="selectVibe('가성비')">💸 가성비</button>
+                    <button type="button" class="cat-btn" onclick="selectVibe('혼밥')">🍱 혼밥</button>
+                    <button type="button" class="cat-btn" onclick="selectVibe('회식')">🍻 회식</button>
+                    <button type="button" class="cat-btn" onclick="selectVibe('조용한')">🤫 조용한</button>
+                    <button type="button" class="cat-btn" onclick="selectVibe('뷰맛집')">🏙️ 뷰맛집</button>
+                    <button type="button" class="cat-btn" onclick="selectVibe('인스타감성')">📸 인스타감성</button>
+                    <button type="button" class="cat-btn" onclick="selectVibe('노포')">👴 노포맛집</button>
+                    <button type="button" class="cat-btn" onclick="selectVibe('격식있는')">🤵 격식있는</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-price" class="expand-section" style="display:none;">
+            <div class="category-wrapper">
+                <div class="category-container">
+                    <button type="button" class="cat-btn" onclick="selectPrice('')">💸 전체</button>
+                    <button type="button" class="cat-btn" onclick="selectPrice('1만원 미만')">1만원 미만</button>
+                    <button type="button" class="cat-btn" onclick="selectPrice('1만원대')">1만원대</button>
+                    <button type="button" class="cat-btn" onclick="selectPrice('2~3만원')">2~3만원</button>
+                    <button type="button" class="cat-btn" onclick="selectPrice('3~5만원')">3~5만원</button>
+                    <button type="button" class="cat-btn" onclick="selectPrice('5~10만원')">5~10만원</button>
+                    <button type="button" class="cat-btn" onclick="selectPrice('10만원 이상')">10만원 이상</button>
+                </div>
+            </div>
+        </div>
+    
+        <p style="font-size: 13px; color: #888;">총 [[${#lists.size(list)}]]개의 맛집을 찾았습니다.</p>
+        <hr style="border: 0; border-top: 1px solid #eee;">
+        
+		<div th:each="place, iterStat : ${list}" class="item" 
+		             th:id="'place-item-' + ${iterStat.index}"
+		             th:onclick="|moveMap(${iterStat.index})|">
+		            
+		            <div class="item-head">
+		                <span class="place-name">[[${place.name}]]</span>
+		                <span th:if="${place.reviewCount > 300}" class="badge">HOT</span>
+		            </div>
+
+		            <button class="btn-list-action" onclick="reserveLog(); event.stopPropagation();">
+		                예약하기
+		            </button>
+
+		            <div style="font-size: 13px; color: #666; margin-bottom: 5px;">[[${place.category}]]</div>
+		            
+		            <div style="margin-bottom: 5px;">
+		                <span th:each="tag : ${place.tags}" 
+		                      th:text="'#' + ${tag}"
+		                      style="color:#E65100; font-size:12px; margin-right:5px; background:#FFF3E0; padding:2px 6px; border-radius:4px; font-weight:600;">
+		                </span>
+		            </div>
+
+		            <div style="font-size: 14px; margin-bottom: 5px;">
+		                <span class="info-rating">★ [[${place.rating}]]</span> 
+		                <span style="color:#ddd;">|</span> 
+		                리뷰 [[${place.reviewCount}]]
+		            </div>
+		            <div style="font-size: 13px; color: #999;">[[${place.roadAddress}]]</div>
+		            <a th:href="${place.url}" target="_blank" style="font-size: 12px; color: #007bff; text-decoration: none;">상세보기 ></a>
+
+		        </div>
+    </div> 
+	<div id="map" class="map-area"></div>
+    <button class="gps-btn" onclick="moveToCurrentLocation()" title="내 위치로 이동"><span class="gps-icon">⌖</span></button>
+    <button class="retry-btn" onclick="searchInCurrentLocation()"><span class="retry-icon">↻</span> 이 지역에서 다시 검색</button>    
+    <div id="toast" class="toast-box">메시지 내용</div>
+    <div id="loading" class="loading-overlay"><div class="spinner"></div><div class="loading-text">맛집 찾는 중...</div></div>
+   
+    <div class="weather-widget" th:if="${weatherMenu != null}">
+        <div class="weather-bubble" 
+             th:data-menu="${weatherMenu}"
+             onclick="searchFromWidget(this.getAttribute('data-menu')); event.stopPropagation();">
+            <span class="bubble-text">
+                오늘 날씨엔 <b>[[${weatherMenu}]]</b> 어때요? 😋
+            </span>
+            <button class="bubble-close" onclick="closeWidget(event)">×</button>
+        </div>
+        <div class="weather-icon-btn" onclick="toggleBubble()">
+            🐻
+        </div>
+    </div>
+</div>
+
+<div id="detailModal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()"> 
+        <button class="close-btn" onclick="closeModal()">×</button>
+        <div class="modal-header-row">
+            <div id="modalTitle" class="modal-title" style="margin-bottom: 0;">식당 이름</div>
+            <button id="bookmarkBtn" class="btn-bookmark" onclick="toggleBookmark(event)" title="찜하기"></button>
+        </div>
+        <div style="font-size:13px; color:#666; margin-bottom:15px;" id="modalCategory">카테고리</div>
+        <div class="modal-row"><span class="modal-icon">⭐</span><span id="modalRating" style="font-weight:bold;">4.5</span> <span style="color:#ddd; margin:0 5px;">|</span>리뷰 <span id="modalReview">120</span>개</div>
+        <div class="modal-row"><span class="modal-icon">📍</span><span id="modalAddress">주소 정보</span></div>
+        <div class="modal-row"><span class="modal-icon">📞</span><span id="modalPhone">전화번호 없음</span></div>
+        
+        <div id="blogReviewContainer" class="review-container" style="display:none;">
+            <div class="review-header">
+                <span>📝 생생 블로그 후기 (Naver)</span>
+                <span style="font-size:11px; color:#999;">실시간</span>
+            </div>
+            <div id="reviewList" class="review-list"></div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-kakao" onclick="openKakaoMap()">카카오맵 보기</button>
+            <button class="btn-call" onclick="reserveLog()">예약하기</button>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" th:src="'//dapi.kakao.com/v2/maps/sdk.js?appkey=' + ${kakaoJsKey} + '&libraries=services,clusterer'"></script>
+
+<script th:inline="javascript">
+    function safeTrack(type, id, msg) { 
+        if (typeof Analytics !== 'undefined') {
+            type === 'SEARCH' ? Analytics.trackSearch(id) : Analytics.trackClick(type, id, msg); 
+        }
+    }
+
+    var savedLat = /*[[${y}]]*/ null;
+    var savedLng = /*[[${x}]]*/ null;
+    var initialLat = savedLat ? parseFloat(savedLat) : 37.498095;
+    var initialLng = savedLng ? parseFloat(savedLng) : 127.027610;
+
+    var mapContainer = document.getElementById('map'); 
+    var mapOption = { center: new kakao.maps.LatLng(initialLat, initialLng), level: 3 };
+    var map = new kakao.maps.Map(mapContainer, mapOption); 
+    var ps = new kakao.maps.services.Places();
+    var clusterer = new kakao.maps.MarkerClusterer({
+        map: map, averageCenter: true, minLevel: 5,
+        calculator: [10, 30, 50],
+        styles: [{ width : '40px', height : '40px', background: 'rgba(109, 76, 65, 0.9)', borderRadius: '50%', color: '#fff', textAlign: 'center', fontWeight: 'bold', lineHeight: '40px', boxShadow: '0 2px 5px rgba(0,0,0,0.3)' }]
+    });
+
+    var places = /*[[${list}]]*/ []; 
+    var VISIBLE_COUNT = 40; 
+    var markers = [];
+    var overlays = []; 
+    var retryBtn = document.querySelector('.retry-btn');
+    var currentPlace = null; 
+    var gpsMarker = null;
+
+    if (places && places.length > 0) {
+        clusterer.clear();
+        var bounds = new kakao.maps.LatLngBounds();
+        places.forEach(function(place, index) {
+            if (index < VISIBLE_COUNT) {
+                addMarker(index, true); 
+                bounds.extend(new kakao.maps.LatLng(place.y, place.x));
+            }
+        });
+        if (!savedLat) {
+            setTimeout(function() { map.relayout(); if (!bounds.isEmpty()) map.setBounds(bounds); }, 100);
+        }
+    }
+
+ kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
+        
+        // 1. 말풍선 닫기
+        overlays.forEach(o => { if(o) o.setMap(null); });
+        
+        // 2. 리스트 하이라이트 끄기
+        var listItems = document.querySelectorAll('.item');
+        listItems.forEach(item => { 
+            item.classList.remove('active'); 
+            item.style.backgroundColor = ""; 
+        });
+
+        // 3. 상세 모달창 닫기
+        document.getElementById('detailModal').style.display = 'none';
+        
+        currentPlace = null;
+    });
+    kakao.maps.event.addListener(map, 'dragend', function() { if(retryBtn) retryBtn.style.display = 'flex'; });
+
+   function addMarker(index, isInit) {
+        if (markers[index]) return;
+        var place = places[index];
+        var position = new kakao.maps.LatLng(parseFloat(place.y), parseFloat(place.x));
+        
+        // 색상 설정
+        var colorDarkChoco = '#6D4C41'; 
+        var colorLatte     = '#A1887F'; 
+        var isCafe = place.category.includes('카페') || place.category.includes('커피') || place.category.includes('디저트');
+        var bgColor = isCafe ? colorLatte : colorDarkChoco; 
+        
+        // 아이콘 SVG
+        var restIcon = `<svg viewBox="0 0 24 24" width="18" height="18" fill="#ffffff"><path d="M11,9H9V2H7v7H5V2H3v7c0,2.12,1.66,3.84,3.75,3.97V22h2.5v-9.03C11.34,12.84,13,11.12,13,9V2h-2V9z M16,6v14h2.5V6c0-2.21-1.79-4-4-4S10.5,3.79,10.5,6h2.5C13,6,13,6,16,6z"/></svg>`;
+        var cafeIcon = `<svg viewBox="0 0 24 24" width="17" height="17" fill="#ffffff"><path d="M20,3H4v10c0,2.21,1.79,4,4,4h6c2.21,0,4-1.79,4-4v-3h2c1.1,0,2-0.9,2-2V5C22,3.9,21.1,3,20,3z M20,8h-2V5h2V8z M4,19h16v2H4V19z"/></svg>`;
+        var iconSvg = isCafe ? cafeIcon : restIcon;
+
+        // ★ [중요] 마커 클릭 시 지도 클릭으로 번지지 않게 막음
+        var markerContent = `<div class="simple-marker" style="background-color: ${bgColor};" onclick="selectPlace(${index}); event.stopPropagation(); return false;">
+                                ${iconSvg}
+                             </div>`;
+        
+        var marker = new kakao.maps.CustomOverlay({
+            position: position, content: markerContent, yAnchor: 0.5, zIndex: 2, clickable: true
+        });
+        markers[index] = marker;
+
+        // ★ [중요] 이름(말풍선) 클릭 시 '상세창 열기' + '지도 클릭 막기' 동시에 수행
+        // event.stopPropagation()이 있어야 지도가 클릭된 걸로 오해하지 않습니다.
+        var content = `<div class="overlay-box" onclick="openModal(${index}); event.stopPropagation(); return false;">
+                            ${place.name} <span style="font-weight:normal; opacity:0.9;">(★${place.rating})</span>
+                       </div>`;
+        
+        var overlay = new kakao.maps.CustomOverlay({ 
+            content: content, 
+            map: null, 
+            position: position, 
+            xAnchor: 0.5, 
+            yAnchor: 1,
+            clickable: true // ★ 이게 있어야 클릭이 뚫리지 않습니다!
+        });
+        overlays[index] = overlay;
+        clusterer.addMarker(marker);
+    }
+       function selectPlace(index) {
+        if (!markers[index]) addMarker(index, false);
+        var place = places[index];
+        var moveLatLon = new kakao.maps.LatLng(place.y, place.x);
+        
+        // ★ [수정] 여기가 핵심입니다! 
+        // 그냥 이동만 하지 말고, 상세히 보이게 '3레벨'로 확대를 먼저 시킵니다.
+        map.setLevel(3); 
+        
+        // 그 다음에 부드럽게 이동
+        map.panTo(moveLatLon);
+        
+        overlays.forEach(o => { if(o) o.setMap(null); });
+        if (overlays[index]) overlays[index].setMap(map);
+        highlightSidebar(index);
+        safeTrack('MAP_MARKER', place.id, place.name + ' 클릭됨');
+    }
+
+	function moveMap(index) { 
+	    selectPlace(index); // 1. 지도 이동하고 마커 띄우기 (기존 기능)
+	    openModal(index);   // 2. ★ [추가] 상세 모달창도 같이 열기!
+	}
+
+    function selectRegion(regionName) {
+        ps.keywordSearch(regionName, function(data, status) {
+            if (status === kakao.maps.services.Status.OK) {
+                var target = data[0];
+                var lat = target.y;
+                var lng = target.x;
+                location.href = '/map?q=&y=' + lat + '&x=' + lng + '&radius=2000'; 
+            } else {
+                showToast('지역을 찾을 수 없습니다.');
+            }
+        });
+    }
+
+    function searchInCurrentLocation(isReset = true) {
+        showLoading();
+        var center = map.getCenter();
+        
+        var userRadius = document.getElementById('radiusInput').value;
+        var radius;
+        if (userRadius && userRadius !== '') {
+            radius = parseInt(userRadius); 
+        } else {
+            var level = map.getLevel();
+            radius = level <= 3 ? 1000 : (level <= 5 ? 3000 : 5000); 
+        }
+        var cat = document.getElementById('categoryInput').value;
+        var vibe = document.getElementById('vibeInput').value;
+        var parking = document.getElementById('parkingInput').value;
+        var reservable = document.getElementById('reservableInput').value;
+        var corkage = document.getElementById('corkageInput').value;
+        var price = document.getElementById('priceInput').value;
+        
+        var query = ''; 
+
+        if (isReset) {
+            cat = vibe = parking = reservable = corkage = price = '';
+            document.getElementById('categoryInput').value = '';
+        } else {
+            if (cat) query = cat;
+        }
+
+        var url = '/map?q=' + encodeURIComponent(query) + 
+                  '&y=' + center.getLat() + '&x=' + center.getLng() + '&radius=' + radius + 
+                  '&category=' + encodeURIComponent(cat) +
+                  '&vibe=' + encodeURIComponent(vibe);
+                  
+        if(parking === 'true') url += '&parking=true';
+        if(reservable === 'true') url += '&reservable=true';
+        if(corkage === 'true') url += '&corkage=true';
+        if(price) url += '&price=' + encodeURIComponent(price);
+
+        location.href = url;
+    }
+
+    function selectCategory(cat) { document.getElementById('categoryInput').value = cat; searchInCurrentLocation(false); }
+    function selectVibe(vibe) { document.getElementById('vibeInput').value = vibe; searchInCurrentLocation(false); }
+    function selectPrice(price) { document.getElementById('priceInput').value = price; searchInCurrentLocation(false); }
+    function toggleBoolFilter(fieldId) {
+        var input = document.getElementById(fieldId + 'Input');
+        input.value = (input.value === 'true') ? '' : 'true';
+        searchInCurrentLocation(false);
+    }
+    
+    function handleSearchLog() { var query = document.getElementById('searchInput').value; safeTrack('SEARCH', null, query); }
+    
+    function applyFilter(type) {
+        var input = document.querySelector('input[name="q"]');
+        var query = input ? input.value : '';
+        document.getElementById('filterInput').value = type;
+        var cat = document.getElementById('categoryInput').value;
+        var vibe = document.getElementById('vibeInput').value;
+        var center = map.getCenter();
+        var radius = map.getLevel() <= 3 ? 1000 : 3000;
+        location.href = '/map?q=' + encodeURIComponent(query) + '&filter=' + type + '&category=' + cat + '&vibe=' + vibe + '&y=' + center.getLat() + '&x=' + center.getLng() + '&radius=' + radius;
+    }
+
+   function toggleFilterSection(type) {
+        var sections = ['region', 'sort', 'radius', 'category', 'vibe', 'price']; 
+        
+        sections.forEach(sec => {
+            var el = document.getElementById('section-' + sec);
+            var btn = document.getElementById('btn-' + sec);
+            if (sec === type) {
+                if (el.style.display === 'none') { el.style.display = 'block'; if(btn) btn.classList.add('active'); }
+                else { el.style.display = 'none'; checkActiveState(); }
+            } else { if(el) el.style.display = 'none'; }
+        });
+        checkActiveState();
+    }
+
+    function checkActiveState() {
+        var cat = document.getElementById('categoryInput').value;
+        var vibe = document.getElementById('vibeInput').value;
+        var price = document.getElementById('priceInput').value;
+        var radiusVal = document.getElementById('radiusInput') ? document.getElementById('radiusInput').value : '';
+
+        if (cat) document.getElementById('btn-category').classList.add('active');
+        else if (document.getElementById('section-category').style.display === 'none') document.getElementById('btn-category').classList.remove('active');
+        
+        if (vibe) document.getElementById('btn-vibe').classList.add('active');
+        else if (document.getElementById('section-vibe').style.display === 'none') document.getElementById('btn-vibe').classList.remove('active');
+        
+        if (price) document.getElementById('btn-price').classList.add('active');
+        else if (document.getElementById('section-price').style.display === 'none') document.getElementById('btn-price').classList.remove('active');
+        
+        if (radiusVal && radiusVal !== '1000') {
+             document.getElementById('btn-radius').classList.add('active');
+        } else if (document.getElementById('section-radius').style.display === 'none') {
+             document.getElementById('btn-radius').classList.remove('active');
+        }
+    }
+
+   function scrollSection(elementId, direction) {
+        var container = document.getElementById(elementId);
+        if (container) {
+            container.scrollBy({ left: direction * 200, behavior: 'smooth' });
+        }
+    }
+    
+    function moveToCurrentLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var lat = position.coords.latitude;
+                var lon = position.coords.longitude;
+                var locPosition = new kakao.maps.LatLng(lat, lon); 
+                if (gpsMarker) gpsMarker.setMap(null);
+                var content = '<div class="my-location-dot"></div>';
+                gpsMarker = new kakao.maps.CustomOverlay({
+                    map: map, position: locPosition, content: content, yAnchor: 0.5, zIndex: 3
+                });
+                map.panTo(locPosition);
+            }, function(error) { showToast('위치 정보를 가져올 수 없습니다.'); });
+        } else { showToast('위치 서비스를 지원하지 않습니다.'); }
+    }
+
+    function registerNewPlace(target) {
+        var isExist = places.findIndex(p => p.id === target.id);
+        if (isExist !== -1) { selectPlace(isExist); return; }
+        var newPlace = {
+            id: target.id, name: target.place_name, category: target.category_name,
+            roadAddress: target.road_address_name || target.address_name,
+            phone: target.phone, x: target.x, y: target.y, url: target.place_url,
+            rating: (3.0 + Math.random() * 2.0).toFixed(1), reviewCount: Math.floor(Math.random() * 500),
+            tags: target.category_name.includes('카페') ? ['카페', '디저트'] : ['맛집', '핫플']
+        };
+        var newIndex = places.push(newPlace) - 1;
+        addMarker(newIndex, false);
+        selectPlace(newIndex);
+        if (typeof addSidebarItem === 'function') addSidebarItem(newPlace, newIndex);
+    }
+
+    function showToast(msg) {
+        var toast = document.getElementById('toast');
+        toast.innerText = msg;
+        toast.classList.add('show');
+        setTimeout(function() { toast.classList.remove('show'); }, 2000);
+    }
+    function showLoading() { document.getElementById('loading').style.display = 'flex'; }
+    function hideLoading() { document.getElementById('loading').style.display = 'none'; }
+
+    window.onload = function() {
+        checkActiveState();
+        var filter = document.getElementById('filterInput') ? document.getElementById('filterInput').value : '';
+        if (filter) document.getElementById('btn-sort').classList.add('active');
+    };
+
+    function openModal(index) {
+        var place = places[index];
+        currentPlace = place; 
+        document.getElementById('modalTitle').innerText = place.name;
+        document.getElementById('modalCategory').innerText = place.category;
+        document.getElementById('modalRating').innerText = place.rating;
+        document.getElementById('modalReview').innerText = place.reviewCount;
+        document.getElementById('modalAddress').innerText = place.roadAddress;
+        document.getElementById('modalPhone').innerText = place.phone ? place.phone : '전화번호 없음';
+        document.getElementById('detailModal').style.display = 'flex';
+        safeTrack('BUTTON', place.id, '상세보기 모달 열림');
+        
+        // ★ [형님 확인!] 모달 열릴 때 네이버 리뷰 불러오기
+        loadNaverReviews(place.name);
+    }
+
+    // ★ [형님 확인!] 네이버 리뷰 가져오는 비동기 함수
+    function loadNaverReviews(placeName) {
+        var container = document.getElementById('blogReviewContainer');
+        var list = document.getElementById('reviewList');
+        
+        container.style.display = 'block';
+        list.innerHTML = '<div class="loading-review"><div class="spinner" style="width:20px; height:20px; border-width:2px; margin:0 auto 10px;"></div>네이버 블로그 후기 검색 중...</div>';
+        
+        // 백엔드 (/api/reviews) 호출
+        fetch('/api/reviews?query=' + encodeURIComponent(placeName))
+            .then(response => response.json())
+            .then(data => {
+                list.innerHTML = ''; // 로딩 문구 제거
+                
+                if (!data || data.length === 0) {
+                    list.innerHTML = '<div class="loading-review">관련 블로그 후기가 없습니다.</div>';
+                    return;
+                }
+                
+                // 데이터 3개 반복해서 HTML 생성
+                data.forEach(review => {
+                    var item = document.createElement('div');
+                    item.className = 'review-item';
+                    item.innerHTML = `
+                        <a href="${review.link}" target="_blank" class="review-title">${review.title}</a>
+                        <div class="review-meta">${review.postdate} | ${review.bloggername}</div>
+                        <div class="review-desc">${review.description}</div>
+                    `;
+                    list.appendChild(item);
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                list.innerHTML = '<div class="loading-review">후기를 불러오지 못했습니다.</div>';
+            });
+    }
+
+    function closeModal(event) { if (!event || event.target.id === 'detailModal' || event.target.className === 'close-btn') document.getElementById('detailModal').style.display = 'none'; }
+    function openKakaoMap() { if (currentPlace) { safeTrack('BUTTON', currentPlace.id, '카카오맵 이동'); if (currentPlace.url) window.open(currentPlace.url, '_blank'); } }
+    function reserveLog() { if(currentPlace) { safeTrack('BUTTON', currentPlace.id, '예약하기 버튼 클릭'); showToast('🚧 예약 기능은 준비 중입니다!'); } }
+
+    function switchRegionTab(regionName) {
+        var regions = ['seoul', 'gyeonggi', 'incheon', 'busan', 'jeju', 'daejeon', 'gangwon'];
+        regions.forEach(function(r) {
+            var tabBtn = document.getElementById('tab-' + r);
+            if (tabBtn) tabBtn.classList.remove('active');
+            var subDiv = document.getElementById('sub-' + r);
+            if (subDiv) subDiv.style.display = 'none';
+        });
+        document.getElementById('tab-' + regionName).classList.add('active');
+        document.getElementById('sub-' + regionName).style.display = 'flex';
+    }
+    function selectRadius(val) {
+        document.getElementById('radiusInput').value = val;
+        searchInCurrentLocation(false);
+    }
+
+    function highlightSidebar(index) {
+        var listItems = document.querySelectorAll('.item'); 
+        listItems.forEach(function(item) {
+            item.classList.remove('active');
+            item.style.backgroundColor = ""; 
+        });
+        var targetItem = document.getElementById('place-item-' + index);
+        if (targetItem) {
+            targetItem.classList.add('active');
+            targetItem.style.backgroundColor = "#EFEBE9"; 
+            targetItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+    // [추가] 챗봇 위젯 관련 스크립트
+    function searchFromWidget(menu) {
+        // 검색창에 메뉴 넣고 검색 실행
+        var input = document.getElementById('searchInput');
+        input.value = "강남 " + menu; // (예: 강남 파전) - 현재 지역명 붙이면 더 좋음
+        document.querySelector('.search-box').submit();
+    }
+
+    function closeWidget(e) {
+        e.stopPropagation(); // 부모 클릭 방지
+        document.querySelector('.weather-bubble').style.display = 'none';
+    }
+
+    function toggleBubble() {
+        var bubble = document.querySelector('.weather-bubble');
+        if (bubble.style.display === 'none') {
+            bubble.style.display = 'block';
+        } else {
+            bubble.style.display = 'none';
+        }
+    }
+  function toggleBookmark(e) {
+        e.stopPropagation(); // 이벤트 전파 방지
+        var btn = document.getElementById('bookmarkBtn');
+
+        // 방어 로직: 현재 선택된 가게 정보가 없으면 중단
+        if (!currentPlace) {
+            showToast('가게 정보를 불러오지 못했습니다.');
+            return;
+        }
+
+        // 1. 서버로 보낼 데이터 준비 (RestaurantDTO 규격에 맞춤)
+        var payload = {
+            id: currentPlace.id,              // 카카오 ID
+            name: currentPlace.name,          // 가게 이름
+            roadAddress: currentPlace.roadAddress, // 도로명 주소
+            phone: currentPlace.phone,        // 전화번호
+            category: currentPlace.category,  // 카테고리
+            x: currentPlace.x,                // 좌표 X
+            y: currentPlace.y,                // 좌표 Y
+            url: currentPlace.url             // 카카오맵 URL
+        };
+
+        // 2. AJAX 요청 (POST /bookmark/toggle)
+        fetch('/bookmark/toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            if (response.status === 401) {
+                // 로그인 안 된 상태면 (나중에 로그인 페이지로 튕기게 할 수 있음)
+                alert('로그인이 필요한 서비스입니다!'); 
+                return null;
+            }
+            return response.json(); // true(찜됨) or false(해제됨)
+        })
+        .then(isBookmarked => {
+            if (isBookmarked === null) return; // 에러난 경우 패스
+
+            if (isBookmarked) {
+                // 찜 성공 (하트 켜기)
+                btn.classList.add('active');
+                showToast('나만의 맛집으로 찜했습니다! ❤️');
+            } else {
+                // 찜 해제 (하트 끄기)
+                btn.classList.remove('active');
+                showToast('찜이 해제되었습니다. 💔');
+            }
+        })
+        .catch(err => {
+            console.error('찜하기 오류:', err);
+            showToast('서버 통신 중 오류가 발생했습니다.');
+        });
+
+        btn.blur(); // 포커스 해제
+    }
+
+    // [수정됨] 모달창 열기 (서버에서 찜 상태 확인 추가)
+    function openModal(index) {
+        var place = places[index];
+        currentPlace = place; 
+        
+        // 1. 기본 텍스트 정보 바인딩
+        document.getElementById('modalTitle').innerText = place.name;
+        document.getElementById('modalCategory').innerText = place.category;
+        document.getElementById('modalRating').innerText = place.rating;
+        document.getElementById('modalReview').innerText = place.reviewCount;
+        document.getElementById('modalAddress').innerText = place.roadAddress;
+        document.getElementById('modalPhone').innerText = place.phone ? place.phone : '전화번호 없음';
+
+        // 2. ★ 찜 상태 확인 (DB 조회)
+        var btn = document.getElementById('bookmarkBtn');
+        btn.classList.remove('active'); // 일단 꺼둠 (깜빡임 방지)
+
+        // GET 요청으로 현재 유저가 이 가게를 찜했는지 물어봄
+        fetch('/bookmark/status?id=' + place.id)
+            .then(res => res.json())
+            .then(isBookmarked => {
+                if (isBookmarked) {
+                    btn.classList.add('active'); // 찜 되어있으면 하트 켬
+                }
+            })
+            .catch(err => console.error('찜 상태 확인 실패:', err));
+
+        // 3. 모달 표시 및 트래킹
+        document.getElementById('detailModal').style.display = 'flex';
+        safeTrack('BUTTON', place.id, '상세보기 모달 열림');
+        
+        // 4. 네이버 리뷰 로드
+        loadNaverReviews(place.name);
+    }
+</script>
+</body>
+</html>

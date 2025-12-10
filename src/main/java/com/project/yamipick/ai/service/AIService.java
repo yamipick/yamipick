@@ -226,7 +226,5 @@ public class AIService {
 	        case "happy"    -> List.of("seafood");
 	        default         -> List.of();
         };
-    }
-
-
+     }
 }

@@ -15,6 +15,7 @@ public class MenuDTO {
     private String flavorTags;
     private String menuDescription;
     private String menuImage;
+    private String menuEnglish;
 
     public Menu toEntity() {
         return Menu.builder()
@@ -24,6 +25,7 @@ public class MenuDTO {
                 .flavorTags(this.flavorTags)
                 .menuDescription(this.menuDescription)
                 .menuImage(this.menuImage)
+                .menuEnglish(this.menuEnglish)
                 .build();
     }
 }

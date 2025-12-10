@@ -1,4 +1,4 @@
-package com.project.yamipick.ai.controller;
+package com.project.yamipick.ai.restcontroller;
 
 import java.util.List;
 
@@ -16,12 +16,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MenuRecommendController {
 
-	private final MenuRecommendService menuRecommendService;
+    private final MenuRecommendService menuRecommendService;
 
-    @PostMapping("/api/recommend/menu")
+    @PostMapping("/api/ai/recommend/menu")
     public List<MenuRecommendResponse> searchMenuRecommendations(@RequestBody MenuRecommendRequest request) {
         return menuRecommendService.recommend(request);
     }
-
 }
+
 
