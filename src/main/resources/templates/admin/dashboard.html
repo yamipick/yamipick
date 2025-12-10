@@ -3,321 +3,300 @@
 <head>
     <meta charset="UTF-8">
     <title>Yamipick Admin Dashboard</title>
-    <!-- 부트스트랩 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- 아이콘 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- 공통 CSS -->
     <link href="/css/admin.css" rel="stylesheet">
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        /* 대시보드 전용 추가 스타일 */
+        /* 대시보드 전용 스타일 */
+        body { background-color: #f8f9fa; }
+        .admin-content { padding: 30px; }
+        
         .stat-card {
             border: none;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             transition: transform 0.3s ease;
             overflow: hidden;
+            background: #fff;
         }
-        .stat-card:hover { transform: translateY(-5px); }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
         .stat-icon {
-            width: 50px; height: 50px;
+            width: 60px; height: 60px;
             display: flex; align-items: center; justify-content: center;
-            border-radius: 12px; font-size: 1.5rem;
+            border-radius: 15px; font-size: 1.8rem;
         }
-        .bg-gradient-primary { background: linear-gradient(45deg, #008080, #20c997); color: white; }
-        .bg-gradient-info { background: linear-gradient(45deg, #17a2b8, #138496); color: white; }
-        .bg-gradient-warning { background: linear-gradient(45deg, #ffc107, #ffca2c); color: white; }
-        .bg-gradient-danger { background: linear-gradient(45deg, #dc3545, #bd2130); color: white; }
         
-        .chart-container { position: relative; height: 300px; width: 100%; }
+        /* 그라데이션 아이콘 배경 */
+        .bg-gradient-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .bg-gradient-info { background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%); color: white; }
+        .bg-gradient-warning { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: white; }
+        
+        .table-hover tbody tr:hover { background-color: #f8f9fa; }
+        .badge-rank { width: 24px; display: inline-block; text-align: center; font-weight: 800; }
+        
+        /* 로그 타임라인 */
+		.timeline-item { position: relative; padding-left: 20px; border-left: 2px solid #e9ecef; padding-bottom: 15px; }
+		.timeline-item:last-child { border-left: 2px solid transparent; }
+		.timeline-dot { position: absolute; left: -6px; top: 5px; width: 10px; height: 10px; border-radius: 50%; }
+		.custom-scroll { max-height: 350px; overflow-y: auto; }
+		.custom-scroll::-webkit-scrollbar { width: 6px; }
+		.custom-scroll::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
     </style>
 </head>
 <body>
 
 <div class="admin-wrapper">
-    <!-- 사이드바 -->
     <div class="admin-sidebar">
         <div th:replace="~{admin/common/header :: header}"></div>
     </div>
 
-    <!-- 메인 컨텐츠 -->
     <div class="admin-content">
         <div class="container-fluid">
             
-            <!-- 헤더 -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2 class="fw-bold text-dark mb-0">Dashboard</h2>
-                    <p class="text-muted mb-0">Yamipick 서비스 현황을 한눈에 확인하세요.</p>
+                    <h3 class="fw-bold text-dark m-0">Dashboard</h3>
+                    <p class="text-muted small m-0">오늘의 서비스 현황입니다.</p>
                 </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-white shadow-sm"><i class="fas fa-sync-alt me-1"></i> 새로고침</button>
-                </div>
+                <button class="btn btn-white shadow-sm btn-sm" onclick="location.reload()">
+                    <i class="fas fa-sync-alt me-1"></i> 새로고침
+                </button>
             </div>
 
-            <!-- 1. 핵심 지표 카드 -->
-            <div class="row g-4 mb-4">
-                <!-- 전체 회원 -->
-                <div class="col-xl-3 col-md-6">
-                    <div class="card stat-card h-100">
-                        <div class="card-body">
+            <div th:if="${dashboard != null}">
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4">
+                        <div class="stat-card h-100 p-4">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div>
-                                    <h6 class="text-muted mb-1">전체 회원수</h6>
-                                    <h3 class="fw-bold mb-0" th:text="${totalUser ?: 0}">0</h3>
+                                    <h6 class="text-muted text-uppercase small fw-bold">Total Users</h6>
+                                    <h2 class="fw-bold mb-0 text-dark">[[${#numbers.formatInteger(dashboard.totalUser, 0, 'COMMA')}]]</h2>
                                 </div>
-                                <div class="stat-icon bg-gradient-primary">
+                                <div class="stat-icon bg-gradient-primary shadow-sm">
                                     <i class="fas fa-users"></i>
                                 </div>
                             </div>
-                            <div class="small text-success fw-bold">
-                                <i class="fas fa-arrow-up me-1"></i> 12% <span class="text-muted fw-normal">지난달 대비</span>
+                            <div class="small text-muted">
+                                <i class="fas fa-check-circle me-1 text-success"></i> 정상 운영 중
                             </div>
                         </div>
                     </div>
-                </div>
-                <!-- 오늘 가입 -->
-                <div class="col-xl-3 col-md-6">
-                    <div class="card stat-card h-100">
-                        <div class="card-body">
+
+                    <div class="col-md-4">
+                        <div class="stat-card h-100 p-4">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div>
-                                    <h6 class="text-muted mb-1">오늘 신규 가입</h6>
-                                    <h3 class="fw-bold mb-0" th:text="${todayJoin ?: 0}">0</h3>
+                                    <h6 class="text-muted text-uppercase small fw-bold">New Users Today</h6>
+                                    <div class="d-flex align-items-baseline gap-2">
+                                        <h2 class="fw-bold mb-0 text-dark">+[[${dashboard.todayJoin}]]</h2>
+                                        <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-2" 
+                                              th:if="${dashboard.todayLeftUsers > 0}">
+                                            -[[${dashboard.todayLeftUsers}]]
+                                        </span>
+                                    </div>
                                 </div>
-                                <div class="stat-icon bg-gradient-info">
+                                <div class="stat-icon bg-gradient-info shadow-sm">
                                     <i class="fas fa-user-plus"></i>
                                 </div>
                             </div>
-                            <div class="small text-muted">
-                                <span class="badge bg-light text-dark">Today</span> 실시간 집계 중
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar bg-info" role="progressbar" style="width: 70%"></div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <!-- 오늘 방문자 -->
-                <div class="col-xl-3 col-md-6">
-                    <div class="card stat-card h-100">
-                        <div class="card-body">
+
+                    <div class="col-md-4">
+                        <div class="stat-card h-100 p-4">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div>
-                                    <h6 class="text-muted mb-1">오늘 방문자</h6>
-                                    <!-- visitData가 null이거나 비었을 때 안전하게 0 출력 -->
-                                    <h3 class="fw-bold mb-0" 
-                                        th:text="${visitData != null and !visitData.isEmpty() ? visitData.get(visitData.size()-1) : 0}">0</h3>
+                                    <h6 class="text-muted text-uppercase small fw-bold">Visitors Today</h6>
+                                    <h2 class="fw-bold mb-0 text-dark" 
+                                        th:text="${dashboard.visitData != null and !dashboard.visitData.isEmpty() ? dashboard.visitData.get(dashboard.visitData.size()-1) : 0}">0</h2>
                                 </div>
-                                <div class="stat-icon bg-gradient-warning">
+                                <div class="stat-icon bg-gradient-warning shadow-sm">
                                     <i class="fas fa-eye"></i>
                                 </div>
                             </div>
-                            <div class="small text-danger fw-bold">
-                                <i class="fas fa-arrow-down me-1"></i> 3% <span class="text-muted fw-normal">어제 대비</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- 매출 -->
-                <div class="col-xl-3 col-md-6">
-                    <div class="card stat-card h-100">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div>
-                                    <h6 class="text-muted mb-1">이번달 매출</h6>
-                                    <h3 class="fw-bold mb-0 text-primary">₩ <span th:text="${#numbers.formatInteger(currentRevenue ?: 0, 0, 'COMMA')}">0</span></h3>
-                                </div>
-                                <div class="stat-icon bg-gradient-danger">
-                                    <i class="fas fa-won-sign"></i>
-                                </div>
-                            </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-danger" role="progressbar" style="width: 65%"></div>
-                            </div>
-                            <div class="small text-muted mt-2">목표 달성률 65%</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. 차트 영역 -->
-            <div class="row g-4 mb-4">
-                <!-- 방문자 추이 차트 -->
-                <div class="col-lg-8">
-                    <div class="card stat-card h-100">
-                        <div class="card-header border-0 bg-white pt-4 px-4">
-                            <h5 class="fw-bold mb-0"><i class="fas fa-chart-area me-2 text-primary"></i>주간 방문자 추이</h5>
-                        </div>
-                        <div class="card-body px-4 pb-4">
-                            <div class="chart-container">
-                                <canvas id="visitChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 인기 식당 랭킹 -->
-				<div class="col-lg-4">
-				    <div class="card stat-card h-100">
-				        <div class="card-header border-0 bg-white pt-4 px-4">
-				            <h5 class="fw-bold mb-0"><i class="fas fa-fire me-2 text-danger"></i>핫플레이스 TOP 5</h5>
-				        </div>
-				        
-				        <div class="card-body px-4 pb-4">
-				            
-				            <div class="list-group list-group-flush">
-				                
-				                <div th:if="${rankLabels != null}" th:each="label, stat : ${rankLabels}" 
-				                     class="list-group-item border-0 px-0 py-3">
-				                    
-				                    <div class="d-flex justify-content-between align-items-center mb-1">
-				                        <div class="d-flex align-items-center">
-				                            <span class="badge rounded-pill me-2" 
-				                                  th:classappend="${stat.index < 3 ? 'bg-primary' : 'bg-secondary'}"
-				                                  th:text="${stat.count}">1</span>
-				                            
-				                            <span class="fw-bold text-dark" th:text="${label}">식당이름</span>
-				                        </div>
-				                        <span class="text-muted small">
-				                            <i class="fas fa-mouse-pointer me-1"></i>
-				                            <span th:text="${rankData[stat.index]}">0</span>회
-				                        </span>
-				                    </div>
-				
-				                    <div class="progress" style="height: 6px;">
-				                        <div class="progress-bar rounded" role="progressbar" 
-				                             th:style="'width: ' + (${rankData[stat.index]} * 100.0 / ${rankData[0]}) + '%; background-color: #008080; opacity: ' + (1 - ${stat.index} * 0.15)"
-				                             aria-valuemin="0" aria-valuemax="100"></div>
-				                    </div>
-				                </div>
-				                
-				                <div th:if="${rankLabels == null or rankLabels.isEmpty()}" class="text-center py-5 text-muted">
-				                    <i class="fas fa-exclamation-circle mb-2"></i><br>
-				                    집계된 데이터가 없습니다.
-				                </div>
-				
-				            </div>
-				            </div>
-				    </div>
-				</div>
-
-            <!-- 3. 하단 상세 정보 -->
-            <div class="row g-4">
-                <!-- 운영 지표 -->
-                <div class="col-lg-6">
-                    <div class="card stat-card h-100">
-                        <div class="card-header border-0 bg-white pt-4 px-4 d-flex justify-content-between">
-                            <h5 class="fw-bold mb-0">서비스 운영 지표</h5>
-                            <span class="badge bg-light text-dark border">Realtime</span>
-                        </div>
-                        <div class="card-body">
-                            <div class="row text-center align-items-center h-100">
-                                <div class="col-4">
-                                    <div style="width: 120px; margin: 0 auto;">
-                                        <canvas id="donut1"></canvas>
-                                    </div>
-                                 	<div class="mt-3 fw-bold">예약 이행률</div>
-									<div class="small text-muted">
-									    <span th:text="${reservationRate}">0</span>% 달성
-									</div>
-                                </div>
-                                <div class="col-4 border-start border-end">
-                                    <div style="width: 120px; margin: 0 auto;">
-                                        <canvas id="donut2"></canvas>
-                                    </div>
-                                    <div class="mt-3 fw-bold text-danger">노쇼 비율</div>
-									<div class="small text-muted">
-									    <span th:text="${noShowRate}">0</span>% 발생
-									</div>
-                                </div>
-                                <div class="col-4">
-                                    <div style="width: 120px; margin: 0 auto;">
-                                        <canvas id="donut3"></canvas>
-                                    </div>
-                                    <div class="mt-3 fw-bold text-success">가동률</div>
-                                    <div class="small text-muted">서버 안정적</div>
-                                </div>
+                            <div class="small text-muted">
+                                실시간 집계 중
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 최근 공지사항 -->
-                <div class="col-lg-6">
-                    <div class="card stat-card h-100">
-                        <div class="card-header border-0 bg-white pt-4 px-4 d-flex justify-content-between align-items-center">
-                            <h5 class="fw-bold mb-0">최근 공지사항</h5>
-                            <a href="/admin/notice/list" class="btn btn-sm btn-light">전체보기</a>
+                <div class="row g-4 mb-4">
+                    
+                    <div class="col-lg-8">
+                        <div class="stat-card h-100 p-0">
+                            <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 fw-bold text-dark"><i class="fas fa-chart-line me-2 text-primary"></i>주간 방문자 추이</h6>
+                            </div>
+                            <div class="card-body p-4">
+                                <div style="height: 300px;">
+                                    <canvas id="visitChart"></canvas>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0" style="border-color: #f0f0f0;">
-                                    <tbody th:if="${noticeList != null}">
-                                        <tr th:each="notice : ${noticeList}">
-                                            <td class="ps-4" style="width: 50px;">
-                                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
-                                                    <i class="fas fa-bullhorn text-secondary small"></i>
-                                                </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="stat-card h-100 p-0 border-start border-4"
+                             th:classappend="${dashboard.pendingReports > 0} ? 'border-danger' : 'border-success'">
+                            <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 fw-bold text-dark"><i class="fas fa-exclamation-triangle me-2 text-danger"></i>신고 현황</h6>
+                                <span class="badge" 
+                                      th:classappend="${dashboard.pendingReports > 0} ? 'bg-danger' : 'bg-success'"
+                                      th:text="${dashboard.pendingReports > 0 ? 'Action Needed' : 'Clean'}">Status</span>
+                            </div>
+                            <div class="card-body p-4 d-flex flex-column justify-content-center align-items-center text-center">
+                                <div class="mb-3">
+                                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center" 
+                                         style="width: 80px; height: 80px;"
+                                         th:classappend="${dashboard.pendingReports > 0} ? 'bg-danger bg-opacity-10 text-danger' : 'bg-success bg-opacity-10 text-success'">
+                                        <i class="fas fa-3x" th:classappend="${dashboard.pendingReports > 0} ? 'fa-bell' : 'fa-check'"></i>
+                                    </div>
+                                </div>
+                                <h3 class="fw-bold mb-1">
+                                    <span th:text="${dashboard.pendingReports}">0</span>건
+                                </h3>
+                                <p class="text-muted small mb-4">처리되지 않은 신고가 있습니다.</p>
+                                
+                                <a href="/admin/report/list?status=PENDING" class="btn w-100 fw-bold"
+                                   th:classappend="${dashboard.pendingReports > 0} ? 'btn-danger' : 'btn-outline-secondary'">
+                                    신고 내역 확인하기
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    
+                    <div class="col-md-6">
+                        <div class="stat-card h-100 p-0">
+                            <div class="card-header bg-white py-3 px-4 border-bottom">
+                                <h6 class="m-0 fw-bold"><i class="fas fa-fire me-2 text-warning"></i>실시간 인기 검색어</h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="list-group list-group-flush">
+                                    <div th:if="${dashboard.topKeywords == null or dashboard.topKeywords.isEmpty()}" class="text-center py-5 text-muted">
+                                        데이터 없음
+                                    </div>
+                                    <div th:each="word, stat : ${dashboard.topKeywords}" 
+                                         class="list-group-item px-4 py-3 border-0 d-flex align-items-center">
+                                        <span class="badge-rank me-3" 
+                                              th:classappend="${stat.index < 3} ? 'text-danger' : 'text-muted'"
+                                              th:text="${stat.count}">1</span>
+                                        <span class="fw-bold text-dark flex-grow-1">[[${word}]]</span>
+                                        <small class="text-muted"><i class="fas fa-search me-1"></i>검색</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="stat-card h-100 p-0">
+                            <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 fw-bold"><i class="fas fa-bullhorn me-2 text-info"></i>최신 공지사항</h6>
+                                <a href="/admin/notice/list" class="btn btn-sm btn-light text-muted">더보기</a>
+                            </div>
+                            <div class="card-body p-0">
+                                <table class="table table-hover mb-0 align-middle">
+                                    <tbody th:if="${dashboard.noticeList != null}">
+                                        <tr th:each="notice : ${dashboard.noticeList}">
+                                            <td class="px-4">
+                                                <a th:href="@{/admin/notice/detail/{seq}(seq=${notice.seqNotice})}" 
+                                                   class="text-dark text-decoration-none fw-bold">[[${notice.title}]]</a>
                                             </td>
-                                            <td>
-                                                <a th:href="@{/admin/notice/view(seq=${notice.seqNotice})}" 
-                                                   class="text-dark text-decoration-none fw-bold" th:text="${notice.title}">제목</a>
-                                                <div class="small text-muted" th:text="${notice.createdAt}">날짜</div>
-                                            </td>
-                                            <td class="pe-4 text-end">
-                                                <span class="badge bg-light text-secondary rounded-pill">
-                                                    <i class="fas fa-eye me-1"></i> <span th:text="${notice.viewCount}">0</span>
-                                                </span>
+                                            <td class="text-end px-4 text-muted small" style="width: 100px;">
+                                                [[${#temporals.format(notice.createdAt, 'MM-dd')}]]
                                             </td>
                                         </tr>
+                                    </tbody>
+                                    <tbody th:if="${dashboard.noticeList == null or dashboard.noticeList.isEmpty()}">
+                                        <tr><td colspan="2" class="text-center py-5 text-muted">공지사항이 없습니다.</td></tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
+                    <div class="col-lg-6">
+					    <div class="card stat-card h-100">
+					        <div class="card-header border-0 bg-white pt-4 px-4 d-flex justify-content-between align-items-center">
+					            <h5 class="fw-bold mb-0"><i class="fas fa-history me-2 text-secondary"></i>Recent Activity</h5>
+					            <span class="badge bg-light text-dark border">Live</span>
+					        </div>
+					        
+					        <div class="card-body px-4 pb-4 custom-scroll">
+					            
+					            <div th:if="${dashboard.recentLogs == null or dashboard.recentLogs.isEmpty()}" class="text-center py-5 text-muted">
+					                <i class="fas fa-server mb-2"></i><br>로그 데이터가 없습니다.
+					            </div>
+					
+					            <div th:each="log : ${dashboard.recentLogs}" class="timeline-item">
+					                <div class="timeline-dot"
+					                     th:classappend="${log.actionType == 'LOGIN'} ? 'bg-primary' : 
+					                                     (${log.actionType == 'SEARCH'} ? 'bg-warning' : 
+					                                     (${log.actionType == 'REPORT'} ? 'bg-danger' : 'bg-secondary'))"></div>
+					                
+					                <div class="d-flex justify-content-between align-items-start">
+					                    <div>
+					                        <span class="badge rounded-pill mb-1" style="font-size: 0.7rem;"
+					                              th:classappend="${log.actionType == 'LOGIN'} ? 'bg-primary bg-opacity-10 text-primary' : 
+					                                              (${log.actionType == 'SEARCH'} ? 'bg-warning bg-opacity-10 text-dark' : 
+					                                              (${log.actionType == 'REPORT'} ? 'bg-danger bg-opacity-10 text-danger' : 'bg-secondary bg-opacity-10 text-dark'))"
+					                              th:text="${log.actionType}">TYPE</span>
+					                        
+					                        <p class="mb-0 fw-bold text-dark small">
+					                            <span th:text="${log.userId}" class="text-primary me-1">User</span>
+					                            <span th:text="${log.message}" class="text-muted fw-normal">Action</span>
+					                        </p>
+					                    </div>
+					                    <small class="text-muted" style="font-size: 0.75rem;" 
+					                           th:text="${#temporals.format(log.createdAt, 'HH:mm:ss')}">Time</small>
+					                </div>
+					            </div>
+					        </div>
+					    </div>
+					</div>
                 </div>
-            </div>
-
-        </div>
+            
+            </div> </div>
     </div>
 </div>
 
-<!-- 부트스트랩 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- 공통 JS -->
 <script src="/js/admin.js"></script>
 
-<!-- ★ 차트 스크립트 -->
 <script th:inline="javascript">
     /*<![CDATA[*/
     
-    // 1. 방문자 차트
-    // Thymeleaf 주석 문법을 사용하여 파싱 에러 방지
-    const visitLabels = /*[[${visitLabels ?: {}}]]*/ [];
-    const visitData = /*[[${visitData ?: {}}]]*/ [];
+    const visitLabels = /*[[${dashboard?.visitLabels ?: {}}]]*/ [];
+    const visitData = /*[[${dashboard?.visitData ?: {}}]]*/ [];
     
     if(visitLabels.length > 0) {
-        const ctxVisit = document.getElementById('visitChart').getContext('2d');
-        
-        const gradientVisit = ctxVisit.createLinearGradient(0, 0, 0, 400);
-        gradientVisit.addColorStop(0, 'rgba(0, 128, 128, 0.5)'); 
-        gradientVisit.addColorStop(1, 'rgba(0, 128, 128, 0.0)'); 
+        const ctx = document.getElementById('visitChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(102, 126, 234, 0.2)'); 
+        gradient.addColorStop(1, 'rgba(102, 126, 234, 0.0)'); 
 
-        new Chart(ctxVisit, {
+        new Chart(ctx, {
             type: 'line',
             data: {
                 labels: visitLabels,
                 datasets: [{
                     label: '방문자 수',
                     data: visitData,
-                    borderColor: '#008080',
-                    backgroundColor: gradientVisit,
+                    borderColor: '#667eea',
+                    backgroundColor: gradient,
                     borderWidth: 2,
                     pointBackgroundColor: '#fff',
-                    pointBorderColor: '#008080',
+                    pointBorderColor: '#667eea',
                     pointRadius: 4,
-                    pointHoverRadius: 6,
                     fill: true,
                     tension: 0.4
                 }]
@@ -333,41 +312,6 @@
             }
         });
     }
-
-    // 3. 도넛 차트
-    function createDonut(id, value, color) {
-        const ctx = document.getElementById(id);
-        if(!ctx) return; // 캔버스가 없으면 중단
-
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['달성', '미달성'],
-                datasets: [{
-                    data: [value, 100 - value],
-                    backgroundColor: [color, '#e9ecef'],
-                    borderWidth: 0,
-                    cutout: '70%'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false }, tooltip: { enabled: false } }
-            }
-        });
-    }
-
-   	const reservationRate = /*[[${reservationRate ?: 0}]]*/ 0;
-    const noShowRate = /*[[${noShowRate ?: 0}]]*/ 0;
-
-    // 변수 넣기
-    createDonut('donut1', reservationRate, '#008080'); 
-    createDonut('donut2', noShowRate, '#dc3545'); 
-    
-    // 가동률은 아직 데이터가 없으므로 98 고정 유지 (혹은 나중에 추가)
-    createDonut('donut3', 98, '#198754');
-
     /*]]>*/	
 </script>
 

@@ -36,7 +36,6 @@ public class AdminUserService {
                         .statusUser(user.getStatusUser())
                         .createdAt(user.getCreatedAt()) 
                         .suspendedUntil(user.getSuspendedUntil() != null ? user.getSuspendedUntil().toLocalDate() : null)
-                        
                         .build());
     }
 

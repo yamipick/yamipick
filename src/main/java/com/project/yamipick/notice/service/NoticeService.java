@@ -60,7 +60,6 @@ public class NoticeService {
                 .content(content)
                 .writer(writer) // 객체 연결!
                 .filePath(filePath)
-                .viewCount(0L)
                 .build();
 
         // (4) 저장 (JPA 기본 제공 메소드)

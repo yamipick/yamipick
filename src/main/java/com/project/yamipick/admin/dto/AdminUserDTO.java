@@ -1,6 +1,7 @@
 package com.project.yamipick.admin.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +21,7 @@ public class AdminUserDTO {
     private String phone;
     private String statusUser;  // 상태 (ACTIVE, SUSPENDED 등)
     private Integer penaltyScore; // 벌점
-    private LocalDate createdAt; // 가입일
+    private LocalDateTime createdAt; // 가입일
     private LocalDate suspendedUntil; //정지 기간 
     
 }

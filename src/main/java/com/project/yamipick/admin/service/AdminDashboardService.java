@@ -1,17 +1,20 @@
 package com.project.yamipick.admin.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime; // ★ 시간 계산용 임포트 필수
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.project.yamipick.admin.dto.DashboardDTO;
+import com.project.yamipick.log.entity.BusinessLog;
 import com.project.yamipick.log.repository.BusinessLogQueryRepository;
+import com.project.yamipick.log.repository.BusinessLogRepository;
 import com.project.yamipick.notice.entity.Notice;
 import com.project.yamipick.notice.repository.NoticeRepository;
+import com.project.yamipick.report.repository.ReportRepository; // ★ 신고 리포지토리 추가
 import com.project.yamipick.user.repository.UserRepository;
 import com.querydsl.core.Tuple;
 
@@ -25,19 +28,40 @@ public class AdminDashboardService {
     private final UserRepository userRepository;
     private final BusinessLogQueryRepository logQueryRepository;
     private final NoticeRepository noticeRepository;
+    private final BusinessLogRepository logRepository;
+    
+    // ★ [추가] 신고 관리를 위해 주입 필요
+    private final ReportRepository reportRepository; 
 
     // 나중에 추가될 Repository들 (주석 처리)
     // private final PaymentRepository paymentRepository;
     // private final ReservationRepository reservationRepository;
 
-    @Cacheable(value = "dashboardData")
+    // @Cacheable(value = "dashboardData") // 실시간 데이터 중요하면 캐시 끄는 게 좋음
     public DashboardDTO getDashboardData() {
         
-        // 1. [Real] 회원 통계
-        long todayJoin = userRepository.countByCreatedAt(LocalDate.now());
-        long totalUser = userRepository.count();
+        // ★ [핵심 수정] "오늘"의 기준을 오늘 0시 0분 0초로 잡음
+        LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
 
-        // 2. [Real] 방문자 차트
+        // 1. [Real] 회원 통계 (시간 문제 해결됨)
+        // UserRepository에 countByCreatedAtAfter 메소드가 있어야 함
+        long todayJoin = userRepository.countByCreatedAtAfter(startOfToday); 
+        long totalUser = userRepository.count();
+        
+        // ★ [추가] 탈퇴 회원 & 미처리 신고
+        long todayLeft = userRepository.countByStatusUser("WITHDRAWN"); // (일단 전체 탈퇴자 수)
+        long pendingReports = reportRepository.countByStatus("PENDING"); // 처리 안 된 신고
+
+        // 2. [Real] 인기 검색어 (로그에서 가져오기)
+        List<String> topKeywords = new ArrayList<>();
+        try {
+            // BusinessLogQueryRepository에 해당 메소드 구현 필요
+            topKeywords = logQueryRepository.getTopSearchKeywords();
+        } catch (Exception e) {
+            // 에러 나도 빈 리스트로 처리해서 대시보드는 뜨게 함
+        }
+
+        // 3. [Real] 방문자 차트
         List<String> visitLabels = new ArrayList<>();
         List<Long> visitData = new ArrayList<>();
         try {
@@ -48,59 +72,62 @@ public class AdminDashboardService {
             }
         } catch (Exception e) {}
 
-        // 3. [Real] 인기 식당 랭킹
+        // 4. [Real] 인기 식당 랭킹
         List<String> rankLabels = new ArrayList<>();
         List<Long> rankData = new ArrayList<>();
         try {
             List<Tuple> topStores = logQueryRepository.getTopPopularStores();
             
             for (Tuple t : topStores) {
-                // DB에서 가져온 원본 메시지 (예: "바나프레소 선릉점 클릭됨")
                 String rawMessage = t.get(0, String.class);
                 Long count = t.get(1, Long.class);
 
-                // " 클릭됨" 글자 제거해서 식당 이름만 추출
+                // " 클릭됨" 같은 불필요한 텍스트 제거
                 String storeName = rawMessage;
                 if (storeName != null && storeName.contains(" 클릭됨")) {
                     storeName = storeName.replace(" 클릭됨", "");
                 }
-                // 만약 메시지가 그냥 식당 이름만 있다면 그대로 사용
-
-                rankLabels.add(storeName); // 이제 "식당 53"이 아니라 "바나프레소 선릉점"으로 나옵니다!
+                
+                rankLabels.add(storeName);
                 rankData.add(count);
             }
         } catch (Exception e) {
-            e.printStackTrace(); // 에러 확인용 (운영 시엔 log.error 권장)
+            e.printStackTrace();
         }
         
-        // [추가] 최신 공지사항 5개 조회
-        // (JPA 기본 메소드 네이밍 규칙 사용 예시)
+        // 5. [Real] 최신 공지사항
         List<Notice> noticeList = noticeRepository.findTop5ByOrderByCreatedAtDesc();
         
-        // =============================================
-        // [TODO] 팀원들이 기능 완성하면 여기를 진짜 코드로 교체!
-        // =============================================
-        // 4. 예약 이행률 (로그 분석 결과)
-        int reservationRate = logQueryRepository.getReservationRate();
+        // 6. [Dummy] 예약 및 매출 (팀원 구현 대기)
+        int reservationRate = 0;
+        try {
+             reservationRate = logQueryRepository.getReservationRate();
+        } catch(Exception e) {}
+        
+        List<BusinessLog> recentLogs = logRepository.findTop10ByOrderByCreatedAtDesc();
 
-        // 5. [Still Dummy] 매출 및 노쇼 데이터
-        // (이 데이터는 로그보다는 Payment나 Reservation 테이블을 직접 조회하는 것이 정확합니다)
         long currentRevenue = 3450000; 
         long targetRevenue = 5000000;
-        int noShowRate = 12; // 추후 ReservationRepository에서 status='NOSHOW' count로 구현 권장
+        int noShowRate = 12;
 
         return DashboardDTO.builder()
-                .todayJoin(todayJoin)
+                .todayJoin(todayJoin)       // 오늘 가입 (수정됨)
                 .totalUser(totalUser)
+                .todayLeftUsers(todayLeft)     // ★ 추가됨
+                .pendingReports(pendingReports) // ★ 추가됨
+                .topKeywords(topKeywords)       // ★ 추가됨
+                
                 .visitLabels(visitLabels)
                 .visitData(visitData)
                 .rankLabels(rankLabels)
                 .rankData(rankData)
+                
                 .currentRevenue(currentRevenue)
                 .targetRevenue(targetRevenue)
-                .reservationRate(reservationRate) // ★ 실제 값 적용
+                .reservationRate(reservationRate)
                 .noShowRate(noShowRate)
                 .noticeList(noticeList)
+                .recentLogs(recentLogs)
                 .build();
     }
 }

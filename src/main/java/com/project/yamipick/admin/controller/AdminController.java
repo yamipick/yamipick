@@ -31,20 +31,7 @@ public class AdminController {
         DashboardDTO data = dashboardService.getDashboardData();
 
         // 2. 화면으로 전달
-        model.addAttribute("todayJoin", data.getTodayJoin());
-        model.addAttribute("totalUser", data.getTotalUser());
-        
-        model.addAttribute("visitLabels", data.getVisitLabels());
-        model.addAttribute("visitData", data.getVisitData());
-        
-        model.addAttribute("rankLabels", data.getRankLabels());
-        model.addAttribute("rankData", data.getRankData());
-        
-        model.addAttribute("currentRevenue", data.getCurrentRevenue());
-        model.addAttribute("targetRevenue", data.getTargetRevenue());
-        model.addAttribute("reservationRate", data.getReservationRate());
-        model.addAttribute("noShowRate", data.getNoShowRate());
-        model.addAttribute("noticeList", data.getNoticeList());	
+        model.addAttribute("dashboard", data);
         
         // 사이드바 활성화용
         model.addAttribute("menu", "dashboard");

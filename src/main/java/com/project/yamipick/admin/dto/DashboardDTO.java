@@ -1,7 +1,10 @@
 package com.project.yamipick.admin.dto;
 
 import java.util.List;
+
+import com.project.yamipick.log.entity.BusinessLog;
 import com.project.yamipick.notice.entity.Notice;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -22,7 +25,7 @@ public class DashboardDTO {
     private List<String> rankLabels;
     private List<Long> rankData;
     private List<Notice> noticeList;
-    
+    private List<BusinessLog> recentLogs;
     // ★ [추가] 인기 검색어
     private List<String> topKeywords; 
 

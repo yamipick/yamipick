@@ -51,10 +51,14 @@
                     </div>
                 </div>
                 <div class="card-footer bg-white text-end">
-                    <!-- 수정/삭제 기능 추가 시 버튼 활성화 -->
-                    <button class="btn btn-warning me-1">수정</button>
-                    <button class="btn btn-danger" onclick="confirmDelete()">삭제</button>
-                </div>
+				    <a href="/admin/notice/list" class="btn btn-secondary me-1">목록</a>
+				    
+				    <a th:href="@{/admin/notice/edit/{seq}(seq=${notice.seqNotice})}" class="btn btn-warning me-1">수정</a>
+				    
+				    <a th:href="@{/admin/notice/delete/{seq}(seq=${notice.seqNotice})}" 
+				       class="btn btn-danger" 
+				       onclick="return confirm('정말 삭제하시겠습니까? 복구할 수 없습니다.');">삭제</a>
+				</div>
             </div>
 
         </div>

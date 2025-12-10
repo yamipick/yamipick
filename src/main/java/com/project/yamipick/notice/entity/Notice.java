@@ -29,9 +29,9 @@ public class Notice {
     @Column(name = "filePath", length = 500)
     private String filePath;
 
-    @Column(name = "viewCount")
-    @ColumnDefault("0")
-    private Long viewCount;
+    @Column(columnDefinition = "integer default 0")
+    @Builder.Default // 빌더 패턴 쓸 때 기본값 적용
+    private int viewCount = 0;
 
     // ★ User가 있어야 에러 안 남
     @ManyToOne(fetch = FetchType.LAZY)
@@ -42,8 +42,14 @@ public class Notice {
     @Column(name = "createdAt", updatable = false)
     private LocalDate createdAt;
     
-    //
+    
     public void increaseViewCount() {
         this.viewCount++;
+    }
+    
+    // ★ [수정 2] 공지사항 수정용 메소드 (Service에서 호출)
+    public void update(String title, String content) {
+        this.title = title;
+        this.content = content;
     }
 }
