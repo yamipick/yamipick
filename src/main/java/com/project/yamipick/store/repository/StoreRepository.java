@@ -1,5 +1,6 @@
 package com.project.yamipick.store.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,5 +17,7 @@ public interface StoreRepository extends JpaRepository<Store, Long>{
 
     // kakaoPlaceId 중복 체크
     boolean existsByKakaoPlaceId(String kakaoPlaceId);
+
+	List<Store> findByNameContainingIgnoreCase(String keyword);
 	
 }

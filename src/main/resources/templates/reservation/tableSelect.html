@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>테이블 타입 선택</title>
+	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+</head>
+<body>
+
+<form th:action="@{/reservation/formok}" method="post" th:object="${reservation}">
+
+    <!-- 1단계에서 받아온 값들 다시 넘겨주기 -->
+    <input type="hidden" th:field="*{seqUser}">
+    <input type="hidden" th:field="*{seqStore}">
+    <input type="hidden" th:field="*{reserveDate}">
+    <input type="hidden" th:field="*{reserveTime}">
+    <input type="hidden" th:field="*{peopleCount}">
+
+    <h3>원하는 테이블 타입 선택</h3>
+
+    <div>
+	    <label>테이블 타입:</label>
+	    <select th:field="*{seqStoreTable}">
+	        <option value="">-- 테이블 타입 선택 --</option>
+	
+	        <option th:each="opt : ${tableOptions}"
+	                th:value="${opt.seqStoreTable}"
+	                th:text="${opt.available} ? ${opt.name} : ${opt.name + ' 예약불가(만석)'}"
+	                th:disabled="${!opt.available}">
+	        </option>
+	    </select>
+	</div>
+
+    <button type="submit">예약 확정</button>
+</form>
+
+</body>
+</html>

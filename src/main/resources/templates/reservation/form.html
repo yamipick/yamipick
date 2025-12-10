@@ -1,60 +1,111 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta charset="UTF-8">
-	<title>예약하기</title>
-	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+    <meta charset="UTF-8">
+    <title>예약하기</title>
+    <link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
 </head>
 <body>
 
-	<h1>예약하기</h1>
+    <h1>예약하기</h1>
 
-	<form th:action="@{/reservation/formok}" method="post" th:object="${reservation}">
-	
-	    <!-- 숨겨진 값들: 유저, 매장, 테이블타입 (지금은 하드코딩이라 숨김 처리) -->
-	    <input type="hidden" th:field="*{seqUser}">
-	    <input type="hidden" th:field="*{seqStore}">
-	    <input type="hidden" th:field="*{seqStoreTable}">
-	
-	    <div>
-	        <label>예약 날짜:</label>
-	        <input type="date" id="reserveDate" name="reserveDate" th:field="*{reserveDate}">
-	    </div>
-	
-	    <div>
-	        <label>예약 시간:</label>
-	        <input type="time" th:field="*{reserveTime}">
-	    </div>
-	
-	    <div>
-	        <label>인원 수:</label>
-	        <input type="number" th:field="*{peopleCount}" min="1">
-	    </div>
-	
-	    <button type="submit">예약하기</button>
-	</form>
-	
-	<script th:inline="javascript">
+    <!-- ★ action: formok -> tableSelect 로 변경 -->
+    <form id="reservationForm" th:action="@{/reservation/tableSelect}" method="post"
+          th:object="${reservation}">
+
+        <!-- 숨겨진 값들: 유저, 매장 -->
+        <input type="hidden" th:field="*{seqUser}">
+        <input type="hidden" th:field="*{seqStore}">
+
+        <!-- 매장 표시 -->
+        <div>
+            <label>매장:</label>
+            <span th:text="${store.name}">매장 이름</span>
+        </div>
+
+        <!-- 예약 날짜 -->
+        <div>
+            <label>예약 날짜:</label>
+	        <input type="date"
+	               id="reserveDate"
+	               th:field="*{reserveDate}"
+	               required>
+        </div>
+
+        <!-- 예약 시간 (1시간 단위) -->
+        <div>
+            <label>예약 시간:</label>
+            <select th:field="*{reserveTime}" id="reserveTime" required>
+                <option value="">-- 시간 선택 --</option>
+                <option th:each="h : ${#numbers.sequence(0,23)}"
+                        th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                        th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
+                </option>
+            </select>
+        </div>
+
+        <!-- 인원 수 -->
+        <div>
+            <label>인원 수:</label>
+            <input type="number" th:field="*{peopleCount}" min="1">
+        </div>
+
+        <button type="submit">테이블 타입 선택</button>
+    </form>
+
+    <script th:inline="javascript">
+        window.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('reserveDate');
+            if (!dateInput) return;
+
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+
+            const todayStr = `${yyyy}-${mm}-${dd}`;
+
+            // 오늘 이전 날짜 선택 못하게
+            dateInput.setAttribute('min', todayStr);
+
+            // 혹시 기본값이 과거면 오늘로 덮어쓰기
+            if (dateInput.value && dateInput.value < todayStr) {
+                dateInput.value = todayStr;
+            }
+        });
+    </script>
+    <script th:inline="javascript">
 	    window.addEventListener('DOMContentLoaded', function () {
-	        const dateInput = document.getElementById('reserveDate');
-	        if (!dateInput) return;
+	        const form = document.getElementById('reservationForm');
+	        const dateEl = document.getElementById('reserveDate');
+	        const timeEl = document.getElementById('reserveTime');
+	        const peopleEl = document.getElementById('peopleCount');
 	
-	        const today = new Date();
-	        const yyyy = today.getFullYear();
-	        const mm = String(today.getMonth() + 1).padStart(2, '0');
-	        const dd = String(today.getDate()).padStart(2, '0');
+	        form.addEventListener('submit', function (e) {
 	
-	        const todayStr = `${yyyy}-${mm}-${dd}`;
+	            if (!dateEl.value) {
+	                alert('예약 날짜를 선택해 주세요.');
+	                dateEl.focus();
+	                e.preventDefault();
+	                return;
+	            }
 	
-	        // 오늘 이전 날짜 선택 못하게
-	        dateInput.setAttribute('min', todayStr);
+	            if (!timeEl.value) {
+	                alert('예약 시간을 선택해 주세요.');
+	                timeEl.focus();
+	                e.preventDefault();
+	                return;
+	            }
 	
-	        // 혹시 기본값이 과거면 오늘로 덮어쓰기
-	        if (dateInput.value && dateInput.value < todayStr) {
-	            dateInput.value = todayStr;
-	        }
+	            if (!peopleEl.value || Number(peopleEl.value) <= 0) {
+	                alert('인원 수를 1명 이상 입력해 주세요.');
+	                peopleEl.focus();
+	                e.preventDefault();
+	                return;
+	            }
+	        });
 	    });
 	</script>
-	
+
 </body>
 </html>

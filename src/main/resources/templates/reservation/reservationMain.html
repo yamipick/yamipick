@@ -90,11 +90,10 @@
 	
 	    <div class="btn-group">
 	        <!-- 예약하기 폼 -->
-	        <a th:href="@{/reservation/form}"
-	           class="btn btn-primary"
-	           onclick="Analytics.trackClick('BUTTON', 'reservation_form', '예약하기 버튼 클릭');">
-	            예약하기
-	        </a>
+	        <a th:href="@{/reservation/storeSelect}"
+			   class="btn btn-primary">
+			    예약하기
+			</a>
 	
 	        <!-- 내 예약 목록 -->
 	        <a th:href="@{/reservation/list}"

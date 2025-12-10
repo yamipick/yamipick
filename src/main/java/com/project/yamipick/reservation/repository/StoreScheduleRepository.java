@@ -1,6 +1,7 @@
 package com.project.yamipick.reservation.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -13,4 +14,6 @@ public interface StoreScheduleRepository extends JpaRepository<StoreSchedule, Lo
     List<StoreSchedule> findByStore_SeqStoreOrderByDayOfWeek(Long seqStore);
     
     List<StoreSchedule> findByStore(Store store);
+
+	Optional<StoreSchedule> findByStoreAndDayOfWeek(Store store, int dayOfWeek);
 }

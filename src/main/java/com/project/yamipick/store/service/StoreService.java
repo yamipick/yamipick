@@ -234,4 +234,25 @@ public class StoreService {
 
 	    storeTableTypeRepository.delete(tableType);
 	}
+
+	// ★ 전체 매장 목록
+	public List<Store> getAllStores() {
+	    return storeRepository.findAll();
+	}
+
+	// ★ 이름으로 간단 검색 (필요하면 주소까지 확장 가능)
+	public List<Store> searchStores(String keyword) {
+	    return storeRepository.findByNameContainingIgnoreCase(keyword);
+	}
+
+	// ★ seqStore로 단건 조회 (폼에서 매장 이름 보여줄 때 사용)
+	public Optional<Store> findById(Long seqStore) {
+	    return storeRepository.findById(seqStore);
+	}
+	
+	// StoreService 안에 추가 (기존 코드 맨 위/아래 아무 데나)
+	public Store getStoreById(Long seqStore) {
+	    return storeRepository.findById(seqStore)
+	            .orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다. seqStore=" + seqStore));
+	}
 }

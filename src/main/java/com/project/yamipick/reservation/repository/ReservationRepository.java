@@ -22,4 +22,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             Long seqStoreTable,
             LocalDate date
     );
+    
+    List<Reservation> findByStore_SeqStoreAndStoreTableType_SeqStoreTableAndReserveDateAndReserveTime(
+            Long seqStore,
+            Long seqStoreTable,
+            LocalDate reserveDate,
+            String reserveTime
+    );
+    
 }
