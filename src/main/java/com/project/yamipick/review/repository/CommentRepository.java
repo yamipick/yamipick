@@ -9,5 +9,7 @@ import com.project.yamipick.review.entity.Comment;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     List<Comment> findByReviewSeqReviewOrderByRegdateAsc(Long seqReview);
+    
+    List<Comment> findByReviewSeqReviewOrderBySeqCommentAsc(Long seqReview);
 
 }

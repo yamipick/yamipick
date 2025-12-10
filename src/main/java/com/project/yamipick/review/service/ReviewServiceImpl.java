@@ -1,8 +1,13 @@
 package com.project.yamipick.review.service;
 
 import java.sql.Date;
-import java.time.LocalDate;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -98,25 +103,92 @@ public class ReviewServiceImpl implements ReviewService {
     
     @Override
     public List<CommentDTO> getComments(Long seqReview) {
-        return commentRepository.findByReviewSeqReviewOrderByRegdateAsc(seqReview)
-                                .stream()
-                                .map(Comment::toDTO)
-                                .toList();
+        List<Comment> raw = commentRepository
+                .findByReviewSeqReviewOrderBySeqCommentAsc(seqReview);
+
+        // 부모ID -> 자식 List 로 맵 구성
+        Map<Long, List<CommentDTO>> childrenMap = new HashMap<>();
+
+        List<CommentDTO> roots = new ArrayList<>();
+
+        for (Comment c : raw) {
+            CommentDTO dto = c.toDTO();
+
+            Long parentId = (c.getParentComment() != null)
+                    ? c.getParentComment().getSeqComment()
+                    : null;
+
+            if (parentId == null) {
+                roots.add(dto);
+            } else {
+                childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(dto);
+            }
+        }
+
+        // 최종 출력 리스트
+        List<CommentDTO> ordered = new ArrayList<>();
+
+        for (CommentDTO root : roots) {
+            ordered.add(root); // 부모 먼저
+            addChildrenRecursively(ordered, root, childrenMap);
+        }
+
+        return ordered;
+    }
+
+    private void addChildrenRecursively(
+            List<CommentDTO> result,
+            CommentDTO parent,
+            Map<Long, List<CommentDTO>> childrenMap) {
+
+        List<CommentDTO> children = childrenMap.get(parent.getSeqComment());
+        if (children == null) return;
+        
+        children.sort(Comparator.comparing(CommentDTO::getSeqComment));
+        
+        for (CommentDTO child : children) {
+            child.setDepth(parent.getDepth() + 1); // 들여쓰기용
+            result.add(child);
+            addChildrenRecursively(result, child, childrenMap); // 재귀로 모든 깊이 처리
+        }
     }
     
     @Override
     @Transactional
-    public void addComment(CommentDTO dto) {
+    public CommentDTO addComment(CommentDTO dto) {
+
+        User user = userRepository.findById(dto.getSeqUser())
+                .orElseThrow();
+        BoardReview review = boardReviewRepository.findById(dto.getSeqReview())
+                .orElseThrow();
+        
+        Comment parent = null;
+        if (dto.getSeqParentComment() != null) {
+            parent = commentRepository.findById(dto.getSeqParentComment()).orElse(null);
+        }
 
         Comment comment = Comment.builder()
                 .content(dto.getContent())
-                .regdate(Date.valueOf(LocalDate.now()))
-                .user(userRepository.findById(dto.getSeqUser()).orElseThrow())
-                .review(boardReviewRepository.findById(dto.getSeqReview()).orElseThrow())
-                .parentComment(null)   // 대댓글 기능은 나중에
+                .regdate(Timestamp.valueOf(LocalDateTime.now()))
+                .user(user)
+                .review(review)
+                .parentComment(parent)
                 .build();
 
-        commentRepository.save(comment);
+        Comment saved = commentRepository.save(comment);
+
+        // JSON으로 돌려줄 DTO 생성
+        CommentDTO result = new CommentDTO();
+        result.setNickname(user.getNickname());
+        result.setContent(saved.getContent());
+        result.setRegdate(saved.getRegdate());
+        result.setSeqUser(user.getSeqUser());
+        result.setSeqReview(saved.getReview().getSeqReview());
+        result.setSeqParentComment(
+                saved.getParentComment() != null ? saved.getParentComment().getSeqComment() : null
+            );
+
+        return result;  
     }
 	
 	@Override

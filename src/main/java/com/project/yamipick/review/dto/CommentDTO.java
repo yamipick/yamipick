@@ -1,6 +1,6 @@
 package com.project.yamipick.review.dto;
 
-import java.sql.Date;
+import java.sql.Timestamp;
 
 import com.project.yamipick.review.entity.BoardReview;
 import com.project.yamipick.review.entity.Comment;
@@ -26,9 +26,10 @@ public class CommentDTO {
 	private Long seqParentComment;
 	private Long seqUser;
 	private String content;
-	private Date regdate;
+	private Timestamp regdate;
 	
 	private String nickname;
+	private int depth = 0;
 	
 	public Comment toEntity(BoardReview review, User user, Comment parent) {
 		

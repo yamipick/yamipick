@@ -23,6 +23,6 @@ public interface ReviewService {
 
 	List<CommentDTO> getComments(Long seqReview);
 
-	void addComment(CommentDTO dto);
+	CommentDTO addComment(CommentDTO dto);
 
 }

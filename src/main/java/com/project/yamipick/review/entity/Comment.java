@@ -1,7 +1,6 @@
 package com.project.yamipick.review.entity;
 
-import java.sql.Date;
-import java.time.LocalDate;
+import java.sql.Timestamp;
 
 import com.project.yamipick.review.dto.CommentDTO;
 import com.project.yamipick.user.entity.User;
@@ -51,7 +50,7 @@ public class Comment {
     private String content;
 	
 	@Column(nullable = false)
-    private Date regdate;
+    private Timestamp regdate;
 	
 	public CommentDTO toDTO() {
 		
