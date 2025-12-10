@@ -28,6 +28,26 @@ public class CustomUserDetailsService implements UserDetailsService {
 		User userData = userRepository.findByUserId(username)
 				.orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 아이디입니다." + username));
 		
+		// 1) 정지 회원(SUSPENDED) 체크
+        if ("SUSPENDED".equals(userData.getStatusUser())) {
+            
+            // 정지 기간이 남았는지 확인
+            if (userData.getSuspendedUntil() != null && userData.getSuspendedUntil().isAfter(java.time.LocalDateTime.now())) {
+                // 로그인 차단 (LockedException 던짐)
+                throw new org.springframework.security.authentication.LockedException(
+                        "정지된 계정입니다. (해제일: " + userData.getSuspendedUntil().toLocalDate() + ")");
+            } else {
+                // 기간이 지났으면? -> 자동으로 풀어주고 로그인 시켜줌! (오토 리셋)
+                userData.changeStatus("ACTIVE", null);
+                userRepository.save(userData);
+            }
+        }
+
+        // 2) 탈퇴 회원(WITHDRAWN) 체크
+        if ("WITHDRAWN".equals(userData.getStatusUser())) {
+            throw new org.springframework.security.authentication.DisabledException("탈퇴한 계정입니다.");
+        }
+		
 		log.info("✅ 회원 확인됨: {} (권한: {})", userData.getUserId(), userData.getRole());
 		
 		// 2. 시큐리티한테 사람 확인하고 데이터 넘겨주기
