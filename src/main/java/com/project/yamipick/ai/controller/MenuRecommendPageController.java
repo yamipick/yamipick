@@ -12,5 +12,10 @@ public class MenuRecommendPageController {
     public String menuRecommendPage() {
         return "ai/menu-recommend"; 
     }
+	
+	@GetMapping("/chatbot")
+    public String chatbotPage() {
+        return "ai/chatbot";
+    }
 
 }
