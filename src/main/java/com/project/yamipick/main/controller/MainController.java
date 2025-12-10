@@ -1,59 +1,69 @@
 package com.project.yamipick.main.controller;
 
-import com.project.yamipick.banner.repository.BannerRepository;
-import com.project.yamipick.log.repository.BusinessLogQueryRepository;
-import com.querydsl.core.Tuple;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+
+import com.project.yamipick.banner.repository.BannerRepository;
+import com.project.yamipick.log.repository.BusinessLogQueryRepository; // ★ 이거 추가
+import com.querydsl.core.Tuple;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
 public class MainController {
 
     private final BannerRepository bannerRepository;
-    private final BusinessLogQueryRepository logQueryRepository; // ★ 추가
+    private final BusinessLogQueryRepository logQueryRepository; // ★ 주입 받기
 
     @GetMapping("/")
     public String index(Model model) {
         
-        // 1. 배너 목록
+        // 1. 배너 (기존 코드)
         model.addAttribute("bannerList", bannerRepository.findByIsVisibleOrderBySeqBannerDesc("Y"));
 
-        // 2. ★ 핫플레이스 TOP 5 가져오기 (로그 기반)
-        List<Map<String, Object>> hotPlaces = new ArrayList<>();
-        
+        // ==========================================
+        // ★ [추가 1] 실시간 인기 검색어 TOP 5
+        // ==========================================
+        List<String> topKeywords = new ArrayList<>();
         try {
-            List<Tuple> topStores = logQueryRepository.getTopPopularStores();
+            topKeywords = logQueryRepository.getTopSearchKeywords();
+        } catch (Exception e) {
+            // 에러 나도 메인 페이지는 떠야 하니까 예외 처리
+            topKeywords = new ArrayList<>(); 
+        }
+        model.addAttribute("topKeywords", topKeywords);
+
+
+        // ==========================================
+        // ★ [추가 2] 핫플레이스 랭킹 TOP 5
+        // ==========================================
+        List<Map<String, Object>> hotPlaces = new ArrayList<>();
+        try {
+            List<Tuple> ranks = logQueryRepository.getTopPopularStores();
             
-            for (Tuple t : topStores) {
-                String rawMsg = t.get(0, String.class); // "바나프레소 선릉점 클릭됨"
-                Long count = t.get(1, Long.class);      // 1234
+            for (int i = 0; i < ranks.size(); i++) {
+                Tuple t = ranks.get(i);
+                String name = t.get(0, String.class);
+                Long count = t.get(1, Long.class);
 
-                // 이름만 예쁘게 자르기
-                String storeName = rawMsg;
-                if (storeName != null && storeName.contains(" 클릭됨")) {
-                    storeName = storeName.replace(" 클릭됨", "");
-                }
-
-                // 맵에 담기 (DTO 대신 간단하게 Map 사용)
                 Map<String, Object> map = new HashMap<>();
-                map.put("name", storeName);
-                map.put("count", count);
+                map.put("rank", i + 1);      // 순위
+                map.put("name", name);       // 가게 이름
+                map.put("count", count);     // 조회수
                 hotPlaces.add(map);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+             // 무시 (빈 리스트로 나감)
         }
-
         model.addAttribute("hotPlaces", hotPlaces);
 
-        return "main/index";
+        return "index";
     }
 }
