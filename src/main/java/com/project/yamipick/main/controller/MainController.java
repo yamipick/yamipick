@@ -50,13 +50,25 @@ public class MainController {
             
             for (int i = 0; i < ranks.size(); i++) {
                 Tuple t = ranks.get(i);
-                String name = t.get(0, String.class);
+                
+                // 1. 원본 데이터 가져오기 ("바나프레소 선릉점 클릭됨")
+                String originalName = t.get(0, String.class); 
                 Long count = t.get(1, Long.class);
 
+                // 2. ★ [수정] " 클릭됨" 글자 제거하기
+                String cleanName = originalName;
+                if (cleanName != null && cleanName.endsWith(" 클릭됨")) {
+                    cleanName = cleanName.replace(" 클릭됨", ""); // "바나프레소 선릉점"만 남음
+                }
+                // 혹시 "예약하기" 같은 다른 말도 섞여 있다면 추가로 제거
+                if (cleanName != null && cleanName.endsWith(" 예약하기")) {
+                    cleanName = cleanName.replace(" 예약하기", "");
+                }
+
                 Map<String, Object> map = new HashMap<>();
-                map.put("rank", i + 1);      // 순위
-                map.put("name", name);       // 가게 이름
-                map.put("count", count);     // 조회수
+                map.put("rank", i + 1);
+                map.put("name", cleanName); // 깔끔해진 이름 넣기
+                map.put("count", count);
                 hotPlaces.add(map);
             }
         } catch (Exception e) {
@@ -64,6 +76,6 @@ public class MainController {
         }
         model.addAttribute("hotPlaces", hotPlaces);
 
-        return "index";
+        return "main/index";
     }
 }
