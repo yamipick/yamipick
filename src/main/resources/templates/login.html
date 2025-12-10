@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>야미픽 - 로그인</title>
+    <style>
+        /* YamiPick Theme 적용 */
+        :root {
+            --primary: #6D4C41;   /* 진한 갈색 */
+            --primary-hover: #5D4037;
+            --bg-body: #F5F5F5;   /* 배경 */
+            --text-main: #3E2723; /* 텍스트 */
+            --border: #D7CCC8;
+            --danger: #E57373;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(109, 76, 65, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 30px;
+            letter-spacing: -1px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 1em;
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.2s;
+            background: #FAFAFA;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            background: #fff;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: 0.2s;
+        }
+
+        .btn-login:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .links {
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        .links a {
+            color: #8D6E63;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        /* 에러 메시지 스타일 */
+        .error-msg {
+            color: var(--danger);
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            display: none; /* 평소엔 숨김 */
+            font-weight: bold;
+            background: #FFEBEE;
+            padding: 10px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <h1>🍽️ YamiPick</h1>
+
+        <div id="error-box" class="error-msg">
+            아이디 또는 비밀번호가 일치하지 않습니다.
+        </div>
+
+        <form action="/loginProc" method="post">
+            <div class="input-group">
+                <input type="text" name="username" placeholder="아이디" required autofocus>
+            </div>
+            <div class="input-group">
+                <input type="password" name="password" placeholder="비밀번호" required>
+            </div>
+            <button type="submit" class="btn-login">로그인</button>
+        </form>
+
+        <div class="links">
+            <a href="/join">회원가입</a>
+            <span style="color:#ddd">|</span>
+            <a href="#">아이디/비밀번호 찾기</a>
+        </div>
+    </div>
+
+    <script>
+        // URL에 ?error가 있으면 에러 메시지를 보여줌
+        // (Spring Security는 로그인 실패 시 /login?error 로 리다이렉트함)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('error')) {
+            document.getElementById('error-box').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

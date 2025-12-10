@@ -18,5 +18,8 @@ public interface WaitingMemberRepository extends JpaRepository<WaitingMember, Lo
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT m FROM WaitingMember m WHERE m.id = :id")
     Optional<WaitingMember> findByIdWithLock(@Param("id") Long id);
+    
+    //로그인
+    Optional<WaitingMember> findByLoginId(String loginId);
 
 }

@@ -223,192 +223,136 @@
     </div>
 
     <script>
-        const storeId = 2; // (테스트용 하드코딩)
+        // -----------------------------------------------------------
+        // 1. 전역 변수 설정 (초기엔 비어있음)
+        // -----------------------------------------------------------
+        let storeId = null; // ★ 더 이상 2가 아닙니다!
         let loadedNotices = [];
         const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
+        // -----------------------------------------------------------
+        // 2. 페이지 시작 (권한 체크 및 내 가게 찾기)
+        // -----------------------------------------------------------
         window.onload = function() {
+            // 서버에게 "나 누구야?" 물어보기
+            fetch('/api/me')
+                .then(res => {
+                    if (res.ok) return res.json();
+                    throw new Error("로그인 필요");
+                })
+                .then(user => {
+                    // 권한 체크: 점주(STORE)나 관리자(ADMIN)가 아니면 쫓아냄
+                    // 그리고 '내 가게'가 등록되어 있는지 확인 (hasStore)
+                    const role = user.role || "";
+                    if ((!role.includes('STORE') && !role.includes('ADMIN')) || !user.hasStore) {
+                        alert("매장 관리 권한이 없거나 등록된 매장이 없습니다.");
+                        location.href = "/";
+                        return;
+                    }
+
+                    // ★ 세션에 들어있던 내 가게 ID를 변수에 저장!
+                    storeId = user.seqStore;
+                    console.log("매장 관리자 인증 성공. Store ID:", storeId);
+
+                    // 앱 기능 시작
+                    initStoreApp();
+                })
+                .catch(() => {
+                    alert("로그인이 필요합니다.");
+                    location.href = "/login";
+                });
+        };
+
+        // -----------------------------------------------------------
+        // 3. 앱 기능 초기화
+        // -----------------------------------------------------------
+        function initStoreApp() {
             checkStatus(); 
             loadList(); 
             loadNotices();
-            loadCurrentSchedule(); // 시작할 때 오늘 영업정보 로드
-            loadWeeklySchedule();  // 시작할 때 주간 정보 로드
+            loadCurrentSchedule(); 
+            loadWeeklySchedule();  
             setInterval(loadList, 3000); 
-        };
-        
-        // --- 메인 리스트 로드 ---
+        }
+
+        // ... (이 아래 함수들은 storeId 변수를 쓰는데, 이제 그 변수에 진짜 값이 들어있음) ...
+
         function loadList() {
             fetch(`/waiting/list?storeId=${storeId}`).then(r => r.json()).then(list => {
-                const tbody = document.getElementById('list-body');
-                tbody.innerHTML = '';
+                const tbody = document.getElementById('list-body'); tbody.innerHTML = '';
                 if(list.length===0) { tbody.innerHTML='<tr><td colspan="4" style="padding:40px; color:#aaa;">현재 대기 중인 팀이 없습니다.</td></tr>'; return;}
                 list.forEach(item => {
                     let btns = '';
                     if(item.status==='WAITING') btns=`<button class="btn-call" onclick="action('call',${item.id})">호출</button><button class="btn-reject" onclick="action('reject',${item.id})">취소</button>`;
                     else if(item.status==='CALLED') btns=`<button class="btn-enter" onclick="action('enter',${item.id})">입장</button><button class="btn-reject" onclick="action('reject',${item.id})">취소</button>`;
-                    const row=`<tr>
-                        <td><b>${item.waitingNumber}</b></td>
-                        <td>${item.teamSize}명<br><span style="font-size:0.75em; color:#aaa;">${item.memberPhone ? item.memberPhone.substr(-4) : 'guest'}</span></td>
-                        <td><span class="status-badge status-${item.status}">${item.status}</span></td>
-                        <td>${btns}</td>
-                    </tr>`;
+                    const row=`<tr><td><b>${item.waitingNumber}</b></td><td>${item.teamSize}명<br><span style="font-size:0.75em; color:#aaa;">${item.memberPhone ? item.memberPhone.substr(-4) : 'guest'}</span></td><td><span class="status-badge status-${item.status}">${item.status}</span></td><td>${btns}</td></tr>`;
                     tbody.innerHTML+=row;
                 });
             });
         }
         
-        // --- 공지사항 로드 ---
         function loadNotices() {
             fetch(`/waiting/notices?storeId=${storeId}`).then(res => res.json()).then(list => {
-                loadedNotices = list;
-                const ul = document.getElementById('manager-notice-list');
-                ul.innerHTML = "";
+                loadedNotices = list; const ul = document.getElementById('manager-notice-list'); ul.innerHTML = "";
                 if(list.length === 0) { ul.innerHTML = "<li style='justify-content:center; color:#aaa; font-size:0.9em; padding:20px;'>등록된 공지가 없습니다.</li>"; return; }
                 list.forEach(item => {
                     const pinIcon = item.pinned ? '<span style="color:var(--danger); margin-right:3px;">[필독]</span>' : '';
                     const dateStr = item.regDate ? item.regDate.substring(5, 10) : ''; 
-                    ul.innerHTML += `
-                        <li>
-                            <div class="notice-content-area">
-                                <div style="font-size:0.95em; font-weight:bold; margin-bottom:3px; color:var(--text-main);">${pinIcon}${item.title}</div>
-                                <div style="font-size:0.8em; color:#aaa;">${dateStr}</div>
-                                <div style="font-size:0.9em; color:#5D4037; margin-top:2px; white-space:pre-wrap;">${item.content}</div>
-                            </div>
-                            <div class="notice-btn-group">
-                                <button class="btn-edit" onclick="editMode(${item.id})">수정</button>
-                                <button class="btn-del" onclick="deleteNotice(${item.id})">삭제</button>
-                            </div>
-                        </li>`;
+                    ul.innerHTML += `<li><div class="notice-content-area"><div style="font-size:0.95em; font-weight:bold; margin-bottom:3px; color:var(--text-main);">${pinIcon}${item.title}</div><div style="font-size:0.8em; color:#aaa;">${dateStr}</div><div style="font-size:0.9em; color:#5D4037; margin-top:2px; white-space:pre-wrap;">${item.content}</div></div><div class="notice-btn-group"><button class="btn-edit" onclick="editMode(${item.id})">수정</button><button class="btn-del" onclick="deleteNotice(${item.id})">삭제</button></div></li>`;
                 });
             });
         }
 
-        // --- 영업 시간 조회 및 UI 채우기 (현재 상태) ---
         function loadCurrentSchedule() {
-            const today = new Date().getDay(); // 0(일) ~ 6(토)
-            
+            const today = new Date().getDay(); 
             document.getElementById('display-day-name').innerText = dayNames[today];
-            document.querySelectorAll('input[name="days"]').forEach(cb => {
-                cb.checked = (parseInt(cb.value) === today);
-            });
+            document.querySelectorAll('input[name="days"]').forEach(cb => { cb.checked = (parseInt(cb.value) === today); });
 
-            fetch(`/waiting/schedule/info?storeId=${storeId}&day=${today}`)
-                .then(r => r.status === 200 ? r.json() : null)
-                .then(data => {
-                    const txtSpan = document.getElementById('display-sch-text');
-                    if (!data) {
-                        txtSpan.innerText = "설정 정보 없음 (기본값 사용)";
-                        setInputs("10:00", "22:00", "", "", false);
-                    } else {
-                        if (data.isOpen === 'N') {
-                            txtSpan.innerText = "⛔ 휴무";
-                            setInputs("", "", "", "", true);
-                        } else {
-                            let info = `${data.openTime} ~ ${data.closeTime}`;
-                            if (data.breakStart && data.breakEnd) {
-                                info += ` (브레이크: ${data.breakStart}~${data.breakEnd})`;
-                            }
-                            txtSpan.innerText = "🟢 " + info;
-                            setInputs(data.openTime, data.closeTime, data.breakStart, data.breakEnd, false);
-                        }
+            fetch(`/waiting/schedule/info?storeId=${storeId}&day=${today}`).then(r => r.status === 200 ? r.json() : null).then(data => {
+                const txtSpan = document.getElementById('display-sch-text');
+                if (!data) { txtSpan.innerText = "설정 정보 없음 (기본값 사용)"; setInputs("10:00", "22:00", "", "", false); } 
+                else {
+                    if (data.isOpen === 'N') { txtSpan.innerText = "⛔ 휴무"; setInputs("", "", "", "", true); } 
+                    else {
+                        let info = `${data.openTime} ~ ${data.closeTime}`;
+                        if (data.breakStart && data.breakEnd) info += ` (브레이크: ${data.breakStart}~${data.breakEnd})`;
+                        txtSpan.innerText = "🟢 " + info; setInputs(data.openTime, data.closeTime, data.breakStart, data.breakEnd, false);
                     }
-                })
-                .catch(() => { document.getElementById('display-sch-text').innerText = "정보 로딩 실패"; });
+                }
+            }).catch(() => { document.getElementById('display-sch-text').innerText = "정보 로딩 실패"; });
         }
 
-        // --- ★ 주간 전체 스케줄 로드 (NEW) ---
         function loadWeeklySchedule() {
-            fetch(`/waiting/schedule/all?storeId=${storeId}`)
-                .then(r => r.json())
-                .then(list => {
-                    const tbody = document.getElementById('weekly-schedule-list');
-                    tbody.innerHTML = "";
-                    if (list.length === 0) {
-                        tbody.innerHTML = "<tr><td colspan='3' style='padding:10px; color:#aaa; text-align:center;'>설정된 스케줄이 없습니다.</td></tr>";
-                        return;
-                    }
+            fetch(`/waiting/schedule/all?storeId=${storeId}`).then(r => r.json()).then(list => {
+                const tbody = document.getElementById('weekly-schedule-list'); tbody.innerHTML = "";
+                if (list.length === 0) { tbody.innerHTML = "<tr><td colspan='3' style='padding:10px; color:#aaa; text-align:center;'>설정된 스케줄이 없습니다.</td></tr>"; return; }
+                const scheduleMap = {}; list.forEach(item => scheduleMap[item.dayOfWeek] = item);
+                const today = new Date().getDay(); const order = [1, 2, 3, 4, 5, 6, 0]; 
+                
+                order.forEach(dayIdx => {
+                    const item = scheduleMap[dayIdx]; const dayName = dayNames[dayIdx];
+                    const trStyle = (dayIdx === today) ? "background: #E0F2F1; font-weight:bold;" : "";
+                    const dayStyle = (dayIdx === 0) ? "color: red;" : (dayIdx === 6 ? "color: blue;" : "");
+                    let statusHtml = "<span style='color:#ccc;'>정보 없음</span>"; let timeHtml = "-";
 
-                    const scheduleMap = {};
-                    list.forEach(item => scheduleMap[item.dayOfWeek] = item);
-                    const today = new Date().getDay(); 
-                    const order = [1, 2, 3, 4, 5, 6, 0]; // 월~일 순서
-                    
-                    order.forEach(dayIdx => {
-                        const item = scheduleMap[dayIdx];
-                        const dayName = dayNames[dayIdx];
-                        const trStyle = (dayIdx === today) ? "background: #E0F2F1; font-weight:bold;" : "";
-                        const dayStyle = (dayIdx === 0) ? "color: red;" : (dayIdx === 6 ? "color: blue;" : "");
-
-                        let statusHtml = "<span style='color:#ccc;'>정보 없음</span>";
-                        let timeHtml = "-";
-
-                        if (item) {
-                            if (item.isOpen === 'N') {
-                                statusHtml = "<span style='color:#E57373;'>⛔ 휴무</span>";
-                            } else {
-                                statusHtml = "<span style='color:#4CAF50;'>🟢 영업</span>";
-                                timeHtml = `${item.openTime} ~ ${item.closeTime}`;
-                                if(item.breakStart && item.breakEnd) {
-                                    timeHtml += `<br><span style="font-size:0.85em; color:#888;">(브레이크 ${item.breakStart}~${item.breakEnd})</span>`;
-                                }
-                            }
+                    if (item) {
+                        if (item.isOpen === 'N') { statusHtml = "<span style='color:#E57373;'>⛔ 휴무</span>"; } 
+                        else {
+                            statusHtml = "<span style='color:#4CAF50;'>🟢 영업</span>"; timeHtml = `${item.openTime} ~ ${item.closeTime}`;
+                            if(item.breakStart && item.breakEnd) timeHtml += `<br><span style="font-size:0.85em; color:#888;">(브레이크 ${item.breakStart}~${item.breakEnd})</span>`;
                         }
-                        tbody.innerHTML += `<tr style="${trStyle}">
-                            <td style="padding: 8px; border: 1px solid #eee; text-align: center; ${dayStyle}">${dayName}</td>
-                            <td style="padding: 8px; border: 1px solid #eee; text-align: center;">${statusHtml}</td>
-                            <td style="padding: 8px; border: 1px solid #eee; text-align: center;">${timeHtml}</td>
-                        </tr>`;
-                    });
+                    }
+                    tbody.innerHTML += `<tr style="${trStyle}"><td style="${dayStyle}">${dayName}</td><td>${statusHtml}</td><td>${timeHtml}</td></tr>`;
                 });
+            });
         }
 
-        function setInputs(open, close, bs, be, isHoliday) {
-            document.getElementById('sch-open').value = open || "10:00";
-            document.getElementById('sch-close').value = close || "22:00";
-            document.getElementById('sch-bs').value = bs || "";
-            document.getElementById('sch-be').value = be || "";
-            document.getElementById('sch-holiday').checked = isHoliday;
-        }
-
-        // --- 토글 함수들 ---
+        function setInputs(open, close, bs, be, isHoliday) { document.getElementById('sch-open').value = open || "10:00"; document.getElementById('sch-close').value = close || "22:00"; document.getElementById('sch-bs').value = bs || ""; document.getElementById('sch-be').value = be || ""; document.getElementById('sch-holiday').checked = isHoliday; }
         function toggleNoticeBoard() { const b=document.getElementById('notice-body'); const a=document.getElementById('n-arrow'); if(b.style.display==='none'){b.style.display='block';a.innerText='🔼';}else{b.style.display='none';a.innerText='🔽';} }
-        
-        // 토글 열릴 때 현재+주간 정보 모두 로드
-        function toggleSchedule() { 
-            const b=document.getElementById('schedule-body'); 
-            const a=document.getElementById('s-arrow'); 
-            if(b.style.display==='none'){
-                b.style.display='block'; a.innerText='🔼';
-                loadCurrentSchedule(); 
-                loadWeeklySchedule();
-            }else{
-                b.style.display='none'; a.innerText='🔽';
-            } 
-        }
-        
+        function toggleSchedule() { const b=document.getElementById('schedule-body'); const a=document.getElementById('s-arrow'); if(b.style.display==='none'){ b.style.display='block'; a.innerText='🔼'; loadCurrentSchedule(); loadWeeklySchedule(); }else{ b.style.display='none'; a.innerText='🔽'; } }
         function toggleLogs() { const b=document.getElementById('log-body'); const a=document.getElementById('l-arrow'); if(b.style.display==='none'){ b.style.display='block'; a.innerText='🔼'; loadLogs(); } else { b.style.display='none'; a.innerText='🔽'; } }
-
-        function loadLogs() { 
-            fetch(`/waiting/logs?storeId=${storeId}`).then(r=>r.json()).then(l=>{
-                const u=document.getElementById('log-list'); u.innerHTML=''; 
-                if(l.length===0){u.innerHTML='<li>기록된 활동이 없습니다.</li>'; return;}
-                l.forEach(i=>{
-                    const time = i.regDate ? i.regDate.substring(11, 19) : '-';
-                    let typeColor = '#fff';
-                    if(i.actionType==='ENTER') typeColor='#A5D6A7'; else if(i.actionType==='CALL') typeColor='#FFB74D'; else if(i.actionType==='CANCEL') typeColor='#EF9A9A';
-                    u.innerHTML+=`<li style="margin-bottom:5px; border-bottom:1px dashed #6D4C41; padding-bottom:5px;"><span style="color:#BCAAA4; font-size:0.9em;">[${time}]</span> <span style="color:${typeColor}; font-weight:bold;">${i.actionType}</span> ${i.logMessage}</li>`;
-                });
-            }); 
-        }
-
-        function saveNotice() { 
-            const id=document.getElementById('n-id').value; const title=document.getElementById('n-title').value; const content=document.getElementById('n-content').value; const isPinned=document.getElementById('n-pinned').checked; 
-            if(!title||!content) return alert("공지사항 제목과 내용을 모두 입력해주세요."); 
-            const url=id?'/waiting/notice/update':'/waiting/notice/create'; 
-            fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, storeId, title, content, isPinned})})
-            .then(r=>{ if(r.ok){ alert(id?"수정되었습니다.":"등록되었습니다."); cancelEditMode(); loadNotices();} else alert("저장 실패"); }); 
-        }
-        
+        function loadLogs() { fetch(`/waiting/logs?storeId=${storeId}`).then(r=>r.json()).then(l=>{ const u=document.getElementById('log-list'); u.innerHTML=''; if(l.length===0){u.innerHTML='<li>기록된 활동이 없습니다.</li>'; return;} l.forEach(i=>{ const time = i.regDate ? i.regDate.substring(11, 19) : '-'; let typeColor = '#fff'; if(i.actionType==='ENTER') typeColor='#A5D6A7'; else if(i.actionType==='CALL') typeColor='#FFB74D'; else if(i.actionType==='CANCEL') typeColor='#EF9A9A'; u.innerHTML+=`<li style="margin-bottom:5px; border-bottom:1px dashed #6D4C41; padding-bottom:5px;"><span style="color:#BCAAA4; font-size:0.9em;">[${time}]</span> <span style="color:${typeColor}; font-weight:bold;">${i.actionType}</span> ${i.logMessage}</li>`; }); }); }
+        function saveNotice() { const id=document.getElementById('n-id').value; const title=document.getElementById('n-title').value; const content=document.getElementById('n-content').value; const isPinned=document.getElementById('n-pinned').checked; if(!title||!content) return alert("공지사항 제목과 내용을 모두 입력해주세요."); const url=id?'/waiting/notice/update':'/waiting/notice/create'; fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, storeId, title, content, isPinned})}).then(r=>{ if(r.ok){ alert(id?"수정되었습니다.":"등록되었습니다."); cancelEditMode(); loadNotices();} else alert("저장 실패"); }); }
         function deleteNotice(id) { if(confirm("정말 삭제하시겠습니까?")) fetch(`/waiting/notice/delete/${id}`, {method:'POST'}).then(r=>{if(r.ok)loadNotices();}); }
         function editMode(id) { const item=loadedNotices.find(n=>n.id===id); if(!item)return; const body=document.getElementById('notice-body'); if(body.style.display==='none')toggleNoticeBoard(); document.getElementById('n-id').value=item.id; document.getElementById('n-title').value=item.title; document.getElementById('n-content').value=item.content; document.getElementById('n-pinned').checked=item.pinned; document.getElementById('btn-save-notice').innerText="수정 저장"; document.getElementById('btn-cancel-edit').style.display="inline-block"; }
         function cancelEditMode() { document.getElementById('n-id').value=""; document.getElementById('n-title').value=""; document.getElementById('n-content').value=""; document.getElementById('n-pinned').checked=false; document.getElementById('btn-save-notice').innerText="등록"; document.getElementById('btn-cancel-edit').style.display="none"; }
@@ -416,35 +360,8 @@
         function toggleStatus() { fetch(`/waiting/toggle?storeId=${storeId}`, {method:'POST'}).then(r=>r.json()).then(o=>{updateStatusUI(o); alert(o?"오픈되었습니다.":"마감되었습니다.");}); }
         function updateStatusUI(o) { const b=document.getElementById('btn-status'); if(o){b.innerText="접수 중"; b.className="btn-toggle on";}else{b.innerText="마감됨"; b.className="btn-toggle off";} }
         function sendWsNotice() { const c=document.getElementById('ws-content').value; if(!c)return alert("내용을 입력하세요."); fetch(`/waiting/notice`, {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:`content=${c}`}).then(()=>{alert("전송되었습니다."); document.getElementById('ws-content').value='';}); }
-        
-        function saveSchedule() { 
-            const checkboxes = document.querySelectorAll('input[name="days"]:checked');
-            if (checkboxes.length === 0) return alert("요일을 선택해주세요.");
-            const days = Array.from(checkboxes).map(cb => parseInt(cb.value));
-            const openTime = document.getElementById('sch-open').value;
-            const closeTime = document.getElementById('sch-close').value;
-            const breakStart = document.getElementById('sch-bs').value;
-            const breakEnd = document.getElementById('sch-be').value;
-            const isHoliday = document.getElementById('sch-holiday').checked;
-            
-            if (!isHoliday && (!openTime || !closeTime)) return alert("시간을 입력해주세요.");
-            
-            const payload = { storeId, days, openTime, closeTime, breakStart, breakEnd, isOpen: isHoliday ? "N" : "Y" };
-            fetch('/waiting/schedule/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            .then(r=>{if(r.ok){ 
-                alert("저장되었습니다."); 
-                loadCurrentSchedule(); // 저장 후 갱신
-                loadWeeklySchedule(); 
-            }});
-        }
-        
-        function action(t,i){ 
-            let msg = "처리하시겠습니까?";
-            if (t === 'call') msg = "🔔 손님을 호출하시겠습니까?";
-            else if (t === 'enter') msg = "✅ 입장 처리하시겠습니까?";
-            else if (t === 'reject') msg = "🚫 취소 처리하시겠습니까?";
-            if(confirm(msg)) fetch(`/waiting/${t}/${i}`,{method:'POST'}).then(()=>{loadList();}); 
-        }
+        function saveSchedule() { const checkboxes = document.querySelectorAll('input[name="days"]:checked'); if (checkboxes.length === 0) return alert("요일을 선택해주세요."); const days = Array.from(checkboxes).map(cb => parseInt(cb.value)); const openTime = document.getElementById('sch-open').value; const closeTime = document.getElementById('sch-close').value; const breakStart = document.getElementById('sch-bs').value; const breakEnd = document.getElementById('sch-be').value; const isHoliday = document.getElementById('sch-holiday').checked; if (!isHoliday && (!openTime || !closeTime)) return alert("시간을 입력해주세요."); const payload = { storeId, days, openTime, closeTime, breakStart, breakEnd, isOpen: isHoliday ? "N" : "Y" }; fetch('/waiting/schedule/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(r=>{if(r.ok){ alert("저장되었습니다."); loadCurrentSchedule(); loadWeeklySchedule(); }}); }
+        function action(t,i){ let msg = "처리하시겠습니까?"; if (t === 'call') msg = "🔔 손님을 호출하시겠습니까?"; else if (t === 'enter') msg = "✅ 입장 처리하시겠습니까?"; else if (t === 'reject') msg = "🚫 취소 처리하시겠습니까?"; if(confirm(msg)) fetch(`/waiting/${t}/${i}`,{method:'POST'}).then(()=>{loadList();}); }
     </script>
 </body>
 </html>

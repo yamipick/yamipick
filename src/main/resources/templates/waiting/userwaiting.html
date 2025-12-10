@@ -247,116 +247,110 @@
     </div>
 
     <script>
-        let userId = null;
+        // -----------------------------------------------------------
+        // 1. 전역 변수 설정 (초기엔 비어있음)
+        // -----------------------------------------------------------
+        let userId = null; // ★ 더 이상 1이 아닙니다!
         let myId = null;
         let socket = null;
         let pollingInterval = null;
-		const urlParams = new URLSearchParams(window.location.search);
-		const storeId = urlParams.get('storeId') || 2; 
-		
-        function doLogin() {
-            const val = document.getElementById('login-input').value;
-            if(!val) return alert("ID를 입력하세요");
-            userId = val;
-            document.getElementById('login-box').style.display = 'none';
-            document.getElementById('main-app').style.display = 'block';
-            init();
-        }
 
+        // 가게 ID는 URL 파라미터에서 가져옴 (예: /waitinguser?storeId=1)
+        const urlParams = new URLSearchParams(window.location.search);
+        const storeId = urlParams.get('storeId');
+
+        // -----------------------------------------------------------
+        // 2. 페이지 시작 (로그인 체크)
+        // -----------------------------------------------------------
+        window.onload = function() {
+            // 가게 정보가 없으면 메인으로 튕겨내기
+            if (!storeId) {
+                alert("잘못된 접근입니다. (가게 정보 없음)");
+                location.href = "/";
+                return;
+            }
+
+            // ★ [핵심] 서버에게 "나 누구야?" 물어보기
+            fetch('/api/me')
+                .then(res => {
+                    if (res.ok) return res.json();
+                    throw new Error("로그인 필요");
+                })
+                .then(user => {
+                    console.log("로그인 확인됨:", user.name);
+                    
+                    // ★ 서버가 준 진짜 ID를 변수에 저장!
+                    userId = user.seqUser; 
+                    
+                    // 가짜 로그인 박스 숨기고 진짜 화면 보여주기
+                    document.getElementById('login-box').style.display = 'none';
+                    document.getElementById('main-app').style.display = 'block';
+                    
+                    // 앱 기능 시작
+                    init();
+                })
+                .catch(() => {
+                    // 로그인 안 했으면 로그인 페이지로 보냄
+                    // (로그인 끝나고 다시 여기로 돌아오게 redirect 파라미터 추가)
+                    const returnUrl = encodeURIComponent(window.location.href);
+                    alert("로그인이 필요한 서비스입니다.");
+                    location.href = `/login?redirect=${returnUrl}`;
+                });
+        };
+
+        // -----------------------------------------------------------
+        // 3. 앱 기능 초기화
+        // -----------------------------------------------------------
         function init() {
             checkStoreStatus();
             restoreSession();
             loadNotices();
         }
+        
+        // ... (이 아래 함수들은 기존과 로직이 같지만 userId 변수가 이제 진짜 값을 가짐) ...
 
         function loadNotices() {
-            fetch(`/waiting/notices?storeId=${storeId}`)
-                .then(r => r.json())
-                .then(list => {
-                    const latestArea = document.getElementById('latest-notice-area');
-                    const toggleBtn = document.getElementById('notice-toggle-btn');
-                    const ul = document.getElementById('notice-list');
-                    const noMsg = document.getElementById('no-notice-msg');
+            fetch(`/waiting/notices?storeId=${storeId}`).then(r => r.json()).then(list => {
+                const latestArea = document.getElementById('latest-notice-area');
+                const toggleBtn = document.getElementById('notice-toggle-btn');
+                const ul = document.getElementById('notice-list');
+                const noMsg = document.getElementById('no-notice-msg');
+                latestArea.style.display = 'none'; toggleBtn.style.display = 'none'; ul.style.display = 'none'; noMsg.style.display = 'none'; ul.innerHTML = "";
 
-                    latestArea.style.display = 'none';
-                    toggleBtn.style.display = 'none';
-                    ul.style.display = 'none';
-                    noMsg.style.display = 'none';
-                    ul.innerHTML = "";
+                if (list.length === 0) { noMsg.style.display = 'block'; return; }
 
-                    if (list.length === 0) {
-                        noMsg.style.display = 'block';
-                        return;
+                const latest = list[0];
+                latestArea.style.display = 'block';
+                document.getElementById('l-badge').innerText = latest.pinned ? '🚨' : '📢 알림';
+                document.getElementById('l-title').innerText = latest.title;
+                document.getElementById('l-content').innerText = latest.content;
+                document.getElementById('l-date').innerText = latest.regDate ? latest.regDate.replace('T', ' ').substring(0, 16) : '';
+
+                if (list.length > 1) {
+                    toggleBtn.style.display = 'flex';
+                    for (let i = 1; i < list.length; i++) {
+                        const item = list[i];
+                        ul.innerHTML += `<li class="notice-item ${item.pinned?'pinned':''}"><span class="n-title">${item.pinned?'<span class="n-badge">🚨</span>':''}${item.title}</span><div class="n-content">${item.content}</div><div class="n-date">${item.regDate?item.regDate.substring(0,10):''}</div></li>`;
                     }
-
-                    const latest = list[0];
-                    latestArea.style.display = 'block';
-                    
-                    const badgeIcon = latest.pinned ? '🚨' : '📢 알림';
-                    const dateStr = latest.regDate ? latest.regDate.replace('T', ' ').substring(0, 16) : '';
-
-                    document.getElementById('l-badge').innerText = badgeIcon;
-                    document.getElementById('l-title').innerText = latest.title;
-                    document.getElementById('l-content').innerText = latest.content;
-                    document.getElementById('l-date').innerText = dateStr;
-
-                    if (list.length > 1) {
-                        toggleBtn.style.display = 'flex';
-                        for (let i = 1; i < list.length; i++) {
-                            const item = list[i];
-                            const pinnedClass = item.pinned ? 'pinned' : '';
-                            const subBadge = item.pinned ? '<span class="n-badge">🚨</span>' : '';
-                            const subDate = item.regDate ? item.regDate.substring(0, 10) : '';
-
-                            ul.innerHTML += `
-                                <li class="notice-item ${pinnedClass}">
-                                    <span class="n-title">${subBadge}${item.title}</span>
-                                    <div class="n-content">${item.content}</div>
-                                    <div class="n-date">${subDate}</div>
-                                </li>
-                            `;
-                        }
-                    }
-                });
+                }
+            });
         }
-
-        function toggleNotice() {
-            const ul = document.getElementById('notice-list');
-            const arrow = document.getElementById('notice-arrow');
-            const btnText = document.querySelector('#notice-toggle-btn span:first-child');
-
-            if(ul.style.display === 'block') { 
-                ul.style.display = 'none'; 
-                arrow.innerText = '🔽';
-                btnText.innerText = '➕ 지난 공지사항 더보기';
-            } else { 
-                ul.style.display = 'block'; 
-                arrow.innerText = '🔼';
-                btnText.innerText = '➖ 접기';
-            }
-        }
+        function toggleNotice() { const ul = document.getElementById('notice-list'); const arrow = document.getElementById('notice-arrow'); const btnText = document.querySelector('#notice-toggle-btn span:first-child'); if(ul.style.display === 'block') { ul.style.display = 'none'; arrow.innerText = '🔽'; btnText.innerText = '➕ 지난 공지사항 더보기'; } else { ul.style.display = 'block'; arrow.innerText = '🔼'; btnText.innerText = '➖ 접기'; } }
 
         function checkStoreStatus() {
             fetch(`/waiting/store-info?storeId=${storeId}`).then(r => r.json()).then(store => {
                 const txt = document.getElementById('store-status-text');
                 const btn = document.getElementById('btn-reg');
-                
-                // ★ [추가됨] 운영 시간 업데이트
                 const hoursBox = document.getElementById('store-hours-text');
-                if (store.todayHours) {
-                    hoursBox.innerText = "⏰ " + store.todayHours;
-                } else {
-                    hoursBox.innerText = "⏰ 운영 시간 정보 없음";
-                }
+                
+                hoursBox.innerText = store.todayHours ? "⏰ " + store.todayHours : "⏰ 운영 시간 정보 없음";
 
                 if (store.waitingOpen) {
                     txt.innerHTML = "🟢 <b style='color:#3E2723'>현재 대기 접수 중</b>"; 
-                    btn.disabled = false;
-                    btn.innerText = "줄서기"; 
+                    btn.disabled = false; btn.innerText = "줄서기"; 
                 } else {
                     txt.innerHTML = "🔴 <b style='color:#D32F2F'>현재 접수 마감</b>"; 
-                    btn.disabled = true;
-                    btn.innerText = "마감됨";
+                    btn.disabled = true; btn.innerText = "마감됨";
                 }
             });
         }
@@ -370,20 +364,13 @@
         function register() {
             const btn = document.getElementById('btn-reg');
             const size = document.getElementById('size').value;
-            btn.disabled = true;
-            btn.innerText = "처리 중...";
+            btn.disabled = true; btn.innerText = "처리 중...";
             
+            // ★ 여기서 사용하는 userId가 이제 로그인한 유저의 진짜 번호입니다.
             fetch(`/waiting/register?userId=${userId}&storeId=${storeId}&size=${size}`, { method: 'POST' })
-                .then(async res => { 
-                    if(!res.ok) throw new Error(await res.text()); 
-                    return res.json(); 
-                })
+                .then(async res => { if(!res.ok) throw new Error(await res.text()); return res.json(); })
                 .then(data => successRegister(data))
-                .catch(e => {
-                    alert("⛔ " + e.message);
-                    btn.disabled = false;
-                    btn.innerText = "줄서기";
-                });
+                .catch(e => { alert("⛔ " + e.message); btn.disabled = false; btn.innerText = "줄서기"; });
         }
 
         function successRegister(data) {
@@ -391,14 +378,13 @@
             document.getElementById('my-number').innerText = data.waitingNumber + "번";
             document.getElementById('reg-box').style.display = 'none';
             document.getElementById('status-box').style.display = 'block';
-            connectWs();
-            startPolling();
-            updateCnt();
+            connectWs(); startPolling(); updateCnt();
         }
 
         function connectWs() {
             if (!myId || (socket && socket.readyState === WebSocket.OPEN)) return;
-            socket = new WebSocket("ws://localhost:8080/ws/waiting");
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            socket = new WebSocket(`${protocol}//${location.host}/ws/waiting`);
             socket.onopen = () => { document.getElementById('socket-status').innerText = "🟢 연결됨"; socket.send(JSON.stringify({ waitingId: myId })); };
             socket.onmessage = (msg) => showAlert(msg.data);
             socket.onclose = () => { document.getElementById('socket-status').innerText = "🔴 재연결 중..."; setTimeout(connectWs, 3000); };
@@ -406,27 +392,18 @@
 
         function showAlert(text) {
             const cleanText = text.trim();
-            const area = document.getElementById('alert-area');
-            area.style.display = 'block';
-            let html = "";
-            
-            if (cleanText === "NOTICE:REFRESH_NOTICE") {
-                setTimeout(() => { loadNotices(); }, 300); 
-                return;
-            }
-            
+            const area = document.getElementById('alert-area'); area.style.display = 'block';
+            if (cleanText === "NOTICE:REFRESH_NOTICE") { setTimeout(() => { loadNotices(); }, 300); return; }
             if (cleanText.startsWith("CALL:") || cleanText.startsWith("CANCEL:")) {
                 const isCall = cleanText.startsWith("CALL:");
                 const msg = cleanText.split(":")[1];
-                html = `<div class="alert-box alert-urgent"><div style="font-size:1.2em;">${isCall ? '🔔 호출 알림' : '🚫 취소 알림'}</div><div style="margin-top:5px;">${msg}</div></div>`;
+                area.innerHTML = `<div class="alert-box alert-urgent"><div style="font-size:1.2em;">${isCall ? '🔔 호출 알림' : '🚫 취소 알림'}</div><div style="margin-top:5px;">${msg}</div></div>`;
                 if(isCall) alert("🔔 입장해주세요!"); else { alert("🚫 취소되었습니다."); location.reload(); }
-            } else if (cleanText.startsWith("ENTER:")) {
-                alert("✅ 입장 확인되었습니다."); location.reload(); return;
+            } else if (cleanText.startsWith("ENTER:")) { alert("✅ 입장 확인되었습니다."); location.reload(); return;
             } else if (cleanText.startsWith("NOTICE:")) {
                 const msg = cleanText.split(":")[1];
-                html = `<div class="alert-box alert-info"><div>📢 실시간 안내</div><div style="margin-top:5px;">${msg}</div></div>`;
+                area.innerHTML = `<div class="alert-box alert-info"><div>📢 실시간 안내</div><div style="margin-top:5px;">${msg}</div></div>`;
             }
-            area.innerHTML = html;
             updateCnt();
         }
 

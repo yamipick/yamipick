@@ -2,273 +2,129 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <title>매장 웨이팅 기록</title>
     <style>
-        /* -------------------------------------------------------
-           YamiPick Theme: Warm Choco & Cream
-        ------------------------------------------------------- */
-        :root {
-            --primary: #6D4C41;   /* 진한 갈색 */
-            --primary-hover: #5D4037;
-            --secondary: #8D6E63; /* 라떼색 */
-            --bg-body: #F5F5F5;   /* 배경 */
-            --text-main: #3E2723; /* 텍스트 */
-            --border: #D7CCC8;
-            
-            /* 통계 박스 색상 */
-            --stat-enter: #6D4C41;  
-            --stat-call: #8D6E63;   
-            --stat-cancel: #E57373; 
-        }
-
-        body { 
-            font-family: 'Pretendard', sans-serif; 
-            background-color: var(--bg-body); 
-            color: var(--text-main); 
-            padding: 15px; 
-            padding-top: 80px; /* 헤더 간격 */
-            margin: 0;
-        }
-
-        .card { 
-            width: 95%;
-            max-width: 800px;
-            margin: 0 auto 20px auto; /* 중앙 정렬 및 하단 여백 */
-            background: white; 
-            padding: 20px; 
-            border-radius: 20px; 
-            box-shadow: 0 4px 15px rgba(109, 76, 65, 0.08); 
-            box-sizing: border-box;
-        }
-        
-        /* 헤더 영역 (제목 + 뒤로가기) */
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        h2 { margin: 0; color: var(--primary); font-size: 1.4em; font-weight: 800; letter-spacing: -0.5px; } 
-        h3 { color: var(--secondary); margin-bottom: 15px; font-size: 1.1em; }
-
-        .btn-home {
-             background: var(--secondary); 
-             color: white; 
-             border: none; 
-             padding: 8px 14px; 
-             border-radius: 20px; 
-             font-size: 0.85em; 
-             cursor: pointer; 
-             text-decoration: none; 
-             font-weight: bold;
-             white-space: nowrap; /* 텍스트 줄바꿈 방지 */
-        }
-
-        /* 날짜 조회 컨트롤 */
-        .date-control { 
-            background: #FAFAFA; 
-            padding: 15px; 
-            border-radius: 12px; 
-            border: 1px solid #EFEBE9;
-            margin-bottom: 20px; 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            justify-content: space-between; /* 양끝 정렬 */
-        }
-        
-        .date-label { font-weight: bold; color: #5D4037; font-size: 0.9em; white-space: nowrap; }
-        
-        input[type="date"] {
-            flex: 1; /* 남은 공간 차지 */
-            padding: 10px; 
-            border: 1px solid var(--border); 
-            border-radius: 8px; 
-            font-family: inherit; 
-            color: var(--text-main);
-            background: #fff;
-            font-size: 0.95em;
-        }
-        
-        .btn-search {
-            background: var(--primary); 
-            color: white; 
-            border: none; 
-            padding: 10px 18px; 
-            border-radius: 8px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            transition: 0.2s;
-            white-space: nowrap;
-        }
-
-        /* 통계 박스 (반응형 그리드) */
-        .stat-box { 
-            display: flex; 
-            gap: 10px; 
-            margin-bottom: 10px; 
-        }
-        .stat-item { 
-            flex: 1; /* 공간 균등 분배 */
-            padding: 15px 10px; 
-            border-radius: 12px; 
-            text-align: center; 
-            color: white; 
-            font-weight: bold; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-        }
-        .bg-enter { background-color: var(--stat-enter); } 
-        .bg-call { background-color: var(--stat-call); } 
-        .bg-cancel { background-color: var(--stat-cancel); } 
-        
-        .stat-title { display: block; font-size: 0.8em; opacity: 0.9; margin-bottom: 5px; }
-        .stat-num { font-size: 1.6em; display: block; line-height: 1; }
-
-        /* 테이블 스타일 (모바일 최적화) */
-        table { 
-            width: 100%; 
-            border-collapse: separate; 
-            border-spacing: 0; 
-            margin-top: 10px; 
-            border: 1px solid #EFEBE9; 
-            border-radius: 10px; 
-            overflow: hidden; 
-            table-layout: fixed; /* ★ 컬럼 너비 고정 */
-        }
-        
-        th { 
-            background: var(--primary); 
-            color: white; 
-            padding: 12px 5px; 
-            text-align: center; 
-            font-weight: 600; 
-            font-size: 0.85em;
-        }
-        
-        td { 
-            padding: 12px 5px; 
-            border-bottom: 1px solid #EFEBE9; 
-            color: #4E342E; 
-            text-align: center;
-            font-size: 0.85em;
-            word-break: break-all; /* 긴 텍스트 줄바꿈 */
-        }
-        
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background-color: #FFF8E1; }
-        
-        .badge { 
-            padding: 4px 6px; 
-            border-radius: 6px; 
-            font-size: 0.8em; 
-            color: white; 
-            display: inline-block; 
-            min-width: 40px; 
-            text-align: center; 
-        }
-
-        /* 내용(Log Message) 컬럼은 왼쪽 정렬 */
-        td.msg-col { text-align: left; padding-left: 10px; }
+        body { font-family: 'Pretendard', sans-serif; padding: 20px; background-color: #f1f2f6; max-width: 800px; margin: 0 auto; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2 { margin-top: 0; color: #2d3436; }
+        .stat-box { display: flex; gap: 10px; margin-bottom: 20px; }
+        .stat-item { flex: 1; padding: 15px; border-radius: 8px; text-align: center; color: white; font-weight: bold; }
+        .bg-blue { background-color: #0984e3; }
+        .bg-green { background-color: #00b894; }
+        .bg-red { background-color: #d63031; }
+        .stat-num { font-size: 1.5em; display: block; margin-top: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
+        th, td { padding: 10px; border-bottom: 1px solid #dfe6e9; text-align: left; }
+        th { background: #f8f9fa; color: #636e72; }
+        .badge { padding: 3px 6px; border-radius: 4px; font-size: 0.8em; color: white; }
     </style>
 </head>
 <body>
-<div th:replace="~{common/header :: headerFragment}"></div>
+    <div th:replace="~{common/header :: headerFragment}"></div>
 
     <div class="card">
-        <div class="page-header">
-            <h2>📅 운영 기록</h2>
-            <button class="btn-home" onclick="location.href='/waitingstore'">🍴 매장 관리</button>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>📅 일별 운영 기록</h2>
+            <button onclick="location.href='/waitingstore'" style="padding:8px 15px; cursor:pointer; background:#fff; border:1px solid #ddd; border-radius:5px;">🏠 매장 관리로</button>
         </div>
         
-        <div class="date-control">
-            <span class="date-label">날짜</span>
-            <input type="date" id="date-picker">
-            <button class="btn-search" onclick="loadDailyLog()">조회</button>
+        <div style="margin: 20px 0;">
+            <label>날짜 선택: </label>
+            <input type="date" id="date-picker" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            <button onclick="loadDailyLog()" style="padding: 8px 15px; background: #2d3436; color: white; border: none; border-radius: 4px; cursor: pointer;">조회</button>
         </div>
 
         <div class="stat-box">
-            <div class="stat-item bg-enter">
-                <span class="stat-title">입장</span>
-                <span id="s-enter" class="stat-num">0</span>
-            </div>
-            <div class="stat-item bg-call">
-                <span class="stat-title">호출</span>
-                <span id="s-call" class="stat-num">0</span>
-            </div>
-            <div class="stat-item bg-cancel">
-                <span class="stat-title">취소</span>
-                <span id="s-cancel" class="stat-num">0</span>
-            </div>
+            <div class="stat-item bg-green">입장 완료 <span id="s-enter" class="stat-num">0</span></div>
+            <div class="stat-item bg-blue">호출 횟수 <span id="s-call" class="stat-num">0</span></div>
+            <div class="stat-item bg-red">취소/거절 <span id="s-cancel" class="stat-num">0</span></div>
         </div>
     </div>
 
     <div class="card">
-        <h3>📜 상세 로그</h3>
+        <h3>📜 상세 활동 로그</h3>
         <table>
-            <colgroup>
-                <col style="width: 20%"> <col style="width: 15%"> <col style="width: 18%"> <col style="width: 47%"> </colgroup>
             <thead>
                 <tr>
-                    <th>시간</th>
-                    <th>인원</th> 
-                    <th>구분</th>
+                    <th width="20%">시간</th>
+                    <th width="10%">인원</th> <th width="15%">구분</th>
                     <th>내용</th>
                 </tr>
             </thead>
             <tbody id="log-body">
-                <tr><td colspan="4" style="text-align:center; padding: 30px; color: #aaa;">날짜를 선택하세요.</td></tr>
+                <tr><td colspan="4" style="text-align:center;">날짜를 선택하고 조회하세요.</td></tr>
             </tbody>
         </table>
     </div>
 
     <script>
-        // 오늘 날짜로 기본 설정
+        // 전역 변수 (초기값 null)
+        let myStoreId = null;
+
         document.getElementById('date-picker').valueAsDate = new Date();
 
-        function loadDailyLog() {
-            const date = document.getElementById('date-picker').value;
-            const storeId = 2; 
+        window.onload = function() {
+            // ★ [수정] 세션에서 내 가게 정보 가져오기
+            fetch('/api/me')
+                .then(res => {
+                    if (res.ok) return res.json();
+                    throw new Error("로그인 필요");
+                })
+                .then(user => {
+                    // 점주인지, 가게는 있는지 확인
+                    const role = user.role || "";
+                    if ((!role.includes('STORE') && !role.includes('ADMIN')) || !user.hasStore) {
+                        alert("권한이 없습니다.");
+                        location.href = "/";
+                        return;
+                    }
+                    
+                    myStoreId = user.seqStore; // 내 가게 번호 저장
+                    loadDailyLog(); // 로그 조회 시작
+                })
+                .catch(() => {
+                    alert("로그인이 필요합니다.");
+                    location.href = "/login";
+                });
+        };
 
-            fetch(`/waiting/logs/daily?storeId=${storeId}&date=${date}`)
+        function loadDailyLog() {
+            if (!myStoreId) return;
+
+            const date = document.getElementById('date-picker').value;
+
+            // API 호출 시 myStoreId 사용 (하드코딩 제거됨)
+            fetch(`/waiting/logs/daily?storeId=${myStoreId}&date=${date}`)
                 .then(res => res.json())
                 .then(data => {
-                    // 1. 통계 업데이트
                     document.getElementById('s-enter').innerText = data.stats.enters;
                     document.getElementById('s-call').innerText = data.stats.calls;
                     document.getElementById('s-cancel').innerText = data.stats.cancels;
 
-                    // 2. 테이블 업데이트
                     const tbody = document.getElementById('log-body');
                     tbody.innerHTML = "";
                     
                     if (data.logs.length === 0) {
-                        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; padding: 40px; color:#aaa;'>기록이 없습니다.</td></tr>";
+                        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; padding: 20px;'>기록이 없습니다.</td></tr>";
                         return;
                     }
 
                     data.logs.forEach(log => {
-                        let badgeColor = '#BCAAA4'; // 기본 회색
-                        let badgeText = log.actionType;
-
-                        // 색상 매핑 (YamiPick 테마)
-                        if(log.actionType === 'ENTER') { badgeColor = '#6D4C41'; badgeText = '입장'; }
-                        else if(log.actionType === 'CALL') { badgeColor = '#8D6E63'; badgeText = '호출'; }
-                        else if(log.actionType === 'CANCEL') { badgeColor = '#E57373'; badgeText = '취소'; }
-                        else if(log.actionType === 'TOGGLE') { badgeColor = '#FFB74D'; badgeText = '설정'; }
-                        else if(log.actionType === 'NOTICE') { badgeColor = '#4E342E'; badgeText = '공지'; } // 공지사항 수정 로그 등
+                        let badgeColor = '#b2bec3';
+                        if(log.actionType === 'ENTER') badgeColor = '#00b894';
+                        else if(log.actionType === 'CALL') badgeColor = '#0984e3';
+                        else if(log.actionType === 'CANCEL') badgeColor = '#d63031';
+                        else if(log.actionType === 'TOGGLE') badgeColor = '#fdcb6e';
                         
-                        // 날짜 포맷팅 (시간만 표시: HH:mm:ss)
                         const timeStr = log.regDate ? log.regDate.replace('T', ' ').substring(11, 19) : '-';
-                        
-                        const sizeStr = log.teamSize > 0 ? `<b style="color:#3E2723">${log.teamSize}</b>` : '<span style="color:#ccc">-</span>';
+                        const sizeStr = log.teamSize > 0 ? `<b>${log.teamSize}</b>명` : '<span style="color:#ccc">-</span>';
 
                         const row = `
                             <tr>
                                 <td>${timeStr}</td>
                                 <td>${sizeStr}</td>
-                                <td><span class="badge" style="background-color: ${badgeColor}">${badgeText}</span></td>
-                                <td class="msg-col">${log.logMessage}</td>
+                                <td><span class="badge" style="background-color: ${badgeColor}">${log.actionType}</span></td>
+                                <td>${log.logMessage}</td>
                             </tr>
                         `;
                         tbody.innerHTML += row;
@@ -279,8 +135,6 @@
                     alert("로그를 불러오는데 실패했습니다.");
                 });
         }
-        
-        window.onload = loadDailyLog;
     </script>
 </body>
 </html>

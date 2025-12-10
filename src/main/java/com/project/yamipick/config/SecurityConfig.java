@@ -8,9 +8,18 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.project.yamipick.login.security.CustomLoginSuccessHandler;
+
+import lombok.RequiredArgsConstructor;
+
 @Configuration
 @EnableWebSecurity
+//로그인
+@RequiredArgsConstructor
 public class SecurityConfig {
+	
+	//로그인
+	private final CustomLoginSuccessHandler successHandler; 
 
     // 1. 비밀번호 암호화 빈 (필수)
     @Bean
@@ -44,7 +53,9 @@ public class SecurityConfig {
             .loginProcessingUrl("/loginProc") // HTML Form의 action 주소와 일치해야 함
             .usernameParameter("username")    // HTML input name="username"
             .passwordParameter("password")    // HTML input name="password"
-            .defaultSuccessUrl("/", true)     // 로그인 성공 시 메인으로 이동
+            //.defaultSuccessUrl("/", true)     // 로그인 성공 시 메인으로 이동
+            //로그인
+            .successHandler(successHandler)
             .permitAll()
         );
 

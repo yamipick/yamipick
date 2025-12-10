@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>야미픽 - 홈</title>
+    <style>
+        /* YamiPick Theme: Warm Choco & Cream */
+        :root {
+            --primary: #6D4C41;
+            --primary-hover: #5D4037;
+            --bg-body: #F5F5F5;
+            --text-main: #3E2723;
+            --border: #D7CCC8;
+            --secondary: #8D6E63;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(109, 76, 65, 0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 { color: var(--primary); margin-bottom: 10px; }
+        p { color: #8D6E63; margin-bottom: 30px; }
+
+        /* 상태 박스 */
+        .status-box {
+            padding: 20px;
+            border-radius: 10px;
+            background: #FAFAFA;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #eee;
+            padding-bottom: 5px;
+        }
+        .info-label { font-weight: bold; color: var(--secondary); }
+        .info-value { color: var(--primary); font-weight: bold; }
+
+        /* 버튼 스타일 */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            transition: 0.2s;
+        }
+
+        .btn-login { background-color: var(--primary); color: white; }
+        .btn-logout { background-color: #BCAAA4; color: white; }
+        
+        .btn-go { background-color: #FFB74D; color: #3E2723; }
+        .btn-store { background-color: #26A69A; color: white; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🍽️ YamiPick</h1>
+        <p>세션 및 로그인 상태 확인 페이지</p>
+
+        <div id="guest-view">
+            <div class="status-box" style="text-align:center; color:#aaa;">
+                현재 로그인되어 있지 않습니다.
+            </div>
+            <a href="/login" class="btn btn-login">로그인 하러 가기</a>
+            <a href="/join" class="btn" style="background:#fff; border:1px solid #ddd; color:#666;">회원가입</a>
+        </div>
+
+        <div id="member-view" class="hidden">
+            <div class="status-box">
+                <div class="info-row">
+                    <span class="info-label">이름</span>
+                    <span class="info-value" id="u-name">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">닉네임</span>
+                    <span class="info-value" id="u-nick">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">권한</span>
+                    <span class="info-value" id="u-role">-</span>
+                </div>
+                
+                <div id="store-info-area" class="hidden">
+                    <div class="info-row">
+                        <span class="info-label">내 가게</span>
+                        <span class="info-value" id="u-store">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <a href="/waitinguser" class="btn btn-go">🏃‍♂️ 맛집 줄서러 가기 (고객용)</a>
+            <a href="/waitingstore" id="btn-manager" class="btn btn-store hidden">🏠 내 매장 관리 (점주용)</a>
+            
+            <button onclick="logout()" class="btn btn-logout">로그아웃</button>
+        </div>
+    </div>
+
+    <script>
+        // 페이지 로드 시 세션 체크
+        window.onload = function() {
+            fetch('/api/me')
+                .then(res => {
+                    if (res.ok) return res.json();
+                    throw new Error("Not logged in");
+                })
+                .then(user => {
+                    // 로그인 성공 시
+                    document.getElementById('guest-view').classList.add('hidden');
+                    document.getElementById('member-view').classList.remove('hidden');
+
+                    // 데이터 채우기
+                    document.getElementById('u-name').innerText = user.name;
+                    document.getElementById('u-nick').innerText = user.nickname || '-';
+                    document.getElementById('u-role').innerText = user.role;
+
+                    // 점주라면 가게 정보 표시
+                    if (user.role === 'STORE' || user.role === 'ADMIN') {
+                        if (user.hasStore) {
+                            document.getElementById('store-info-area').classList.remove('hidden');
+                            document.getElementById('u-store').innerText = user.storeName + " (ID:" + user.seqStore + ")";
+                            document.getElementById('btn-manager').classList.remove('hidden');
+                        } else {
+                            document.getElementById('u-store').innerText = "등록된 가게 없음";
+                        }
+                    }
+                })
+                .catch(() => {
+                    // 로그인 안 된 상태 (기본 상태 유지)
+                    console.log("게스트 상태입니다.");
+                });
+        };
+
+        function logout() {
+            // Spring Security 로그아웃 호출
+            location.href = "/logout";
+        }
+    </script>
+</body>
+</html>
