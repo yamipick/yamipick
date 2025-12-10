@@ -1,6 +1,7 @@
 package com.project.yamipick.log.repository;
 
 import com.project.yamipick.log.entity.BusinessLog;
+import com.project.yamipick.log.entity.QBusinessLog;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -44,5 +45,19 @@ public class BusinessLogQueryRepository {
             return null;
         }
         return businessLog.userId.contains(userId); // LIKE 검색
+    }
+    
+    // 인기 검색어 TOP 5 조회
+    public List<String> getTopSearchKeywords() {
+        QBusinessLog log = QBusinessLog.businessLog;
+        
+        return queryFactory
+                .select(log.targetId) // 검색어(keyword)가 targetId에 저장됨
+                .from(log)
+                .where(log.actionType.eq("SEARCH")) // 검색 로그만
+                .groupBy(log.targetId)
+                .orderBy(log.targetId.count().desc()) // 많이 검색된 순
+                .limit(5)
+                .fetch();
     }
 }
