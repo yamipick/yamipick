@@ -1,0 +1,111 @@
+@charset "UTF-8";
+
+/* -------------------------------------------------------
+   Modern Admin Theme (Dark Navy & Clean White)
+------------------------------------------------------- */
+:root {
+    --admin-bg: #f4f6f9;         /* 전체 배경색 (연한 회색) */
+    --header-bg: #1e293b;        /* 헤더 배경 (다크 네이비) */
+    --header-text: #e2e8f0;      /* 헤더 글자색 (밝은 회색) */
+    --primary: #3b82f6;          /* 포인트 컬러 (밝은 블루) */
+    --hover-bg: rgba(255, 255, 255, 0.1); /* 메뉴 호버 효과 */
+}
+
+body {
+    background-color: var(--admin-bg);
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif; /* 폰트 변경 추천 */
+}
+
+/* -------------------------------------------------------
+   1. 헤더 (Navbar) 스타일
+------------------------------------------------------- */
+.admin-header .navbar {
+    background-color: var(--header-bg) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); /* 입체감 */
+    padding: 0.8rem 1rem;
+}
+
+/* 브랜드 로고 */
+.navbar-brand {
+    font-weight: 800;
+    font-size: 1.4rem;
+    color: #ffffff !important;
+    letter-spacing: -0.5px;
+}
+.navbar-brand i { color: var(--primary); }
+
+/* 네비게이션 메뉴 */
+.nav-link {
+    color: var(--header-text) !important;
+    font-weight: 500;
+    margin: 0 5px;
+    padding: 8px 16px !important;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+/* 메뉴 호버 & 활성화 */
+.nav-link:hover, .nav-link.active {
+    background-color: var(--hover-bg);
+    color: #ffffff !important;
+    transform: translateY(-1px);
+}
+
+/* 활성화된 메뉴 하단 바 (선택사항) */
+.nav-link.active {
+    border-bottom: 3px solid var(--primary);
+    border-radius: 6px 6px 0 0; /* 아래쪽은 직각 */
+    background-color: transparent; /* 배경색 빼고 밑줄만 강조 */
+}
+
+/* -------------------------------------------------------
+   2. 컨텐츠 영역
+------------------------------------------------------- */
+.admin-content {
+    padding: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* 카드 (Card) 디자인 업그레이드 */
+.card {
+    border: none;
+    border-radius: 12px; /* 둥근 모서리 */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* 아주 연한 그림자 */
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.card-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 15px 20px;
+    font-weight: 700;
+    color: #334155;
+}
+
+/* 테이블 디자인 */
+.table th {
+    background-color: #f8fafc;
+    color: #64748b;
+    font-weight: 600;
+    border-bottom: 2px solid #e2e8f0;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+
+.table td {
+    vertical-align: middle;
+    color: #334155;
+}
+
+/* 버튼 스타일 */
+.btn-primary {
+    background-color: var(--primary);
+    border: none;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+.btn-primary:hover {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+}
