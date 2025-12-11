@@ -44,6 +44,14 @@
             background-color: #f8d7da;
             color: #721c24;
         }
+        .badge-reject {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .badge-expired {
+		    background-color: #b2bec3; /* 회색 계열 예시 */
+		    color: #2d3436;
+		}
         .badge-etc {
             background-color: #e2e3e5;
             color: #383d41;
@@ -89,7 +97,7 @@
 		    <th>매장</th>
 		    <th>좌석 타입</th>
 		    <th>인원</th>
-		    <th>상태</th>
+		    <th>예약 상태</th>
 		    <th>상세</th> <!-- 요 줄 추가 -->
 		</tr>
 	    </thead>
@@ -108,7 +116,9 @@
 	            <span th:text="${r.status == '취소' ? '취소완료' : r.status}"
 			          th:class="'badge ' + (${r.status} == '대기' ? 'badge-wait' :
 			                                  (${r.status} == '완료' ? 'badge-done' :
-			                                  (${r.status} == '취소' ? 'badge-cancel' : 'badge-etc')))">
+			                                  (${r.status} == '취소' ? 'badge-cancel' : 
+			                                  (${r.status} == '반려' ? 'badge-reject' :
+			                                  (${r.status} == '만료' ? 'badge-expired' : 'badge-etc')))))">
 			        예약 상태
 			    </span>
 	        </td>

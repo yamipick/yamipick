@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>당일 예약 현황</title>
+	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+</head>
+<body>
+
+<h1 th:text="${store.name} + ' - 오늘 예약 현황'">당일 예약 리스트</h1>
+<p th:text="${#temporals.format(date, 'yyyy-MM-dd')}">2025-12-11</p>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>시간</th>
+        <th>손님</th>
+        <th>인원</th>
+        <th>테이블 타입</th>
+        <th>상태</th>
+        <th>취소사유</th>
+        <th>작업</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="r : ${reservations}">
+        <td th:text="${r.reserveTime}">18:00</td>
+        <td th:text="${r.nickname}">닉네임</td> <!-- 나중에 손님 이름/nickname 붙이고 싶으면 DTO에 추가 -->
+        <td th:text="${r.peopleCount}">4</td>
+        <td th:text="${r.tableTypeName}">룸</td>
+        <td th:text="${r.status}">대기</td>
+        <td th:text="${r.cancelReason}">사유</td>
+        <td>
+            <!-- 대기 상태일 때만 확정/취소 버튼 보이게 -->
+            <div th:if="${r.status == '대기'}">
+                <form th:action="@{|/store/reservation/${r.seqReservation}/confirm|}" method="post" style="display:inline;">
+                    <button type="submit">확정</button>
+                </form>
+                <form th:action="@{|/store/reservation/${r.seqReservation}/cancel|}" method="post" style="display:inline;">
+                    <button type="submit">취소</button>
+                    <input type="text" name="reason" placeholder="취소 사유" required>
+                </form>
+            </div>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<a href="/store/dashboard">대시보드로</a>
+
+</body>
+</html>

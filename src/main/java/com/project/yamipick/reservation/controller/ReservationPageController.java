@@ -21,6 +21,7 @@ import com.project.yamipick.reservation.repository.StoreTableTypeRepository;
 import com.project.yamipick.reservation.service.ReservationService;
 import com.project.yamipick.store.repository.StoreRepository;
 import com.project.yamipick.store.service.StoreService;
+import com.project.yamipick.user.entity.User;
 
 import lombok.RequiredArgsConstructor;
 
@@ -36,7 +37,19 @@ public class ReservationPageController {
 
 	// 예약 메인화면
 	@GetMapping("/main")
-	public String reservationMain() {
+	public String reservationMain(@AuthenticationPrincipal CustomUserDetails principal,
+            Model model) {
+		
+		// 로그인 유저
+        User loginUser = principal.getUser();
+        Long seqUser = loginUser.getSeqUser();
+
+        // ✅ 알림용 예약 리스트 (대기 아닌 것들)
+        List<ReservationDTO> notifications =
+                reservationService.getUserNotificationReservations(seqUser);
+
+        model.addAttribute("notifications", notifications);
+		
 		return "reservation/reservationMain"; // reservationMain.html
 	}
 
@@ -128,9 +141,11 @@ public class ReservationPageController {
 
 	// 예약 취소
 	@PostMapping("/cancel/{seqReservation}")
-	public String cancel(@PathVariable("seqReservation") Long seqReservation, RedirectAttributes rttr) {
+	public String cancel(@PathVariable("seqReservation") Long seqReservation, 
+			@RequestParam("reason") String reason,
+			RedirectAttributes rttr) {
 
-		reservationService.cancelReservation(seqReservation);
+		reservationService.cancelReservation(seqReservation, reason);
 		rttr.addFlashAttribute("msg", "예약이 취소되었습니다.");
 
 		return "redirect:/reservation/list"; // "/reservation/list" 로 가게 됨 (위 @RequestMapping 덕분)
@@ -181,7 +196,7 @@ public class ReservationPageController {
 		return "redirect:/reservation/complete";
 	}
 	
-	@GetMapping("/availableTimes")
+	@GetMapping("/available-times")
 	@ResponseBody
 	public List<ReservationService.TimeSlotDTO> getAvailableTimes(
 	        @RequestParam("seqStore") Long seqStore,
@@ -189,6 +204,17 @@ public class ReservationPageController {
 	        @RequestParam("peopleCount") Integer peopleCount) {
 		
 	    return reservationService.getAvailableTimeSlots(seqStore, reserveDate, peopleCount);
+	}
+	
+	//휴무일 비활성화
+	@GetMapping("/holiday-dates")
+	@ResponseBody
+	public List<String> getHolidayDates(
+			@RequestParam("seqStore") Long seqStore,
+	        @RequestParam("year") int year,
+	        @RequestParam("month") int month) {
+
+		return reservationService.getHolidayDatesForMonth(seqStore, year, month);
 	}
 
 }

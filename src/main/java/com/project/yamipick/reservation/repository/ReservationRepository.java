@@ -30,4 +30,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             String reserveTime
     );
     
+    // 매장 + 상태별 예약 개수
+    long countByStore_SeqStoreAndStatus(Long seqStore, String status);
+    
 }

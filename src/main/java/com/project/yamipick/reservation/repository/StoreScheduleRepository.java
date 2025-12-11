@@ -16,4 +16,6 @@ public interface StoreScheduleRepository extends JpaRepository<StoreSchedule, Lo
     List<StoreSchedule> findByStore(Store store);
 
 	Optional<StoreSchedule> findByStoreAndDayOfWeek(Store store, int dayOfWeek);
+	
+	List<StoreSchedule> findByStoreAndIsOpenIgnoreCase(Store store, String isOpen);
 }

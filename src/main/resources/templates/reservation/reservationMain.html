@@ -81,6 +81,32 @@
     </style>
 </head>
 <body>
+
+	<!-- 🔔 알림 영역 -->
+	<div class="notification-box" style="border: 1px solid #ddd; padding: 12px; margin-bottom: 16px;">
+	    
+	    <!-- 알림이 있을 때 -->
+	    <div th:if="${notifications != null and !#lists.isEmpty(notifications)}">
+	        <h3>알림</h3>
+	        <ul>
+	            <li th:each="n : ${notifications}"
+	                th:text="${#temporals.format(n.reserveDate, 'yyyy-MM-dd') 
+	                         + ' ' 
+	                         + n.reserveTime
+	                         + ' 예약이 '
+	                         + (n.status == '완료' ? '확정' : n.status)
+	                         + '되었습니다.'}">
+	                알림 내용
+	            </li>
+	        </ul>
+	    </div>
+	
+	    <!-- 알림이 하나도 없을 때 -->
+	    <div th:if="${notifications == null or #lists.isEmpty(notifications)}">
+	        현재 표시할 알림이 없습니다.
+	    </div>
+	</div>
+
 	<div class="container">
 	    <h1>예약 메뉴</h1>
 	    <p class="subtitle">
@@ -97,8 +123,7 @@
 	
 	        <!-- 내 예약 목록 -->
 	        <a th:href="@{/reservation/list}"
-	           class="btn btn-secondary"
-	           onclick="Analytics.trackClick('BUTTON', 'reservation_list', '내 예약목록 버튼 클릭');">
+	           class="btn btn-secondary">
 	            내 예약목록
 	        </a>
 	    </div>

@@ -51,6 +51,10 @@ public class Reservation {
     @Column(nullable = false, length = 10)
     private String status;         // '대기', '완료', '취소', '노쇼' 등
 
+    // 🔹 취소 사유 (사장/손님이 취소할 때 남기는 사유, 선택사항)
+    @Column(length = 200)
+    private String cancelReason;
+    
     // 예약한 유저
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "SEQUSER", nullable = false)
@@ -68,6 +72,25 @@ public class Reservation {
     
     public void changeStatus(String status) {
         this.status = status;
+    }
+    
+    // 🔹 사장님이 예약을 "확정"할 때 쓸 메서드
+    public void confirm() {
+        this.status = "확정";
+        // 필요하면 추후에 confirmedAt, confirmedBy 같은 필드 추가 가능
+    }
+
+    // 🔹 사장님이 예약을 "취소"할 때 + 사유 남길 때
+    public void cancelByStore(String reason) {
+        this.status = "반려";
+        this.cancelReason = reason;
+    }
+
+    // 🔹 손님이 직접 취소하는 경우도 구분하고 싶으면 이런 식으로 메서드 하나 더 둘 수도 있음
+    public void cancelByUser(String reason) {
+        this.status = "취소";
+        this.cancelReason = reason;
+        // cancelReason은 null로 둘 수도 있고, "손님 요청" 같은 기본값을 넣어도 됨
     }
     
 }

@@ -24,26 +24,43 @@
         <td th:text="${reservation.storeName}">매장</td>
     </tr>
     <tr>
-        <th>좌석 타입</th>
-        <td th:text="${reservation.tableTypeName}">좌석 타입</td>
+        <th>테이블 타입</th>
+        <td th:text="${reservation.tableTypeName}">테이블 타입</td>
     </tr>
     <tr>
         <th>인원</th>
         <td th:text="${reservation.peopleCount}">인원</td>
     </tr>
     <tr>
-        <th>상태</th>
-        <td th:text="${reservation.status}">상태</td>
+        <th>예약 상태</th>
+        <td th:text="${reservation.status}">예약 상태</td>
     </tr>
+    
+    <!-- 취소 사유 표시: 상태가 취소 또는 반려인 경우 -->
+	<tr th:if="${reservation.status == '취소' or reservation.status == '반려'}">
+	    <th>취소 사유</th>
+	    <td th:text="${reservation.cancelReason != null ? reservation.cancelReason : '사유 없음'}"></td>
+	</tr>
 </table>
 
 <hr/>
 
-<!-- 상태가 '대기'일 때만 취소 버튼 보이기 -->
+<!-- 상태가 '대기'일 때만 취소 버튼 + 취소 사유 입력 -->
 <form th:if="${reservation.status == '대기'}"
       th:action="@{/reservation/cancel/{seqReservation}(seqReservation=${reservation.seqReservation})}"
       method="post"
       onsubmit="return confirm('정말 취소하시겠습니까?');">
+
+    <div style="margin-top: 10px; margin-bottom: 10px;">
+        <label for="cancelReason">취소 사유</label><br>
+        <textarea id="cancelReason"
+                  name="reason"
+                  rows="3"
+                  cols="40"
+                  placeholder="예: 일정 변경으로 인해 방문이 어렵습니다."
+                  required></textarea>
+    </div>
+
     <button type="submit">예약 취소</button>
 </form>
 

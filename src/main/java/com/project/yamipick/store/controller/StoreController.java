@@ -1,5 +1,6 @@
 package com.project.yamipick.store.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,8 +14,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.project.yamipick.reservation.auth.CustomUserDetails;
+import com.project.yamipick.reservation.dto.ReservationDTO;
 import com.project.yamipick.reservation.entity.StoreSchedule;
 import com.project.yamipick.reservation.entity.StoreTableType;
+import com.project.yamipick.reservation.service.ReservationService;
 import com.project.yamipick.store.entity.Store;
 import com.project.yamipick.store.service.StoreService;
 import com.project.yamipick.user.entity.User;
@@ -27,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class StoreController {
 
     private final StoreService storeService;
+    private final ReservationService reservationService;
 
     // 매장 유저 로그인 후 진입: /store/main
     @GetMapping("/main")
@@ -58,13 +62,17 @@ public class StoreController {
         Store store = storeService.findByUser(loginUser)
                 .orElseThrow(() -> new IllegalStateException("매장이 존재하지 않습니다."));
 
-     // ★ 추가: 스케줄 / 테이블 타입 조회
+        // ★ 추가: 스케줄 / 테이블 타입 조회
         List<StoreSchedule> schedules = storeService.getSchedules(store);
         List<StoreTableType> tableTypes = storeService.getTableTypes(store);
+        
+        // ✅ 대기중 예약 개수
+        long waitingCount = reservationService.countWaitingReservationsForStore(store.getSeqStore());
         
         model.addAttribute("store", store);
         model.addAttribute("schedules", schedules);
         model.addAttribute("tableTypes", tableTypes);
+        model.addAttribute("waitingCount", waitingCount);
         
         return "store/dashboard";
     }
@@ -262,4 +270,94 @@ public class StoreController {
         return "redirect:/store/dashboard";
     }
     
+    //오늘 예약 현황
+    @GetMapping("/reservation/today")
+    public String todayReservations(@AuthenticationPrincipal CustomUserDetails principal, Model model) {
+    	
+    	User loginUser = principal.getUser();
+
+        // 매장 찾기 (이미 여러 곳에서 쓰는 패턴)
+        Store store = storeService.findByUser(loginUser)
+                .orElseThrow(() -> new IllegalStateException("매장이 존재하지 않습니다."));
+
+        LocalDate today = LocalDate.now();
+
+        // 이 매장의 오늘 예약 리스트 (DTO로 변환)
+        List<ReservationDTO> reservations =
+                reservationService.getStoreReservations(store.getSeqStore(), today);
+
+        model.addAttribute("store", store);
+        model.addAttribute("date", today);
+        model.addAttribute("reservations", reservations);
+
+        return "store/reservationToday";
+    }
+    
+    @GetMapping("/reservation/list")
+    public String reservationsByDate(@AuthenticationPrincipal CustomUserDetails principal,
+                                     @RequestParam(value = "date", required = false) String dateStr,
+                                     Model model) {
+
+        User loginUser = principal.getUser();
+        Store store = storeService.findByUser(loginUser)
+                .orElseThrow(() -> new IllegalStateException("매장이 존재하지 않습니다."));
+
+        LocalDate date;
+
+        // date 파라미터 없으면 오늘로
+        if (dateStr == null || dateStr.isBlank()) {
+            date = LocalDate.now();
+        } else {
+            date = LocalDate.parse(dateStr); // "yyyy-MM-dd" 형식 가정
+        }
+
+        List<ReservationDTO> reservations =
+                reservationService.getStoreReservations(store.getSeqStore(), date);
+
+        model.addAttribute("store", store);
+        model.addAttribute("date", date);
+        model.addAttribute("reservations", reservations);
+
+        return "store/reservationList"; // templates/store/reservationList.html
+    }
+    
+	 // ======================
+	 // 사장님: 예약 확정
+	 // ======================
+	 @PostMapping("/reservation/{seqReservation}/confirm")
+	 public String confirmReservation(@AuthenticationPrincipal CustomUserDetails principal,
+	                                  @PathVariable("seqReservation") Long seqReservation,
+	                                  RedirectAttributes rttr) {
+	
+	     User loginUser = principal.getUser();
+	     Store store = storeService.findByUser(loginUser)
+	             .orElseThrow(() -> new IllegalStateException("매장이 존재하지 않습니다."));
+	
+	     // (선택) 이 예약이 이 매장 소유인지 검사하려면 Reservation 조회해서 store 비교하면 됨
+	     reservationService.confirmReservation(seqReservation);
+	
+	     rttr.addFlashAttribute("msg", "예약이 확정되었습니다.");
+	     return "redirect:/store/reservation/today";
+	 }
+    
+	// ======================
+	// 사장님: 예약 취소 + 사유
+	// ======================
+	@PostMapping("/reservation/{seqReservation}/cancel")
+	public String cancelReservationByStore(@AuthenticationPrincipal CustomUserDetails principal,
+	                                       @PathVariable("seqReservation") Long seqReservation,
+	                                       @RequestParam("reason") String reason,
+	                                       RedirectAttributes rttr) {
+
+	    User loginUser = principal.getUser();
+	    Store store = storeService.findByUser(loginUser)
+	            .orElseThrow(() -> new IllegalStateException("매장이 존재하지 않습니다."));
+
+	    // (선택) 여기서도 매장 소유 검증 가능
+	    reservationService.storeCancelReservation(seqReservation, reason);
+
+	    rttr.addFlashAttribute("msg", "예약이 취소되었습니다.");
+	    return "redirect:/store/reservation/today";
+	}
+	 
 }

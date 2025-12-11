@@ -8,6 +8,16 @@
 <body>
 <h1>매장 대시보드</h1>
 
+<div th:if="${waitingCount > 0}" class="alert alert-warning" style="margin-bottom: 16px;">
+    <strong>새로운 예약이 있습니다.</strong><br/>
+    현재 대기 중인 예약이
+    <span th:text="${waitingCount}">0</span>건 있습니다.
+</div>
+
+<div th:if="${waitingCount == 0}" class="alert alert-info" style="margin-bottom: 16px;">
+    현재 대기 중인 예약이 없습니다.
+</div>
+
 <p th:text="'매장 이름: ' + ${store.name}"></p>
 <p th:text="'주소: ' + ${store.address}"></p>
 <p th:text="'전화번호: ' + ${store.phone}"></p>
@@ -58,9 +68,13 @@
     </tr>
 </table>
 
-<a th:href="@{/store/table/edit}" class="btn btn-secondary">테이블수정</a>
+<a th:href="@{/store/table/edit}" class="btn btn-secondary">|테이블수정|</a>
 
-<a th:href="@{/store/table/add}" class="btn btn-secondary">테이블추가</a>
+<a th:href="@{/store/table/add}" class="btn btn-secondary">|테이블추가|</a>
+
+<a th:href="@{/store/reservation/today}">|당일 예약 리스트|</a>
+
+<a th:href="@{/store/reservation/list}">|날짜별 예약 리스트|</a>
 
 <a th:href="@{/logout}">로그아웃</a>
 
