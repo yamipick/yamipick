@@ -21,4 +21,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("UPDATE User u SET u.statusUser = 'ACTIVE', u.suspendedUntil = null WHERE u.statusUser = 'SUSPENDED' AND u.suspendedUntil < :now")
     int updateStatusToActiveIfSuspensionEnded(@Param("now") LocalDateTime now);
+
 }
+
+
+
