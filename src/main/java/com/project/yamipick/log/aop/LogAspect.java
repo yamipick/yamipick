@@ -21,6 +21,14 @@ import com.project.yamipick.log.repository.BusinessLogRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+<<<<<<< HEAD
+=======
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.project.yamipick.log.repository.BusinessLogRepository;
+import com.project.yamipick.log.entity.BusinessLog;
+>>>>>>> dev
 
 @Aspect
 @Component
@@ -30,71 +38,108 @@ public class LogAspect {
     @Autowired
     private BusinessLogRepository logRepository;
 
-    // 1. [정상 수행]
-    @AfterReturning(pointcut = "execution(* com.project.yamipick..*Controller.*(..))", returning = "result")
-    public void captureLog(JoinPoint joinPoint, Object result) {
-        handleLog(joinPoint, null, "SUCCESS");
-    }
-
-    // 2. [에러 발생]
-    @AfterThrowing(pointcut = "execution(* com.project.yamipick..*Controller.*(..))", throwing = "ex")
-    public void captureError(JoinPoint joinPoint, Exception ex) {
-        handleLog(joinPoint, ex, "ERROR");
-    }
-
-    private void handleLog(JoinPoint joinPoint, Exception ex, String status) {
+    // 1. [기본] Service의 중요 메서드 감시 (회원가입, 수정 등)
+    @AfterReturning(pointcut = "execution(* com.project.yamipick..*Service.*(..))", returning = "result")
+    public void captureServiceLog(JoinPoint joinPoint, Object result) {
         String methodName = joinPoint.getSignature().getName();
-        String className = joinPoint.getTarget().getClass().getSimpleName();
-
-        // 에러거나 중요한 행동이면 기록
-        if ("ERROR".equals(status) || isImportantAction(methodName)) {
-            
-            String params = Arrays.toString(joinPoint.getArgs());
-            String message = methodName + " 실행됨. (파라미터: " + params + ")";
-            String actionType = "ERROR".equals(status) ? "SYSTEM_ERROR" : "AUTO_LOG";
-
-            if (ex != null) {
-                message += "\n[에러] " + ex.getMessage();
-                StringWriter sw = new StringWriter();
-                ex.printStackTrace(new PrintWriter(sw));
-                message += "\n[위치] " + sw.toString();
-            }
-
-            BusinessLog logEntity = BusinessLog.builder()
-                    .actionType(actionType)
-                    .targetType(className)
-                    .targetId(status)
-                    .userId(getCurrentUserId()) // ★ 핵심: 자동으로 ID 가져오기!
-                    .message(message)
-                    .ipAddr(getClientIp())
-                    .build();
-
-            try {
-                logRepository.save(logEntity);
-                log.info("✅ 로그 저장 완료 [User: {}]: {}", logEntity.getUserId(), methodName);
-            } catch (Exception e) {
-                log.error("❌ 로그 저장 실패", e);
-            }
+        if (isImportantAction(methodName)) {
+            handleLog(joinPoint, null, "SERVICE");
         }
     }
 
-    // ★ [핵심] 로그인한 유저 ID 가져오는 메소드
+    // 2. ★ [추가] MapController의 검색 감시 (팀원 코드 안 건드리고 여기서 낚아채기!)
+    @AfterReturning(pointcut = "execution(* com.project.yamipick.map.controller.MapController.map(..))", returning = "result")
+    public void captureSearchLog(JoinPoint joinPoint, Object result) {
+        
+        // 파라미터 뒤져서 검색어 찾기
+        Object[] args = joinPoint.getArgs();
+        String keyword = null;
+
+        // MapController.map 메서드의 파라미터 순서를 알 수 없으므로, String 타입이고 값이 있는 걸 찾음
+        for (Object arg : args) {
+            if (arg instanceof String) {
+                String strArg = (String) arg;
+                // "맛집" 같은 기본값이나 "null" 문자열 제외하고 유효한 검색어만
+                if (!strArg.isEmpty() && !"null".equals(strArg) && !"맛집".equals(strArg)) {
+                    keyword = strArg;
+                    break; 
+                }
+            }
+        }
+
+        // 유효한 검색어가 있을 때만 저장
+        if (keyword != null) {
+            saveLog("SEARCH", "KEYWORD", keyword, keyword + "검색됨");
+        }
+    }
+
+    // 3. [공통] 에러 발생 시 로그
+    @AfterThrowing(pointcut = "execution(* com.project.yamipick..*Service.*(..))", throwing = "exception")
+    public void captureError(JoinPoint joinPoint, Exception exception) {
+        handleLog(joinPoint, exception, "ERROR");
+    }
+
+    // 로그 처리 내부 로직
+    private void handleLog(JoinPoint joinPoint, Exception exception, String type) {
+        try {
+            String methodName = joinPoint.getSignature().getName();
+            String actionType = extractActionType(methodName);
+            String message = "Service: " + methodName;
+            
+            if (exception != null) message += " [ERROR] " + exception.getMessage();
+
+            saveLog(actionType, "SYSTEM", methodName, message);
+        } catch (Exception e) {
+            log.error("로그 저장 실패", e);
+        }
+    }
+
+    // ★ 진짜 저장하는 함수
+    private void saveLog(String actionType, String targetType, String targetId, String message) {
+        try {
+            String userId = getCurrentUserId();
+            String ip = getClientIp();
+
+            logRepository.save(BusinessLog.builder()
+                    .actionType(actionType) // SEARCH, UPDATE ...
+                    .targetType(targetType) // KEYWORD, SYSTEM ...
+                    .targetId(targetId)     // 검색어, 메서드명
+                    .userId(userId)
+                    .ipAddr(ip)
+                    .message(message)
+                    .build());
+        } catch (Exception e) {
+            log.error("DB 저장 실패", e);
+        }
+    }
+
+    // (이하 헬퍼 메서드들은 기존과 동일)
+    private String extractActionType(String methodName) {
+        String lower = methodName.toLowerCase();
+        if (lower.startsWith("save") || lower.startsWith("create") || lower.startsWith("add")) return "CREATE";
+        if (lower.startsWith("update") || lower.startsWith("modify")) return "UPDATE";
+        if (lower.startsWith("delete") || lower.startsWith("remove")) return "DELETE";
+        if (lower.startsWith("login")) return "LOGIN";
+        return "SERVICE";
+    }
+
+    private boolean isImportantAction(String name) {
+        String lower = name.toLowerCase();
+        return lower.startsWith("save") || lower.startsWith("create") || lower.startsWith("add") ||
+               lower.startsWith("update") || lower.startsWith("modify") || 
+               lower.startsWith("delete") || lower.startsWith("remove") || lower.startsWith("process");
+    }
+
     private String getCurrentUserId() {
         try {
-            // 1. 시큐리티 컨텍스트에서 인증 정보 꺼냄
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            
-            // 2. 로그인 상태인지 확인
             if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
-                return auth.getName(); // 로그인한 ID (예: admin, user1) 반환
+                return auth.getName();
             }
-        } catch (Exception e) {
-            // 무시
-        }
-        return "GUEST"; // 비회원이면 GUEST로 기록
+        } catch (Exception e) {}
+        return "GUEST";
     }
 
-    // IP 가져오기 (기존 동일)
     private String getClientIp() {
         try {
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -106,17 +151,5 @@ public class LogAspect {
             }
         } catch (Exception e) {}
         return "0.0.0.0";
-    }
-
-    // 중요 행동 필터 (기존 동일)
-    private boolean isImportantAction(String name) {
-        String lower = name.toLowerCase();
-        return lower.startsWith("add") || lower.startsWith("save") || 
-               lower.startsWith("create") || lower.startsWith("update") || 
-               lower.startsWith("modify") || lower.startsWith("delete") || 
-               lower.startsWith("remove") || lower.startsWith("login") || 
-               lower.startsWith("logout") || lower.startsWith("confirm") || 
-               lower.startsWith("cancel") || lower.startsWith("search") || 
-               lower.startsWith("view");
     }
 }

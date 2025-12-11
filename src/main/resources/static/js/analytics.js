@@ -60,4 +60,23 @@ const Analytics = {
     trackView: function(pageName, targetId) {
         this.track('VIEW', pageName, targetId, '페이지 조회');
     }
+	
 };
+
+function handleSearchLog() {
+    // 1. 검색어 입력칸 찾기 (name="keyword"인 input 태그)
+    const keywordInput = document.querySelector('input[name="keyword"]');
+    
+    // 2. 검색어가 있을 때만 로그 전송
+    if (keywordInput && keywordInput.value.trim() !== "") {
+        const keyword = keywordInput.value.trim();
+        
+        // 위에서 만든 Analytics 도구를 사용해 전송
+        Analytics.trackSearch(keyword); 
+        
+        console.log("🔍 검색 로그 전송됨:", keyword);
+    }
+    
+    // 3. 폼 제출(검색)은 계속 진행되어야 하므로 true 반환
+    return true; 
+}
