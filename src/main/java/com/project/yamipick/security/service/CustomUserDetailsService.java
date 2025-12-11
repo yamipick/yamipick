@@ -1,5 +1,8 @@
 package com.project.yamipick.security.service;
 
+import java.time.LocalDateTime;
+
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -29,19 +32,21 @@ public class CustomUserDetailsService implements UserDetailsService {
 				.orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 아이디입니다." + username));
 		
 		// 1) 정지 회원(SUSPENDED) 체크
-        if ("SUSPENDED".equals(userData.getStatusUser())) {
-            
-            // 정지 기간이 남았는지 확인
-            if (userData.getSuspendedUntil() != null && userData.getSuspendedUntil().isAfter(java.time.LocalDateTime.now())) {
-                // 로그인 차단 (LockedException 던짐)
-                throw new org.springframework.security.authentication.LockedException(
-                        "정지된 계정입니다. (해제일: " + userData.getSuspendedUntil().toLocalDate() + ")");
-            } else {
-                // 기간이 지났으면? -> 자동으로 풀어주고 로그인 시켜줌! (오토 리셋)
-                userData.changeStatus("ACTIVE", null);
-                userRepository.save(userData);
-            }
-        }
+		if ("SUSPENDED".equals(userData.getStatusUser())) {
+			
+			// 정지 해제일이 아직 안 지났는지 확인 (현재 시간보다 미래인지)
+			if (userData.getSuspendedUntil() != null && userData.getSuspendedUntil().isAfter(LocalDateTime.now())) {
+				
+				// 정지 상태임 -> 로그인 차단 (LockedException 발생)
+				throw new LockedException("정지된 계정입니다. (해제일: " + userData.getSuspendedUntil().toLocalDate() + ")");
+				
+			} else {
+				// 기간이 지났음 -> 자동으로 풀어주고 로그인 통과! (Auto Reset)
+				log.info("정지 기간 만료됨. 계정 상태를 ACTIVE로 복구합니다. User: {}", username);
+				userData.changeStatus("ACTIVE", null);
+				userRepository.save(userData); // DB에 변경사항 저장
+			}
+		}
 
         // 2) 탈퇴 회원(WITHDRAWN) 체크
         if ("WITHDRAWN".equals(userData.getStatusUser())) {
