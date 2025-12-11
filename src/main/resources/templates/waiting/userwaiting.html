@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- ★ CSRF 토큰 메타 태그 추가 -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>웨이팅</title>
     <style>
         /* -------------------------------------------------------
@@ -27,7 +30,7 @@
             text-align: center; 
             max-width: 420px; 
             margin: 0 auto; 
-            
+
             padding-top: 60px; 
         }
 
@@ -38,9 +41,9 @@
             box-shadow: 0 10px 25px rgba(109, 76, 65, 0.1); /* 은은한 갈색 그림자 */
             margin-top: 20px; 
         }
-        
+
         .box { display: none; }
-        
+
         h2 { color: var(--primary); margin-bottom: 10px; font-weight: 800; letter-spacing: -0.5px; }
 
         /* 버튼 공통 스타일 */
@@ -58,7 +61,7 @@
             font-weight: bold; 
         }
         .btn-primary:disabled { background: #D7CCC8; cursor: not-allowed; box-shadow: none; }
-        
+
         /* 버튼 그룹 (취소/미루기) */
         .btn-group { display: flex; gap: 10px; margin-top: 20px; }
         .btn-cancel { background: var(--danger); color: white; padding: 14px; border-radius: 12px; font-weight: bold; flex: 1; } 
@@ -72,7 +75,7 @@
 
         /* 공지사항 게시판 */
         .notice-board { margin: 25px 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
-        
+
         .latest-notice-box {
             background-color: #FFF3E0; 
             padding: 20px;
@@ -116,7 +119,7 @@
         .notice-item { padding: 15px; border-bottom: 1px solid #EFEBE9; }
         .notice-item:last-child { border-bottom: none; }
         .notice-item.pinned { background-color: #FFFDE7; } 
-        
+
         .n-title { font-weight: bold; display: block; margin-bottom: 5px; color: var(--text-main); }
         .n-badge { color: #D84315; font-size: 0.85em; margin-right: 4px; font-weight: 800; }
         .n-content { font-size: 0.95em; color: #5D4037; white-space: pre-wrap; line-height: 1.5; }
@@ -179,7 +182,7 @@
     </div>
 
     <div id="main-app" class="container box">
-        
+
         <div id="alert-area"></div>
 
         <div class="notice-board">
@@ -205,13 +208,13 @@
 
         <div id="reg-box">
             <h2 style="margin-top:10px;">🍽️ 대기 접수</h2>
-            
+
             <p id="store-status-text" style="color: #A1887F;">매장 상태 확인 중...</p>
-            
+
             <p id="store-hours-text" style="color: #5D4037; font-size: 0.95em; margin-top: -10px; margin-bottom: 25px; font-weight: bold;">
                 ⏳ 시간 정보 불러오는 중...
             </p>
-            
+
             <div style="margin: 40px 0;">
                 <label style="display:block; margin-bottom:15px; font-weight:bold; color:#5D4037;">총 방문 인원</label>
                 <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
@@ -228,12 +231,12 @@
                 <div class="waiting-number" id="my-number">-</div>
                 <p style="margin:0; color:#5D4037;">내 앞 <span id="cnt" class="count-text">0</span>팀 대기 중</p>
             </div>
-            
+
             <div class="btn-group">
                 <button class="btn-defer" onclick="postpone()">↩️ 순서 미루기</button>
                 <button class="btn-cancel" onclick="cancel()">웨이팅 취소</button>
             </div>
-            
+
             <div style="font-size: 0.8em; color: #BCAAA4; margin-top: 20px;">
                 실시간 연결 상태: <span id="socket-status">⚪</span>
             </div>
@@ -247,6 +250,12 @@
     </div>
 
     <script>
+        // -----------------------------------------------------------
+        // 0. ★ CSRF 토큰 설정
+        // -----------------------------------------------------------
+        const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
         // -----------------------------------------------------------
         // 1. 전역 변수 설정 (초기엔 비어있음)
         // -----------------------------------------------------------
@@ -278,14 +287,14 @@
                 })
                 .then(user => {
                     console.log("로그인 확인됨:", user.name);
-                    
+
                     // ★ 서버가 준 진짜 ID를 변수에 저장!
                     userId = user.seqUser; 
-                    
+
                     // 가짜 로그인 박스 숨기고 진짜 화면 보여주기
                     document.getElementById('login-box').style.display = 'none';
                     document.getElementById('main-app').style.display = 'block';
-                    
+
                     // 앱 기능 시작
                     init();
                 })
@@ -306,34 +315,55 @@
             restoreSession();
             loadNotices();
         }
-        
+
         // ... (이 아래 함수들은 기존과 로직이 같지만 userId 변수가 이제 진짜 값을 가짐) ...
 
         function loadNotices() {
-            fetch(`/waiting/notices?storeId=${storeId}`).then(r => r.json()).then(list => {
-                const latestArea = document.getElementById('latest-notice-area');
-                const toggleBtn = document.getElementById('notice-toggle-btn');
-                const ul = document.getElementById('notice-list');
-                const noMsg = document.getElementById('no-notice-msg');
-                latestArea.style.display = 'none'; toggleBtn.style.display = 'none'; ul.style.display = 'none'; noMsg.style.display = 'none'; ul.innerHTML = "";
+            // ★ [수정 1] URL 뒤에 &t=... 를 붙여서 브라우저가 옛날 데이터를 캐싱(기억)하지 못하게 함
+            const timestamp = new Date().getTime();
+            fetch(`/waiting/notices?storeId=${storeId}&t=${timestamp}`)
+                .then(r => r.json())
+                .then(list => {
+                    const latestArea = document.getElementById('latest-notice-area');
+                    const toggleBtn = document.getElementById('notice-toggle-btn');
+                    const ul = document.getElementById('notice-list');
+                    const noMsg = document.getElementById('no-notice-msg');
+                    
+                    latestArea.style.display = 'none'; 
+                    toggleBtn.style.display = 'none'; 
+                    ul.style.display = 'none'; 
+                    noMsg.style.display = 'none'; 
+                    ul.innerHTML = "";
 
-                if (list.length === 0) { noMsg.style.display = 'block'; return; }
-
-                const latest = list[0];
-                latestArea.style.display = 'block';
-                document.getElementById('l-badge').innerText = latest.pinned ? '🚨' : '📢 알림';
-                document.getElementById('l-title').innerText = latest.title;
-                document.getElementById('l-content').innerText = latest.content;
-                document.getElementById('l-date').innerText = latest.regDate ? latest.regDate.replace('T', ' ').substring(0, 16) : '';
-
-                if (list.length > 1) {
-                    toggleBtn.style.display = 'flex';
-                    for (let i = 1; i < list.length; i++) {
-                        const item = list[i];
-                        ul.innerHTML += `<li class="notice-item ${item.pinned?'pinned':''}"><span class="n-title">${item.pinned?'<span class="n-badge">🚨</span>':''}${item.title}</span><div class="n-content">${item.content}</div><div class="n-date">${item.regDate?item.regDate.substring(0,10):''}</div></li>`;
+                    if (list.length === 0) { 
+                        noMsg.style.display = 'block'; 
+                        return; 
                     }
-                }
-            });
+
+                    const latest = list[0];
+                    latestArea.style.display = 'block';
+                    document.getElementById('l-badge').innerText = latest.pinned ? '🚨' : '📢 알림';
+                    document.getElementById('l-title').innerText = latest.title;
+                    document.getElementById('l-content').innerText = latest.content;
+                    document.getElementById('l-date').innerText = latest.regDate ? latest.regDate.replace('T', ' ').substring(0, 16) : '';
+
+                    if (list.length > 1) {
+                        toggleBtn.style.display = 'flex';
+                        for (let i = 1; i < list.length; i++) {
+                            const item = list[i];
+                            const pinnedClass = item.pinned ? 'pinned' : '';
+                            const badge = item.pinned ? '<span class="n-badge">🚨</span>' : '';
+                            const date = item.regDate ? item.regDate.substring(0,10) : '';
+                            
+                            ul.innerHTML += `
+                                <li class="notice-item ${pinnedClass}">
+                                    <span class="n-title">${badge}${item.title}</span>
+                                    <div class="n-content">${item.content}</div>
+                                    <div class="n-date">${date}</div>
+                                </li>`;
+                        }
+                    }
+                });
         }
         function toggleNotice() { const ul = document.getElementById('notice-list'); const arrow = document.getElementById('notice-arrow'); const btnText = document.querySelector('#notice-toggle-btn span:first-child'); if(ul.style.display === 'block') { ul.style.display = 'none'; arrow.innerText = '🔽'; btnText.innerText = '➕ 지난 공지사항 더보기'; } else { ul.style.display = 'block'; arrow.innerText = '🔼'; btnText.innerText = '➖ 접기'; } }
 
@@ -342,7 +372,7 @@
                 const txt = document.getElementById('store-status-text');
                 const btn = document.getElementById('btn-reg');
                 const hoursBox = document.getElementById('store-hours-text');
-                
+
                 hoursBox.innerText = store.todayHours ? "⏰ " + store.todayHours : "⏰ 운영 시간 정보 없음";
 
                 if (store.waitingOpen) {
@@ -365,9 +395,15 @@
             const btn = document.getElementById('btn-reg');
             const size = document.getElementById('size').value;
             btn.disabled = true; btn.innerText = "처리 중...";
-            
+
             // ★ 여기서 사용하는 userId가 이제 로그인한 유저의 진짜 번호입니다.
-            fetch(`/waiting/register?userId=${userId}&storeId=${storeId}&size=${size}`, { method: 'POST' })
+            // ★ CSRF 헤더 추가
+            fetch(`/waiting/register?userId=${userId}&storeId=${storeId}&size=${size}`, { 
+                method: 'POST',
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            })
                 .then(async res => { if(!res.ok) throw new Error(await res.text()); return res.json(); })
                 .then(data => successRegister(data))
                 .catch(e => { alert("⛔ " + e.message); btn.disabled = false; btn.innerText = "줄서기"; });
@@ -378,7 +414,7 @@
             document.getElementById('my-number').innerText = data.waitingNumber + "번";
             document.getElementById('reg-box').style.display = 'none';
             document.getElementById('status-box').style.display = 'block';
-            
+
             // ★ [수정] 웹소켓 연결 로직 개선
             if (socket && socket.readyState === WebSocket.OPEN) {
                 // 이미 연결돼있으면 새로운 waitingId만 전송해서 맵핑 갱신
@@ -388,7 +424,7 @@
                 // 연결 없으면 새로 연결
                 connectWs();
             }
-            
+
             startPolling();
             updateCnt();
         }
@@ -407,47 +443,39 @@
             const area = document.getElementById('alert-area');
             area.style.display = 'block';
             let html = "";
-            
+
             // 1. 공지사항 새로고침
             if (cleanText === "NOTICE:REFRESH_NOTICE") {
-                setTimeout(() => { loadNotices(); }, 300); 
+                // ★ [수정 2] DB 저장 시간을 고려해 딜레이를 300ms -> 1000ms(1초)로 늘림
+                setTimeout(() => { loadNotices(); }, 1000); 
                 return;
             }
-            
-            // 2. 호출 및 취소 알림 처리
+
+            // ... (아래는 기존 코드와 동일) ...
             if (cleanText.startsWith("CALL:") || cleanText.startsWith("CANCEL:")) {
                 const isCall = cleanText.startsWith("CALL:");
                 const msg = cleanText.split(":")[1];
-                
                 const alertType = isCall ? 'alert-urgent' : 'alert-urgent'; 
                 html = `<div class="alert-box ${alertType}">
                             <div style="font-size:1.2em;">${isCall ? '🔔 호출 알림' : '🚫 취소 알림'}</div>
                             <div style="margin-top:5px;">${msg}</div>
                         </div>`;
-                
                 area.innerHTML = html;
 
                 if(isCall) {
                     alert("🔔 입장해주세요!"); 
                 } else { 
                     alert("🚫 취소되었습니다."); 
-                    
-                    // --- 초기화 로직 ---
                     myId = null;
                     if (pollingInterval) clearInterval(pollingInterval);
-                    
                     document.getElementById('status-box').style.display = 'none';
                     document.getElementById('reg-box').style.display = 'block';
-                    
-                    // ★ [핵심 수정] 줄서기 버튼 다시 활성화 (이게 없어서 반응이 없었음)
                     const btn = document.getElementById('btn-reg');
                     btn.disabled = false;
                     btn.innerText = "줄서기";
-
                     checkStoreStatus();
                 }
             } 
-            // 3. 입장 완료 알림
             else if (cleanText.startsWith("ENTER:")) {
                 alert("✅ 입장 확인되었습니다. 즐거운 식사 되세요!");
                 myId = null;
@@ -455,28 +483,49 @@
                 document.getElementById('status-box').style.display = 'none';
                 document.getElementById('reg-box').style.display = 'block';
                 document.getElementById('alert-area').style.display = 'none';
-                
-                // ★ [핵심 수정] 입장 후에도 다시 줄설 수 있게 버튼 활성화
                 const btn = document.getElementById('btn-reg');
                 btn.disabled = false;
                 btn.innerText = "줄서기";
-                
                 return;
             } 
-            // 4. 일반 공지
             else if (cleanText.startsWith("NOTICE:")) {
                 const msg = cleanText.split(":")[1];
                 html = `<div class="alert-box alert-info"><div>📢 실시간 안내</div><div style="margin-top:5px;">${msg}</div></div>`;
                 area.innerHTML = html;
             }
-            
+
             if(myId) updateCnt();
         }
 
         function startPolling() { if (pollingInterval) clearInterval(pollingInterval); pollingInterval = setInterval(updateCnt, 3000); }
         function updateCnt() { if(myId) fetch(`/waiting/check/${myId}`).then(r=>r.text()).then(c => document.getElementById('cnt').innerText = c); }
-        function cancel() { if(confirm("취소하시겠습니까?")) fetch(`/waiting/cancel/${myId}`, {method:'POST'}).then(() => location.reload()); }
-        function postpone() { if(confirm("순서를 맨 뒤로 미루시겠습니까?")) fetch(`/waiting/postpone/${myId}`, {method:'POST'}).then(async r => { if(r.ok) { alert("순서가 변경되었습니다."); location.reload(); } else alert(await r.text()); }); }
+
+        function cancel() { 
+            if(confirm("취소하시겠습니까?")) 
+                // ★ CSRF 헤더 추가
+                fetch(`/waiting/cancel/${myId}`, {
+                    method:'POST',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    }
+                }).then(() => location.reload()); 
+        }
+
+        function postpone() { 
+            if(confirm("순서를 맨 뒤로 미루시겠습니까?")) 
+                // ★ CSRF 헤더 추가
+                fetch(`/waiting/postpone/${myId}`, {
+                    method:'POST',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    }
+                }).then(async r => { 
+                    if(r.ok) { 
+                        alert("순서가 변경되었습니다."); 
+                        location.reload(); 
+                    } else alert(await r.text()); 
+                }); 
+        }
     </script>
 </body>
 </html>

@@ -15,19 +15,14 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.RequiredArgsConstructor;
-<<<<<<< HEAD
-=======
-import org.springframework.stereotype.Repository;
+
 
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringTemplate;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
-// Q파일 임포트 (빌드 후 자동 생성됨)
-import static com.project.yamipick.log.entity.QBusinessLog.businessLog;
->>>>>>> dev
+
 
 @Repository // 스프링 빈으로 등록
 @RequiredArgsConstructor

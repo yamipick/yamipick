@@ -21,14 +21,7 @@ import com.project.yamipick.log.repository.BusinessLogRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-<<<<<<< HEAD
-=======
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.project.yamipick.log.repository.BusinessLogRepository;
-import com.project.yamipick.log.entity.BusinessLog;
->>>>>>> dev
 
 @Aspect
 @Component

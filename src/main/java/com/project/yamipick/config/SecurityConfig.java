@@ -32,7 +32,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         
         // (1) CSRF 설정 (개발 중에는 귀찮으니 끄기 / 운영 땐 켜는 게 좋음)
-        http.csrf(csrf -> csrf.disable());
+        //http.csrf(csrf -> csrf.disable());
 
         // (2) 권한 설정 (누가 어디에 갈 수 있나)
         http.authorizeHttpRequests(auth -> auth
