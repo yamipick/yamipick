@@ -3,13 +3,14 @@ package com.project.yamipick.review.controller;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
@@ -84,69 +85,6 @@ public class ReviewController {
 	    return "review/activity"; // 하나의 템플릿만 사용
 	}
 	
-	@GetMapping("/review/reviewview")
-	public String reviewview(@RequestParam("seqReview") Long seqReview, Model model) {
-
-	    BoardReviewDTO dto = reviewService.getReview(seqReview);
-	    model.addAttribute("review", dto);
-	    model.addAttribute("kakaoAppKey", kakaoAppKey);
-
-	    Double lat = null;
-	    Double lng = null;
-	    String placeName = null;
-	    String kakaoPlaceId = null;
-
-	    // 1) place 문자열 파싱
-	    String placeStr = dto.getPlace();
-	    if (placeStr != null && !placeStr.isBlank()) {
-	        if (placeStr.contains("|")) {
-	            String[] arr = placeStr.split("\\|");
-	            placeName = arr[0];
-	            lat = Double.parseDouble(arr[1]);
-	            lng = Double.parseDouble(arr[2]);
-	            if (arr.length > 3) {
-	                kakaoPlaceId = arr[3];
-	            }
-	        } else if (placeStr.contains(",")) { // 예전 데이터 대비
-	            String[] arr = placeStr.split(",");
-	            lat = Double.parseDouble(arr[0]);
-	            lng = Double.parseDouble(arr[1]);
-	        }
-	    }
-
-	    if (lat != null && lng != null) {
-	        model.addAttribute("lat", lat);
-	        model.addAttribute("lng", lng);
-	    }
-	    model.addAttribute("name", placeName);
-	    model.addAttribute("kakaoPlaceId", kakaoPlaceId);
-	    
-	    model.addAttribute("comments", reviewService.getComments(seqReview));
-
-	    return "review/reviewview";
-	}
-	
-	@Value("${kakao.api.key}")
-	private String kakaoAppKey;
-
-	@GetMapping("/review/reviewadd")
-	public String reviewAdd(Model model) {
-		
-	    model.addAttribute("kakaoAppKey", kakaoAppKey);
-	    
-	    return "review/reviewadd";
-	}
-	
-	@PostMapping("/review/comment/add")
-	@ResponseBody
-	public CommentDTO addComment(CommentDTO dto, Principal principal) {
-
-	    Long id = (principal != null) ? Long.parseLong(principal.getName()) : 1L;
-	    dto.setSeqUser(id);
-
-	    return reviewService.addComment(dto);
-	}
-	
 	@PostMapping("/review/reviewaddok")
 	public String reviewaddok(BoardReviewDTO dto, Principal principal, Model model) {
 
@@ -183,7 +121,106 @@ public class ReviewController {
 	    Long seq = reviewService.add(dto);
 	    return "redirect:/review/reviewview?seqReview=" + seq;
 	}
+	
+	@GetMapping("/review/reviewview")
+	public String reviewview(BoardReviewDTO rdto, @RequestParam("seqReview") Long seqReview, Principal principal, Model model) {
 
+		Long seqUser = (principal != null) ? Long.parseLong(principal.getName()) : 1L;
+	    rdto.setSeqUser(seqUser);
+		
+	    BoardReviewDTO dto = reviewService.getReview(seqReview);
+	    model.addAttribute("review", dto);
+	    model.addAttribute("kakaoAppKey", kakaoAppKey);
+
+	    Double lat = null;
+	    Double lng = null;
+	    String placeName = null;
+	    String kakaoPlaceId = null;
+
+	    // 1) place 문자열 파싱
+	    String placeStr = dto.getPlace();
+	    if (placeStr != null && !placeStr.isBlank()) {
+	        if (placeStr.contains("|")) {
+	            String[] arr = placeStr.split("\\|");
+	            placeName = arr[0];
+	            lat = Double.parseDouble(arr[1]);
+	            lng = Double.parseDouble(arr[2]);
+	            if (arr.length > 3) {
+	                kakaoPlaceId = arr[3];
+	            }
+	        } else if (placeStr.contains(",")) { // 예전 데이터 대비
+	            String[] arr = placeStr.split(",");
+	            lat = Double.parseDouble(arr[0]);
+	            lng = Double.parseDouble(arr[1]);
+	        }
+	    }
+
+	    if (lat != null && lng != null) {
+	        model.addAttribute("lat", lat);
+	        model.addAttribute("lng", lng);
+	    }
+	    model.addAttribute("name", placeName);
+	    model.addAttribute("kakaoPlaceId", kakaoPlaceId);
+	    
+	    var comments = reviewService.getComments(seqReview);
+	    
+	    model.addAttribute("comments", reviewService.getComments(seqReview));
+	    model.addAttribute("commentCount", comments.size());
+	    model.addAttribute("isFavorite", reviewService.isFavorite(seqReview, seqUser));
+	    model.addAttribute("isScrap", reviewService.isScrap(seqReview, seqUser));
+
+	    return "review/reviewview";
+	}
+	
+	@Value("${kakao.api.key}")
+	private String kakaoAppKey;
+
+	@GetMapping("/review/reviewadd")
+	public String reviewAdd(Model model) {
+		
+	    model.addAttribute("kakaoAppKey", kakaoAppKey);
+	    
+	    return "review/reviewadd";
+	}
+	
+	@PostMapping("/review/comment/add")
+	@ResponseBody
+	public CommentDTO addComment(CommentDTO dto, Principal principal) {
+
+	    Long id = (principal != null) ? Long.parseLong(principal.getName()) : 1L;
+	    dto.setSeqUser(id);
+
+	    return reviewService.addComment(dto);
+	}
+	
+	@PostMapping("/review/favorite/toggle")
+	@ResponseBody
+	public Map<String, Object> toggleFavorite(@RequestParam("seqReview") Long seqReview, Principal principal) {
+
+	    Long seqUser = (principal != null) ? Long.parseLong(principal.getName()) : 1L;
+
+	    boolean isFavorite = reviewService.toggleFavorite(seqReview, seqUser);
+
+	    Map<String, Object> res = new HashMap<>();
+	    res.put("favorite", isFavorite);
+	    res.put("count", reviewService.getFavoriteCount(seqReview));
+
+	    return res;
+	}
+	
+	@PostMapping("/review/scrap/toggle")
+	@ResponseBody
+	public Map<String, Object> toggleScrap(@RequestParam("seqReview") Long seqReview, Principal principal) {
+
+	    Long seqUser = (principal != null) ? Long.parseLong(principal.getName()) : 1L;
+
+	    boolean isScrap = reviewService.toggleScrap(seqReview, seqUser);
+
+	    Map<String, Object> res = new HashMap<>();
+	    res.put("scrap", isScrap);
+
+	    return res;
+	}
 	
 	@GetMapping("/review/reviewedit")
 	public String reviewedit() {
@@ -201,6 +238,39 @@ public class ReviewController {
 	public String reviewdeleteok() {
 		
 		return "review/reviewdeleteok";
+	}
+	
+	@PostMapping("/review/comment/edit")
+	@ResponseBody
+	public Map<String, Object> editComment(
+	        @RequestParam("seqComment") Long seqComment,
+	        @RequestParam("content") String content,
+	        Principal principal) {
+
+	    Long seqUser = (principal != null) ? Long.parseLong(principal.getName()) : 1L;
+
+	    CommentDTO updated = reviewService.editComment(seqComment, seqUser, content);
+
+	    Map<String, Object> res = new HashMap<>();
+	    res.put("content", updated.getContent());
+	    res.put("regdate", updated.getRegdate());
+
+	    return res;
+	}
+
+	@PostMapping("/review/comment/delete")
+	@ResponseBody
+	public Map<String, Object> deleteComment(
+	        @RequestParam("seqComment") Long seqComment,
+	        Principal principal) {
+
+	    Long seqUser = (principal != null) ? Long.parseLong(principal.getName()) : 1L;
+
+	    boolean success = reviewService.deleteComment(seqComment, seqUser);
+
+	    Map<String, Object> res = new HashMap<>();
+	    res.put("success", success);
+	    return res;
 	}
 
 }

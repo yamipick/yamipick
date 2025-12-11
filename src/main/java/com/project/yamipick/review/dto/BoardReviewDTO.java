@@ -39,6 +39,7 @@ public class BoardReviewDTO {
 	private Integer readCount;
 	private Integer favoriteCount;
 	private String contentState;
+	private String state;
 	
 	private String nickname;
 	private String tags;

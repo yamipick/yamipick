@@ -19,10 +19,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "tblComment")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -52,6 +54,9 @@ public class Comment {
 	@Column(nullable = false)
     private Timestamp regdate;
 	
+	@Column(nullable = false, length = 20)
+	private String state;
+	
 	public CommentDTO toDTO() {
 		
 		return CommentDTO.builder()
@@ -61,6 +66,7 @@ public class Comment {
 						.seqUser(this.user.getSeqUser())
 						.content(this.content)
 						.regdate(this.regdate)
+						.state(this.state)
 						.nickname(this.user.getNickname())
 						.build();
 		

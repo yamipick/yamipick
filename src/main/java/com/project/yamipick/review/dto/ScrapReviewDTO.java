@@ -1,6 +1,6 @@
 package com.project.yamipick.review.dto;
 
-import java.sql.Date;
+import java.sql.Timestamp;
 
 import com.project.yamipick.review.entity.BoardReview;
 import com.project.yamipick.review.entity.ScrapReview;
@@ -24,7 +24,7 @@ public class ScrapReviewDTO {
 	private Long seqscrapReview;
 	private Long seqReview;
 	private Long seqUser;
-	private Date regdate;
+	private Timestamp regdate;
 
 	public ScrapReview toEntity(BoardReview review, User user) {
 		

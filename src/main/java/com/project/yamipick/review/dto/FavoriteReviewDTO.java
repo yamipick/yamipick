@@ -1,6 +1,6 @@
 package com.project.yamipick.review.dto;
 
-import java.sql.Date;
+import java.sql.Timestamp;
 
 import com.project.yamipick.review.entity.BoardReview;
 import com.project.yamipick.review.entity.FavoriteReview;
@@ -24,7 +24,7 @@ public class FavoriteReviewDTO {
 	private Long seqFavoriteReview;
 	private Long seqReview;
 	private Long seqUser;
-	private Date regdate;
+	private Timestamp regdate;
 	
 	public FavoriteReview toEntity(BoardReview review, User user) {
 		

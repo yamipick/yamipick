@@ -1,6 +1,6 @@
 package com.project.yamipick.review.entity;
 
-import java.sql.Date;
+import java.sql.Timestamp;
 
 import com.project.yamipick.review.dto.FavoriteReviewDTO;
 import com.project.yamipick.user.entity.User;
@@ -12,7 +12,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -42,7 +41,7 @@ public class FavoriteReview {
     private User user;
 	
 	@Column(nullable = false)
-	private Date regdate;
+	private Timestamp regdate;
 	
 	public FavoriteReviewDTO toDTO() {
 		

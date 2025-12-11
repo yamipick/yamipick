@@ -79,8 +79,12 @@ public class BoardReview {
 	@Column(nullable = false, length = 20)
 	private String contentState;
 	
+	@Column(nullable = false, length = 20)
+	private String state;
+	
 	@OneToMany(mappedBy = "review")
 	private List<Tagging> taggings = new ArrayList<>();
+	
 	
 	public BoardReviewDTO toDTO() {
 		
@@ -96,6 +100,7 @@ public class BoardReview {
 							.place(this.place)
 							.regdate(this.regdate)
 							.contentState(this.contentState)
+							.state(this.state)
 							.build();
 	}
 

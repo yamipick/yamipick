@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,11 +19,15 @@ import com.project.yamipick.review.dto.FavoriteReviewDTO;
 import com.project.yamipick.review.dto.ScrapReviewDTO;
 import com.project.yamipick.review.entity.BoardReview;
 import com.project.yamipick.review.entity.Comment;
+import com.project.yamipick.review.entity.FavoriteReview;
 import com.project.yamipick.review.entity.Hashtag;
+import com.project.yamipick.review.entity.ScrapReview;
 import com.project.yamipick.review.entity.Tagging;
 import com.project.yamipick.review.repository.BoardReviewRepository;
 import com.project.yamipick.review.repository.CommentRepository;
+import com.project.yamipick.review.repository.FavoriteReviewRepository;
 import com.project.yamipick.review.repository.HashtagRepository;
+import com.project.yamipick.review.repository.ScrapReviewRepository;
 import com.project.yamipick.review.repository.TaggingRepository;
 import com.project.yamipick.user.entity.User;
 import com.project.yamipick.user.repository.UserRepository;
@@ -38,6 +43,9 @@ public class ReviewServiceImpl implements ReviewService {
     private final HashtagRepository hashtagRepository;
     private final TaggingRepository taggingRepository;
     private final CommentRepository commentRepository;
+    private final FavoriteReviewRepository favoriteReviewRepository;
+    private final ScrapReviewRepository scrapReviewRepository;
+
 
     @Override
     public Long add(BoardReviewDTO dto) {
@@ -64,6 +72,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .readCount(0)
                 .favoriteCount(0)
                 .contentState(state)
+                .state("ACTIVE")
                 .build();
 
         // 3. 리뷰 저장
@@ -135,7 +144,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         return ordered;
     }
-
+    
     private void addChildrenRecursively(
             List<CommentDTO> result,
             CommentDTO parent,
@@ -173,6 +182,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .user(user)
                 .review(review)
                 .parentComment(parent)
+                .state("ACTIVE")
                 .build();
 
         Comment saved = commentRepository.save(comment);
@@ -189,6 +199,106 @@ public class ReviewServiceImpl implements ReviewService {
             );
 
         return result;  
+    }
+    
+    @Override
+    @Transactional
+    public boolean toggleFavorite(Long seqReview, Long seqUser) {
+
+        Optional<FavoriteReview> existing = favoriteReviewRepository
+                .findByUserSeqUserAndReviewSeqReview(seqUser, seqReview);
+
+        if (existing.isPresent()) {
+            favoriteReviewRepository.delete(existing.get());
+            return false; // 취소됨
+        } else {
+            FavoriteReview fav = FavoriteReview.builder()
+                    .user(userRepository.findById(seqUser).orElseThrow())
+                    .review(boardReviewRepository.findById(seqReview).orElseThrow())
+                    .regdate(Timestamp.valueOf(LocalDateTime.now()))
+                    .build();
+            favoriteReviewRepository.save(fav);
+            return true; // 좋아요 추가됨
+        }
+    }
+    
+    @Override
+    @Transactional
+    public boolean toggleScrap(Long seqReview, Long seqUser) {
+
+        Optional<ScrapReview> existing = scrapReviewRepository
+                .findByUserSeqUserAndReviewSeqReview(seqUser, seqReview);
+
+        if (existing.isPresent()) {
+            scrapReviewRepository.delete(existing.get());
+            return false;
+        } else {
+            ScrapReview scrap = ScrapReview.builder()
+                    .user(userRepository.findById(seqUser).orElseThrow())
+                    .review(boardReviewRepository.findById(seqReview).orElseThrow())
+                    .regdate(Timestamp.valueOf(LocalDateTime.now()))
+                    .build();
+            scrapReviewRepository.save(scrap);
+            return true;
+        }
+    }
+    
+    @Override
+    public boolean isFavorite(Long seqReview, Long seqUser) {
+        return favoriteReviewRepository
+                .existsByUserSeqUserAndReviewSeqReview(seqUser, seqReview);
+    }
+
+    @Override
+    public boolean isScrap(Long seqReview, Long seqUser) {
+        return scrapReviewRepository
+                .existsByUserSeqUserAndReviewSeqReview(seqUser, seqReview);
+    }
+    
+    @Override
+    public int getFavoriteCount(Long seqReview) {
+        return favoriteReviewRepository.countByReviewSeqReview(seqReview);
+    }
+    
+    @Override
+    public CommentDTO editComment(Long seqComment, Long seqUser, String content) {
+
+        Comment entity = commentRepository.findById(seqComment).orElseThrow();
+
+        // 본인 댓글인지 체크(선택)
+        if (!entity.getUser().getSeqUser().equals(seqUser)) {
+            throw new RuntimeException("권한 없음");
+        }
+
+        entity.setContent(content);
+        entity.setRegdate(Timestamp.valueOf(LocalDateTime.now()));
+
+        commentRepository.save(entity);
+
+        // DTO 변환
+        CommentDTO dto = new CommentDTO();
+        dto.setSeqComment(entity.getSeqComment());
+        dto.setSeqUser(entity.getUser().getSeqUser());
+        dto.setNickname(entity.getUser().getNickname());
+        dto.setContent(entity.getContent());
+        dto.setRegdate(entity.getRegdate());
+
+        return dto;
+    }
+    
+    @Override
+    public boolean deleteComment(Long seqComment, Long seqUser) {
+        Comment comment = commentRepository.findById(seqComment).orElseThrow();
+
+        if (!comment.getUser().getSeqUser().equals(seqUser)) {
+            return false; // 작성자만 삭제 가능
+        }
+
+        comment.setState("DELETED");
+        comment.setContent("삭제된 댓글입니다.");
+        commentRepository.save(comment);
+
+        return true;
     }
 	
 	@Override
@@ -239,6 +349,9 @@ public class ReviewServiceImpl implements ReviewService {
 	                    .map(t -> t.getHashtag().getHashtag())
 	                    .toList()
 	    );
+	    
+	    int favoriteCnt = favoriteReviewRepository.countByReviewSeqReview(seqReview);
+	    dto.setFavoriteCount(favoriteCnt);
 
 	    return dto;
 	}

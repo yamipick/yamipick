@@ -27,6 +27,7 @@ public class CommentDTO {
 	private Long seqUser;
 	private String content;
 	private Timestamp regdate;
+	private String state;
 	
 	private String nickname;
 	private int depth = 0;

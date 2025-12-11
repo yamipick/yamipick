@@ -24,5 +24,19 @@ public interface ReviewService {
 	List<CommentDTO> getComments(Long seqReview);
 
 	CommentDTO addComment(CommentDTO dto);
+	
+	boolean toggleFavorite(Long seqReview, Long seqUser);
+	
+	boolean toggleScrap(Long seqReview, Long seqUser);
+	
+	boolean isFavorite(Long seqReview, Long seqUser);
+
+	boolean isScrap(Long seqReview, Long seqUser);
+	
+	int getFavoriteCount(Long seqReview);
+
+	CommentDTO editComment(Long seqComment, Long seqUser, String content);
+
+	boolean deleteComment(Long seqComment, Long seqUser);
 
 }
