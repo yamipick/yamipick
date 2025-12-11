@@ -378,7 +378,19 @@
             document.getElementById('my-number').innerText = data.waitingNumber + "번";
             document.getElementById('reg-box').style.display = 'none';
             document.getElementById('status-box').style.display = 'block';
-            connectWs(); startPolling(); updateCnt();
+            
+            // ★ [수정] 웹소켓 연결 로직 개선
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                // 이미 연결돼있으면 새로운 waitingId만 전송해서 맵핑 갱신
+                socket.send(JSON.stringify({ waitingId: myId }));
+                console.log("기존 소켓에 새 ID 매핑:", myId);
+            } else {
+                // 연결 없으면 새로 연결
+                connectWs();
+            }
+            
+            startPolling();
+            updateCnt();
         }
 
         function connectWs() {
@@ -392,19 +404,73 @@
 
         function showAlert(text) {
             const cleanText = text.trim();
-            const area = document.getElementById('alert-area'); area.style.display = 'block';
-            if (cleanText === "NOTICE:REFRESH_NOTICE") { setTimeout(() => { loadNotices(); }, 300); return; }
+            const area = document.getElementById('alert-area');
+            area.style.display = 'block';
+            let html = "";
+            
+            // 1. 공지사항 새로고침
+            if (cleanText === "NOTICE:REFRESH_NOTICE") {
+                setTimeout(() => { loadNotices(); }, 300); 
+                return;
+            }
+            
+            // 2. 호출 및 취소 알림 처리
             if (cleanText.startsWith("CALL:") || cleanText.startsWith("CANCEL:")) {
                 const isCall = cleanText.startsWith("CALL:");
                 const msg = cleanText.split(":")[1];
-                area.innerHTML = `<div class="alert-box alert-urgent"><div style="font-size:1.2em;">${isCall ? '🔔 호출 알림' : '🚫 취소 알림'}</div><div style="margin-top:5px;">${msg}</div></div>`;
-                if(isCall) alert("🔔 입장해주세요!"); else { alert("🚫 취소되었습니다."); location.reload(); }
-            } else if (cleanText.startsWith("ENTER:")) { alert("✅ 입장 확인되었습니다."); location.reload(); return;
-            } else if (cleanText.startsWith("NOTICE:")) {
+                
+                const alertType = isCall ? 'alert-urgent' : 'alert-urgent'; 
+                html = `<div class="alert-box ${alertType}">
+                            <div style="font-size:1.2em;">${isCall ? '🔔 호출 알림' : '🚫 취소 알림'}</div>
+                            <div style="margin-top:5px;">${msg}</div>
+                        </div>`;
+                
+                area.innerHTML = html;
+
+                if(isCall) {
+                    alert("🔔 입장해주세요!"); 
+                } else { 
+                    alert("🚫 취소되었습니다."); 
+                    
+                    // --- 초기화 로직 ---
+                    myId = null;
+                    if (pollingInterval) clearInterval(pollingInterval);
+                    
+                    document.getElementById('status-box').style.display = 'none';
+                    document.getElementById('reg-box').style.display = 'block';
+                    
+                    // ★ [핵심 수정] 줄서기 버튼 다시 활성화 (이게 없어서 반응이 없었음)
+                    const btn = document.getElementById('btn-reg');
+                    btn.disabled = false;
+                    btn.innerText = "줄서기";
+
+                    checkStoreStatus();
+                }
+            } 
+            // 3. 입장 완료 알림
+            else if (cleanText.startsWith("ENTER:")) {
+                alert("✅ 입장 확인되었습니다. 즐거운 식사 되세요!");
+                myId = null;
+                if (pollingInterval) clearInterval(pollingInterval);
+                document.getElementById('status-box').style.display = 'none';
+                document.getElementById('reg-box').style.display = 'block';
+                document.getElementById('alert-area').style.display = 'none';
+                
+                // ★ [핵심 수정] 입장 후에도 다시 줄설 수 있게 버튼 활성화
+                const btn = document.getElementById('btn-reg');
+                btn.disabled = false;
+                btn.innerText = "줄서기";
+                
+                return;
+            } 
+            // 4. 일반 공지
+            else if (cleanText.startsWith("NOTICE:")) {
                 const msg = cleanText.split(":")[1];
-                area.innerHTML = `<div class="alert-box alert-info"><div>📢 실시간 안내</div><div style="margin-top:5px;">${msg}</div></div>`;
+                html = `<div class="alert-box alert-info"><div>📢 실시간 안내</div><div style="margin-top:5px;">${msg}</div></div>`;
+                area.innerHTML = html;
             }
-            updateCnt();
+            
+            if(myId) updateCnt();
         }
 
         function startPolling() { if (pollingInterval) clearInterval(pollingInterval); pollingInterval = setInterval(updateCnt, 3000); }
