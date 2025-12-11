@@ -1,11 +1,14 @@
 package com.project.yamipick;
 
-import jakarta.annotation.PostConstruct;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
 import java.util.TimeZone;
 
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
+import jakarta.annotation.PostConstruct;
+
+@EnableScheduling
 @SpringBootApplication
 public class YamipickApplication {
 
