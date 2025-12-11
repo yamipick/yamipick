@@ -67,7 +67,7 @@ public class User {
 
     @CreationTimestamp
     @Column(name = "createdAt", updatable = false)
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
     
     @Column(name = "suspendedUntil")
     private LocalDateTime suspendedUntil; 
