@@ -26,4 +26,16 @@ public class AIChatSession {
 
     @Column(name = "seqUser", nullable = false)
     private Long seqUser;   // FK → tblUser.seqUser
+    
+    // 이전 대화에서 추출된 positive 태그
+    @Column(length = 500)
+    private String lastPositiveTags;
+
+    // 이전 대화에서 추출된 negative
+    @Column(length = 500)
+    private String lastNegativeTags;
+
+    // 이전 감정
+    @Column(length = 50)
+    private String lastEmotion;
 }

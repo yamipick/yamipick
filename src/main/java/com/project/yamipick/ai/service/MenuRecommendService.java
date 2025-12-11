@@ -24,42 +24,56 @@ public class MenuRecommendService {
 
     public List<MenuRecommendResponse> recommend(MenuRecommendRequest req) {
 
-        List<String> selectedTags = req.getPositiveTags();
-        if (selectedTags == null || selectedTags.isEmpty()) {
-            return Collections.emptyList();
-        }
-
+        List<String> positive = req.getPositiveTags();
+        List<String> negative = req.getNegativeTags();
+        
         // 1. 전체 메뉴 로드
         List<Menu> menus = menuRepository.findAll();
 
-        // 2. 각 메뉴의 flavorTags 를 파싱해서, 선택된 태그를 모두 포함하는 메뉴만 필터
         return menus.stream()
-                // 1) 태그 필터 먼저 적용
-                .filter(menu -> {
-                    List<String> menuTags = parseTags(menu.getFlavorTags());
-                    return selectedTags.stream().allMatch(menuTags::contains);
-                })
-                // 2) 매핑 단계
                 .map(menu -> {
 
                     List<String> menuTags = parseTags(menu.getFlavorTags());
+                    int score = 0;
+                    
+                    //negative 태그 포함하면 점수 -999
+                    if (negative != null && menuTags.stream().anyMatch(negative::contains)) {
+                    	score = -999;
+                    } else {
+                    	//positive 태그: 하나당 +10
+                    	if (positive != null) {
+                    		for (String tag : positive) {
+                    			if (menuTags.contains(tag)) {
+                    				score += 10;
+                    			}
+                    		}
+                    	}
+                    }
 
-                    // 3) 이미지 가져오기 (동기 아님. block() 제거!)
+                    //이미지 (동기 아님. block() 제거!)
                     String menuImage = pexelsService
                             .getFoodImageSync(menu.getMenuEnglish());
                     if (menuImage == null || menuImage.isBlank()) {
-                    	menuImage = "/img/menu/default.jpa"; 
+                    	menuImage = "/img/menu/default.jpg"; 
                     }
-
+                    
+                    //positive와 메뉴 태그의 교집합 (UI 표시용)
+                    List<String> matched = getMatchedTags(menuTags, positive);
+                    
                     return MenuRecommendResponse.builder()
                             .seqMenu(menu.getSeqMenu())
                             .menuName(menu.getMenuName())
                             .menuDescription(menu.getMenuDescription())
                             .menuImage(menuImage)
-                            .matchedTags(selectedTags)
                             .allTags(menuTags)
+                            .matchedTags(matched)
+                            .score(score)
                             .build();
                 })
+                //점수 높은 순으로 정렬
+                .sorted((a,b) -> Integer.compare(b.getScore(), a.getScore()))
+                //점수 0 이하 제외
+                .filter(r -> r.getScore() > 0)
                 .collect(Collectors.toList());
     }
 
@@ -72,5 +86,12 @@ public class MenuRecommendService {
                 .map(String::trim)
                 .filter(s -> !s.isBlank())
                 .collect(Collectors.toList());
+    }
+    
+    private List<String> getMatchedTags(List<String> menuTags, List<String> positive) {
+    	if (positive == null) return List.of();
+    	return positive.stream()
+    			.filter(menuTags::contains)
+    			.collect(Collectors.toList());
     }
 }

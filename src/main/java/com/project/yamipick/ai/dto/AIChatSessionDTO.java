@@ -19,6 +19,9 @@ public class AIChatSessionDTO {
 	private Long seqSession;
     private LocalDateTime sessionCreatedAt;
     private Long seqUser;
+    private String lastPositiveTags;
+    private String lastNegativeTags;
+    private String lastEmotion;
 
     public AIChatSession toEntity() {
         return AIChatSession.builder()

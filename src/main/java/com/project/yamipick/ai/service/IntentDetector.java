@@ -14,8 +14,9 @@ public class IntentDetector {
     }
 
     private static final List<String> KEYWORDS = List.of(
-    		"추천", "골라", "정해줘", "먹을까", "뭐먹", "메뉴",
-    	    "아무거나", "고민하기 싫어", "하나만", "선택해줘", "먹고싶어", "배고파"
+    		"추천", "골라", "정해줘", "먹을까", "뭐먹", "메뉴", "먹고싶다",
+    	    "아무거나", "고민하기 싫어", "하나만", "선택해줘", "먹고싶어", "배고파",
+    	    "딴거", "다른", "그거말고", "말고", "또", "더", "그외", "아닌", "다른메뉴", "또추천"
     );
 
     public boolean isRecommendIntent(String message) {

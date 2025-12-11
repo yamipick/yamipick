@@ -1,3 +1,6 @@
+//전역 변수
+let sessionId = null;
+
 // 메시지 박스
 const chatBox = document.getElementById("chat-box");
 const input = document.getElementById("chat-input");
@@ -35,50 +38,86 @@ function addMessage(text, type) {
     scrollToBottom();
 }
 
-// 추천 메뉴 카드 출력
-function addMenuCards(menus) {
+// REST API 호출
+async function sendMessage() {
+    const msg = input.value.trim();
+    if (!msg || msg === "") return;
+
+	//user 메시지
+	addMessage(msg, "user");
+	input.value = "";
+
+	try {
+		const res = await fetch("/api/chat/send", {
+	        method: "POST",
+	        headers: {"Content-Type": "application/json"},
+	        body: JSON.stringify({
+	            seqSession: sessionId,
+	            message: msg
+	        })
+	    });
+		
+		const data = await res.json();
+		
+		//세션 메시지 출력
+		sessionId = data.seqSession;
+		
+		//AI 메시지
+		addMessage(data.aiMessage ?? "응답 오류", "bot");
+		
+		//메뉴 추천 UI
+		const best = data.recommendList[0];
+		if (best) {
+			addMenuCard(best);
+		}
+			
+	} catch (err) {
+		addMessage("⚠ 오류 발생: " + err, "bot");
+	}
+}
+
+function addMenuCard(menu) {
+	
     const wrapper = document.createElement("div");
     wrapper.classList.add("menu-card-container");
 
-    menus.forEach(m => {
-        const card = document.createElement("div");
-        card.classList.add("menu-card");
+    const card = document.createElement("div");
+    card.classList.add("menu-card", "fade-in");
 
-        card.innerHTML = `
-            <img src="${m.menuImage}" />
-            <div class="desc-overlay">${m.menuDescription ?? "설명 없음"}</div>
-        `;
+    card.innerHTML = `
+		<div class="menu-image">
+            <img src="${menu.menuImage}" alt="">
+            <div class="desc-overlay">${menu.menuDescription ?? ""}</div>
+        </div>
 
-        wrapper.appendChild(card);
-    });
+        <div class="menu-info">
+            <h3>${menu.menuName}</h3>
+            <div class="tag-badges">
+                ${menu.allTags
+                    .map(t => `<span class="tag-badge">${convertTag(t)}</span>`)
+                    .join("")}
+            </div>
+        </div>
+    `;
 
+    wrapper.appendChild(card);
     chatBox.appendChild(wrapper);
     scrollToBottom();
 }
 
-// REST API 호출
-async function sendMessage() {
-    const text = input.value.trim();
-    if (!text) return;
-
-    addMessage(text, "user");
-    input.value = "";
-
-    const response = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text })
-    });
-
-    const result = await response.json();
-
-    // AI 메시지 출력
-    addMessage(result.answer, "bot");
-
-    // 메뉴 추천이 포함되어 있으면 카드로 렌더링
-    if (result.recommendList) {
-        addMenuCards(result.recommendList);
-    }
+function convertTag(tag) {
+    const mapping = {
+        spicy: "#매콤",
+        sweet: "#달달",
+        salty: "#짭짤",
+        meat: "#고기",
+        seafood: "#해산물",
+        soup: "#국물요리",
+        noodle: "#면요리",
+        oily: "#기름진",
+        healthy: "#건강식"
+    };
+    return mapping[tag] ?? tag;
 }
 
 btn.addEventListener("click", sendMessage);

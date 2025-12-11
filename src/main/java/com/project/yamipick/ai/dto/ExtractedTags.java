@@ -20,9 +20,6 @@ public class ExtractedTags {
     @JsonProperty("negative_tags")
     private List<String> negativeTags;
 
-    @JsonProperty("context_tags")
-    private List<String> contextTags;
-
     // NPE 방지용 헬퍼
     public List<String> safePositive() {
         return positiveTags != null ? positiveTags : new ArrayList<>();
@@ -30,10 +27,6 @@ public class ExtractedTags {
 
     public List<String> safeNegative() {
         return negativeTags != null ? negativeTags : new ArrayList<>();
-    }
-
-    public List<String> safeContext() {
-        return contextTags != null ? contextTags : new ArrayList<>();
     }
 
 }

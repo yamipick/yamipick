@@ -19,7 +19,7 @@ public class ChatResponse {
     private String aiMessage;
     private LocalDateTime timestamp;
     
-    private List<MenuRecommendResponse> recommends;
+    private List<MenuRecommendResponse> recommendList;
 
 }
 

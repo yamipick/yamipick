@@ -42,7 +42,7 @@ public class AIService {
         try {
             tags = mapper.readValue(json, ExtractedTags.class);
         } catch (Exception e) {
-            tags = new ExtractedTags(List.of(), List.of(), List.of());
+            tags = new ExtractedTags(List.of(), List.of());
         }
 
         return fallbackTagExtraction(userMessage.toLowerCase(), tags);
@@ -54,54 +54,128 @@ public class AIService {
 
         List<String> pos = new ArrayList<>(tags.safePositive());
         List<String> neg = new ArrayList<>(tags.safeNegative());
-        List<String> ctx = new ArrayList<>(tags.safeContext());
 
         msg = msg.replace(" ", "");
 
         // spicy
-        if (contains(msg, "매운","매콤","불맛","얼큰","spicy")) addOnce(pos,"spicy");
-        if (contains(msg, "안맵","덜맵","맵지않")) addOnce(neg,"spicy");
+        if (contains(msg,
+                "매운", "매콤", "얼큰", "매운맛", "불맛", "화끈", "칼칼", "spicy"))
+            addOnce(pos,"spicy");
 
-        // sweet
-        if (contains(msg,"달달","달콤","단거")) addOnce(pos,"sweet");
-        if (contains(msg,"안달","달지않","단거말고")) addOnce(neg,"sweet");
-
-        // salty
-        if (contains(msg,"짠","짭짤","간세")) addOnce(pos,"salty");
-        if (contains(msg,"안짜","싱거운","짜지않")) addOnce(neg,"salty");
-
-        // meat
-        if (contains(msg,"고기","삼겹","제육","닭","갈비")) addOnce(pos,"meat");
-        if (contains(msg,"고기말고","고기싫")) addOnce(neg,"meat");
-
-        // seafood
-        if (contains(msg,"해물","해산물","오징어","새우","초밥","회")) addOnce(pos,"seafood");
-        if (contains(msg,"해물말고","비린")) addOnce(neg,"seafood");
-
-        // soup
-        if (contains(msg,"국물","탕","찌개","라멘")) addOnce(pos,"soup");
-        if (contains(msg,"국물없","드라이","볶음")) {
-            addOnce(neg,"soup");
-            addOnce(ctx,"dry");
+        if (contains(msg,
+                "안맵", "맵지않", "맵게말고", "덜맵", "맵기싫", "매운거말고", "안매운", "좀 안맵게"))
+        {
+            addOnce(neg,"spicy");
+            pos.remove("spicy");
         }
 
+
+        // sweet
+        if (contains(msg,
+                "달달", "달콤", "단맛", "스윗", "당기는", "당기네", "달큰", "sweet"))
+            addOnce(pos,"sweet");
+
+        if (contains(msg,
+                "안달", "달지않", "단거말고", "단건싫", "달달한건말고", "단건별로", "단맛제외"))
+        {
+            addOnce(neg,"sweet");
+            pos.remove("sweet");
+        }
+
+
+        // salty
+        if (contains(msg,
+                "짠", "짭짤", "간세", "자극적", "강한간", "짠맛"))
+            addOnce(pos,"salty");
+
+        if (contains(msg,
+                "안짜", "싱거운", "짜지않", "싱겁게", "짜지않았으면", "짜지말고"))
+        {
+            addOnce(neg,"salty");
+            pos.remove("salty");
+        }
+
+
+        // meat
+        if (contains(msg,
+                "고기", "삼겹", "제육", "닭", "갈비", "소고기", "돼지", "육류"))
+            addOnce(pos,"meat");
+
+        if (contains(msg,
+                "고기말고", "고기싫", "고기제외", "육류말고", "고기뺀", "고기안먹"))
+        {
+            addOnce(neg,"meat");
+            pos.remove("meat");
+        }
+
+
+        // seafood
+        if (contains(msg,
+                "해물", "해산물", "오징어", "문어", "새우", "초밥", "회", "해물향", "seafood"))
+            addOnce(pos,"seafood");
+
+        if (contains(msg,
+                "해물말고", "해산물싫", "비린", "비린내", "해물제외", "해물안먹"))
+        {
+            addOnce(neg,"seafood");
+            pos.remove("seafood");
+        }
+
+
+        // soup
+        if (contains(msg,
+                "국물", "탕", "찌개", "라멘", "라면국물", "국물있는", "얼큰한국물", "진한국물"))
+            addOnce(pos,"soup");
+
+        if (contains(msg,
+                "국물없", "국물말고", "국물제외", "국물싫", "국물없는", "국물안땡겨",
+                "국물있는거말고", "드라이", "볶음", "국물뺀"))
+        {
+            addOnce(neg,"soup");
+            pos.remove("soup");
+        }
+
+
         // noodle
-        if (contains(msg,"면","파스타","우동","라면")) addOnce(pos,"noodle");
-        if (contains(msg,"면말고","면싫")) addOnce(neg,"noodle");
+        if (contains(msg,
+                "면", "파스타", "우동", "라면", "라멘", "쫄면", "국수", "noodle"))
+            addOnce(pos,"noodle");
+
+        if (contains(msg,
+                "면말고", "면싫", "면은싫", "면제외", "면안먹", "면뺀"))
+        {
+            addOnce(neg,"noodle");
+            pos.remove("noodle");
+        }
+
 
         // oily
-        if (contains(msg,"기름","느끼","튀김","치킨","돈까스")) addOnce(pos,"oily");
-        if (contains(msg,"안느끼","느끼한거싫","기름기없")) addOnce(neg,"oily");
+        if (contains(msg,
+                "기름", "느끼", "튀김", "치킨", "돈까스", "기름진", "기름맛"))
+            addOnce(pos,"oily");
+
+        if (contains(msg,
+                "안느끼", "느끼한거싫", "기름기없", "기름말고", "담백하게", "기름진건싫"))
+        {
+            addOnce(neg,"oily");
+            pos.remove("oily");
+        }
+
 
         // healthy
-        if (contains(msg,"가벼운","담백","건강","샐러드")) addOnce(pos,"healthy");
-        if (contains(msg,"샐러드싫","건강식말고")) addOnce(neg,"healthy");
+        if (contains(msg,
+                "가벼운", "담백", "건강", "샐러드", "라이트", "헬시", "healthy", "깔끔한"))
+            addOnce(pos,"healthy");
 
-        // context
-        if (contains(msg,"볶","구이")) addOnce(ctx,"dry");
-        if (contains(msg,"밥","덮밥","볶음밥")) addOnce(ctx,"rice");
+        if (contains(msg,
+                "샐러드싫", "건강식말고", "담백한건말고", "가벼운건싫", "라이트말고"))
+        {
+            addOnce(neg,"healthy");
+            pos.remove("healthy");
+        }
 
-        return new ExtractedTags(pos, neg, ctx);
+
+        return new ExtractedTags(pos, neg);
     }
 
     private boolean contains(String msg, String... ks) {
@@ -141,29 +215,48 @@ public class AIService {
     public String generateReason(String userMsg, MenuRecommendResponse best,
                                  ExtractedTags tags, String emotion) {
 
-        String prompt = """
-            너는 음식 추천 전문가이자 감정 케어 AI야.
+    	try {
+    		
+    		String menu = best.getMenuName();;
+    		String matched = String.join(",",
+    							tags.getPositiveTags()==null ?
+    							List.of() : tags.getPositiveTags());
+    		
+    		String prompt = """
+    		너는 음식 추천 전문가이자 감정 케어 AI입니다.
+            사용자가 "%s" 라고 말했습니다.
+            추천된 메뉴는 "%s" 입니다.
+            사용자가 원한 조건(태그)은 다음과 같습니다: %s.
+            감정 분석 결과는 '%s' 입니다.
 
-            아래 정보를 바탕으로 2~3문장 자연스럽게 말해줘.
-            사용자의 감정까지 고려해서 따뜻하게 추천해줘.
-
-            사용자 입력: %s
-            감정: %s
-            추천 메뉴: %s
-            매칭 태그: %s
-            positive: %s
-            negative: %s
-            context: %s
-
+            위 정보를 바탕으로, 왜 이 메뉴가 잘 맞는지
+            2~3문장으로 자연스럽고 부드럽게 설명해 주세요.
             절대 DB에 없는 메뉴명을 언급하지 마.
             """.formatted(
-                    userMsg, emotion, best.getMenuName(),
-                    best.getMatchedTags(),
-                    tags.getPositiveTags(), tags.getNegativeTags(), tags.getContextTags()
+                safe(userMsg),
+                safe(menu),
+                safe(matched),
+                safe(emotion)
             );
-
-        String raw = gemini.call(prompt).blockOptional().orElse("");
-        return raw.isBlank() ? "추천 이유를 생성하지 못했어요." : raw;
+    		
+    		String result = gemini.call(prompt).blockOptional().orElse("");
+    		
+    		if (result == null || result.isBlank()) {
+    			return "오늘은 %s 어떠세요? 조건에 가장 잘 맞는 메뉴예요."
+    					.formatted(menu);
+    		}
+    		
+    		return result;
+    	
+    	} catch (Exception e) {
+    		return "오늘은 %s 어떠세요? 조건에 가장 잘 맞는 메뉴예요."
+    					.formatted(best.getMenuName());
+    	}
+    	
+    }
+    
+    private String safe(String s) {
+    	return (s == null || s.isBlank()) ? "" : s;
     }
 
 
@@ -208,7 +301,6 @@ public class AIService {
         return ""; 
     }
     
-    // AIService.java 안에 추가 (클래스 안, 다른 메서드들이랑 같은 레벨)
     public List<String> emotionToTags(String emotion) {
 
         if (emotion == null) return List.of();
