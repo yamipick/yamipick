@@ -18,7 +18,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "tblBusinessLog")
+//인덱스 추가(10만건 읽는데 딜레이가 3초 정도 걸려서)
+@Table(name = "tblBusinessLog", indexes = {
+ @Index(name = "idx_log_created_at", columnList = "createdAt"),  // 날짜 검색용
+ @Index(name = "idx_log_action_type", columnList = "actionType") // 행동 검색용
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
