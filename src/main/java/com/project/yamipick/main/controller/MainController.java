@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import com.project.yamipick.banner.repository.BannerRepository;
 import com.project.yamipick.log.repository.BusinessLogQueryRepository; // ★ 이거 추가
+import com.project.yamipick.notice.repository.NoticeRepository;
 import com.querydsl.core.Tuple;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class MainController {
 
     private final BannerRepository bannerRepository;
     private final BusinessLogQueryRepository logQueryRepository; // ★ 주입 받기
+    private final NoticeRepository noticeRepository;
 
     @GetMapping("/")
     public String index(Model model) {
@@ -75,6 +77,8 @@ public class MainController {
              // 무시 (빈 리스트로 나감)
         }
         model.addAttribute("hotPlaces", hotPlaces);
+        
+        model.addAttribute("noticeList", noticeRepository.findTop2ByOrderByCreatedAtDesc());
 
         return "main/index";
     }

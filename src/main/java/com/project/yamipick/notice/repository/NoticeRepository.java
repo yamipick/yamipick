@@ -10,4 +10,6 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
     List<Notice> findAllByOrderByCreatedAtDesc();
 
 	List<Notice> findTop5ByOrderByCreatedAtDesc();
+
+	List<Notice> findTop2ByOrderByCreatedAtDesc();
 }
