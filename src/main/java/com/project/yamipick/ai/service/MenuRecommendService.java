@@ -24,25 +24,41 @@ public class MenuRecommendService {
 
     public List<MenuRecommendResponse> recommend(MenuRecommendRequest req) {
 
-        List<String> positive = req.getPositiveTags();
-        List<String> negative = req.getNegativeTags();
+    	List<String> selectedTags = req.getPositiveTags();
+        List<String> negativeTags = req.getNegativeTags();
+        
+        if (selectedTags == null || selectedTags.isEmpty()) {
+            return Collections.emptyList();
+        }
         
         // 1. 전체 메뉴 로드
         List<Menu> menus = menuRepository.findAll();
 
         return menus.stream()
+        		.filter(menu -> {
+        			List<String> menuTags = parseTags(menu.getFlavorTags());
+        			
+        			boolean matchPositive = selectedTags.stream().allMatch(menuTags::contains);
+        			
+        			boolean avoidNegative = false;
+        			if (negativeTags != null && !negativeTags.isEmpty()) {
+        				avoidNegative = negativeTags.stream().anyMatch(menuTags::contains);
+        			}
+        			
+        			return matchPositive && !avoidNegative;
+        		})
                 .map(menu -> {
 
                     List<String> menuTags = parseTags(menu.getFlavorTags());
                     int score = 0;
                     
                     //negative 태그 포함하면 점수 -999
-                    if (negative != null && menuTags.stream().anyMatch(negative::contains)) {
+                    if (negativeTags != null && menuTags.stream().anyMatch(negativeTags::contains)) {
                     	score = -999;
                     } else {
                     	//positive 태그: 하나당 +10
-                    	if (positive != null) {
-                    		for (String tag : positive) {
+                    	if (selectedTags != null) {
+                    		for (String tag : selectedTags) {
                     			if (menuTags.contains(tag)) {
                     				score += 10;
                     			}
@@ -58,7 +74,7 @@ public class MenuRecommendService {
                     }
                     
                     //positive와 메뉴 태그의 교집합 (UI 표시용)
-                    List<String> matched = getMatchedTags(menuTags, positive);
+                    List<String> matched = getMatchedTags(menuTags, selectedTags);
                     
                     return MenuRecommendResponse.builder()
                             .seqMenu(menu.getSeqMenu())

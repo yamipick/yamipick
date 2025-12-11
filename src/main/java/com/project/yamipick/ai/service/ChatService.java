@@ -17,7 +17,6 @@ import com.project.yamipick.ai.dto.MenuRecommendResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatService {
@@ -83,9 +82,7 @@ public class ChatService {
     	
     	//현재 입력 메시지까지 합치기
     	String fullContext = contextHistory + " " + userMsg;
-    	
-    	log.info("🤖 [태그분석용 통합 텍스트]: {}", fullContext);
-    	
+    	    	
     	//합쳐진 전체 텍스트로 태그 분석 실행
     	ExtractedTags tags = ai.analyzeTags(fullContext);
     	
