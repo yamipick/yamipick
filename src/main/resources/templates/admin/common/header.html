@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<th:block th:fragment="header">
+
+    <header class="admin-header sticky-top">
+        
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+            <div class="container-fluid px-4">
+                
+                <a class="navbar-brand fw-bold fs-4" href="/admin/dashboard">
+                    <i class="fas fa-utensils me-2"></i>YamiPick
+                    <span class="badge bg-white text-dark ms-1 align-middle" 
+                          style="font-size: 0.6rem; color: #008080;">ADMIN</span>
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="adminNavbar">
+                    
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                        <li class="nav-item">
+                            <a class="nav-link" th:classappend="${menu == 'dashboard'} ? 'active'" href="/admin/dashboard">
+                                <i class="fas fa-home me-1"></i> 대시보드
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:classappend="${menu == 'member'} ? 'active'" href="/admin/user/list">
+                                <i class="fas fa-users me-1"></i> 회원 관리
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:classappend="${menu == 'report'} ? 'active'" href="/admin/report/list">
+                                <i class="fas fa-exclamation-triangle me-1"></i> 신고 관리
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:classappend="${menu == 'banner'} ? 'active'" href="/admin/banner/list">
+                                <i class="fas fa-images me-1"></i> 배너 관리
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:classappend="${menu == 'notice'} ? 'active'" href="/admin/notice/list">
+                                <i class="fas fa-bullhorn me-1"></i> 공지사항
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="d-flex align-items-center">
+                        <div class="d-none d-lg-flex align-items-center me-3 text-white text-end">
+                            <div class="bg-white bg-opacity-25 rounded-circle d-flex justify-content-center align-items-center me-2" 
+                                 style="width: 35px; height: 35px;">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div class="lh-1">
+                                <div style="font-size: 0.75rem;" class="opacity-75">Welcome</div>
+                                <div class="fw-bold" style="font-size: 0.9rem;">Administrator</div>
+                            </div>
+                        </div>
+
+                        <div class="vr d-none d-lg-block bg-white opacity-50 mx-2" style="height: 25px;"></div>
+
+                        <form action="/logout" method="post" class="m-0">
+                            <button class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm" 
+                                    style="background-color: #ff6b6b; border: none;">
+                                Logout <i class="fas fa-sign-out-alt ms-1"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </nav>
+    </header>
+
+</th:block>
+</body>
+</html>
