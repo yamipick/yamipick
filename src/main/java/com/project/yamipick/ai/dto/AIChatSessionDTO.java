@@ -1,7 +1,6 @@
 package com.project.yamipick.ai.dto;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import com.project.yamipick.ai.entity.AIChatSession;
 
