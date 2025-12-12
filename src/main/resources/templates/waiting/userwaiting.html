@@ -5,95 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>웨이팅</title>
     <style>
-        /* 원본 스타일 그대로 유지 (생략 없이 다 넣음) */
-        :root {
-            --primary: #6D4C41;   /* 진한 갈색 */
-            --primary-hover: #5D4037;
-            --secondary: #8D6E63; /* 라떼색 */
-            --bg-body: #F5F5F5;   /* 배경 */
-            --text-main: #3E2723; /* 텍스트 */
-            --danger: #E57373;    /* 취소/삭제 */
-            --warning: #FFB74D;   /* 알림 */
-            --border: #D7CCC8;
-        }
-
-        body { 
-            font-family: 'Pretendard', sans-serif; 
-            background-color: var(--bg-body); 
-            color: var(--text-main); 
-            padding: 20px; 
-            text-align: center; 
-            max-width: 420px; 
-            margin: 0 auto; 
-            padding-top: 60px; 
-        }
-
-        .container { 
-            background: white; 
-            padding: 30px 25px; 
-            border-radius: 20px; 
-            box-shadow: 0 10px 25px rgba(109, 76, 65, 0.1); 
-            margin-top: 20px; 
-        }
-
-        /* ★ 수정: .box는 기본적으로 보이게 (로그인 박스 없으므로) */
-        .box { display: block; }
-        /* 단, 상태 박스(status-box)는 로직에 따라 보여야 하므로 초기엔 숨김 */
-        #status-box { display: none; }
-
-        h2 { color: var(--primary); margin-bottom: 10px; font-weight: 800; letter-spacing: -0.5px; }
-
-        button { cursor: pointer; border: none; font-family: inherit; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        button:active { transform: scale(0.98); }
-
-        .btn-primary { 
-            width: 100%; 
-            padding: 16px; 
-            background: var(--primary); 
-            color: white; 
-            border-radius: 12px; 
-            font-size: 1.1em; 
-            font-weight: bold; 
-        }
-        .btn-primary:disabled { background: #D7CCC8; cursor: not-allowed; box-shadow: none; }
-
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-cancel { background: var(--danger); color: white; padding: 14px; border-radius: 12px; font-weight: bold; flex: 1; } 
-        .btn-defer { background: var(--secondary); color: white; padding: 14px; border-radius: 12px; font-weight: bold; flex: 1; }
-
-        #alert-area { display: none; margin-bottom: 20px; }
-        .alert-box { padding: 15px; border-radius: 12px; text-align: left; margin-bottom: 10px; animation: slideIn 0.3s; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .alert-urgent { background: #FFEBEE; color: #C62828; border-left: 5px solid #E57373; font-weight: bold; } 
-        .alert-info { background: #E0F2F1; color: #00695C; border-left: 5px solid #4DB6AC; } 
-
-        .notice-board { margin: 25px 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
-        .latest-notice-box { background-color: #FFF3E0; padding: 20px; border-bottom: 1px dashed #D7CCC8; text-align: left; }
-        .latest-title { font-size: 1.1em; font-weight: bold; color: #D84315; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
-        .latest-content { font-size: 1em; color: #3E2723; line-height: 1.5; white-space: pre-wrap; }
-        .notice-header { background: #FAFAFA; color: #8D6E63; padding: 12px 15px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s; gap: 5px; font-size: 0.9em; }
-        .notice-header:hover { background: #F5F5F5; color: var(--primary); }
-        .notice-list { display: none; padding: 0; margin: 0; list-style: none; text-align: left; }
-        .notice-item { padding: 15px; border-bottom: 1px solid #EFEBE9; }
-        .notice-item:last-child { border-bottom: none; }
-        .notice-item.pinned { background-color: #FFFDE7; } 
-        .n-title { font-weight: bold; display: block; margin-bottom: 5px; color: var(--text-main); }
-        .n-badge { color: #D84315; font-size: 0.85em; margin-right: 4px; font-weight: 800; }
-        .n-content { font-size: 0.95em; color: #5D4037; white-space: pre-wrap; line-height: 1.5; }
-        .n-date { font-size: 0.8em; color: #A1887F; margin-top: 8px; text-align: right; }
-
-        .waiting-display { margin: 25px 0; padding: 30px 20px; background: #EFEBE9; border-radius: 20px; border: 1px dashed #D7CCC8; }
-        .waiting-number { font-size: 4em; font-weight: 900; color: var(--primary); margin: 10px 0; line-height: 1; text-shadow: 2px 2px 0 rgba(0,0,0,0.05); }
-        .waiting-label { color: #8D6E63; font-size: 1em; font-weight: bold; }
-        .count-text { color: #D84315; font-weight: 800; font-size: 1.3em; }
-
-        #reg-box #size { border: 2px solid var(--primary); color: var(--primary); border-radius: 12px; background: #FAFAFA; padding: 15px; width: 60%; text-align: center; font-size: 2em; font-weight: 800; outline: none; }
-
-        .bottom-link { margin-top: 30px; text-align: center; border-top: 2px dashed #EFEBE9; padding-top: 20px; }
-        .bottom-link a { text-decoration: none; color: #8D6E63; font-weight: bold; font-size: 0.95em; display: inline-flex; align-items: center; gap: 5px; transition: 0.2s; }
-        .bottom-link a:hover { color: var(--primary); transform: translateX(3px); }
-
         @keyframes slideIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
+         <link rel="stylesheet" th:href="@{/css/waiting.css}">
+    
 </head>
 <body>
 <div th:replace="~{common/header :: headerFragment}"></div>
@@ -101,7 +16,7 @@
     <!-- ★ 수정: 로그인 입력 박스(login-box) 전체 삭제됨 -->
 
     <!-- ★ 수정: main-app 컨테이너 (기본적으로 보이게 설정) -->
-    <div id="main-app" class="container box">
+    <div id="main-app" class="container box mobile-container">
 
         <div id="alert-area"></div>
 
@@ -134,7 +49,6 @@
             </p>
 
             <div style="margin: 40px 0;">
-                <label style="display:block; margin-bottom:15px; font-weight:bold; color:#5D4037;">총 방문 인원</label>
                 <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
                     <input type="number" id="size" value="2" placeholder="2">
                     <span style="font-size:1.5em; font-weight:bold; color:var(--primary);">명</span>

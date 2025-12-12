@@ -3,21 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>매장 웨이팅 기록</title>
-    <style>
-        body { font-family: 'Pretendard', sans-serif; padding: 20px; background-color: #f1f2f6; max-width: 800px; margin: 0 auto; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h2 { margin-top: 0; color: #2d3436; }
-        .stat-box { display: flex; gap: 10px; margin-bottom: 20px; }
-        .stat-item { flex: 1; padding: 15px; border-radius: 8px; text-align: center; color: white; font-weight: bold; }
-        .bg-blue { background-color: #0984e3; }
-        .bg-green { background-color: #00b894; }
-        .bg-red { background-color: #d63031; }
-        .stat-num { font-size: 1.5em; display: block; margin-top: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
-        th, td { padding: 10px; border-bottom: 1px solid #dfe6e9; text-align: left; }
-        th { background: #f8f9fa; color: #636e72; }
-        .badge { padding: 3px 6px; border-radius: 4px; font-size: 0.8em; color: white; }
-    </style>
+        <link rel="stylesheet" th:href="@{/css/waiting.css}">
+
 </head>
 <body>
     <div th:replace="~{common/header :: headerFragment}"></div>
