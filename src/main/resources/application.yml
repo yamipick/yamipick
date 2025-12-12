@@ -73,3 +73,6 @@ logging:
 gemini:
   api-key: ${GEMINI_API_KEY}
   model: "gemini-2.5-flash"
+
+pexels:
+  api-key: ${PEXELS_API_KEY}
