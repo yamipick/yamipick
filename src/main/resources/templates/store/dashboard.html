@@ -3,81 +3,332 @@
 <head>
 	<meta charset="UTF-8">
 	<title>매장 대시보드</title>
-	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        /* -------------------------------------------------------
+           Warm Choco & Cream Theme Variables (Header와 통일)
+        ------------------------------------------------------- */
+        :root {
+            --choco-dark: #3E2723; /* 텍스트 및 최강조 (Dark Brown) */
+            --choco-main: #6D4C41; /* 메인 초코 브라운 (Primary) */
+            --choco-accent: #A1887F; /* 부드러운 강조색 (Point) */
+            --cream-light: #FFFCF5; /* 배경색 */
+            --cream-card: #fff; /* 카드 내부 배경 */
+            --cream-dark: #EFEBE9; /* 테이블 호버 배경 / 대기 0 배경 */
+            --border-light: #D7CCC8; /* 연한 코코아색 테두리 */
+            --shadow: 0 4px 15px rgba(109, 76, 65, 0.08); /* 따뜻한 그림자 */
+            --danger-color: #B71C1C; /* 삭제/로그아웃 등 */
+            --radius-l: 18px;
+            --radius-s: 8px;
+        }
+
+        /* -------------------------------------------------------
+           기본 스타일 및 레이아웃
+        ------------------------------------------------------- */
+        body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; background-color: var(--cream-light); color: var(--choco-dark); padding-top: 60px; }
+        .wrap-container { 
+            max-width: 1100px; 
+            margin: 40px auto; 
+            padding: 30px; 
+            background: var(--cream-card); 
+            border-radius: var(--radius-l); 
+            box-shadow: var(--shadow); 
+        }
+        
+        /* H1 색상 변경 및 아이콘 추가 */
+        h1 { 
+            color: var(--choco-dark); /* 강조 */
+            border-bottom: 3px solid var(--choco-accent); 
+            padding-bottom: 10px; 
+            margin-bottom: 25px; 
+            font-weight: 900; 
+            font-size: 26px;
+        }
+        h3 { color: var(--choco-dark); margin: 0 0 15px; font-weight: 800; font-size: 18px; }
+        a { text-decoration: none; color: var(--choco-main); }
+        a:hover { text-decoration: underline; }
+
+        /* -------------------------------------------------------
+           Dashboard Layout - Grid Structure
+        ------------------------------------------------------- */
+        .dashboard-grid { 
+            display: grid;
+            grid-template-columns: 1fr; 
+            gap: 25px; 
+        }
+        @media (min-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr; /* 2단 레이아웃 유지 */
+            }
+        }
+        
+        /* -------------------------------------------------------
+           Card Styles 
+        ------------------------------------------------------- */
+        .card {
+            padding: 20px;
+            background: var(--cream-card);
+            border-radius: var(--radius-s);
+            border: 1px solid var(--border-light);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* 기본 그림자 */
+            transition: transform .2s;
+        }
+        .card:hover {
+             transform: translateY(-2px);
+             /* 그림자를 초코색 기반으로 변경하여 따뜻한 느낌 강조 */
+             box-shadow: 0 4px 12px rgba(109, 76, 65, 0.15);
+        }
+        
+        /* 1. 예약 대기 알림 카드 */
+        .waiting-alert-card {
+            grid-column: 1 / -1; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 30px;
+        }
+
+        /* 대기 카운트가 있을 때 */
+        .alert-warning { 
+            background-color: #FEF7E6; /* Light Yellow-Cream (Alert 느낌 유지) */
+            border-left: 5px solid var(--choco-main); 
+        }
+        .alert-warning strong {
+            color: var(--choco-dark);
+            font-size: 1.1em;
+        }
+        .waiting-count {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--danger-color); /* 긴급 상황에 대비해 Danger color 사용 */
+            margin-right: 20px;
+        }
+        
+        /* 대기 카운트가 0일 때 */
+        .alert-info {
+            background-color: var(--cream-dark); 
+            color: var(--choco-main); 
+            border: 1px solid var(--border-light); 
+        }
+
+        /* 2. 매장 정보 카드 */
+        .store-info-card p {
+            margin: 25px 0;
+            font-size: 15px;
+            color: var(--choco-dark); /* 색상 변수 사용 */
+        }
+        .store-info-card p strong {
+            display: inline-block;
+            width: 80px;
+            color: var(--choco-dark);
+            font-weight: 700;
+        }
+
+        /* 3. 액션 버튼 그룹 */
+        .action-group {
+            margin-top: 25px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .logout-link {
+            display: block;
+            margin-top: 20px;
+            text-align: right;
+        }
+        
+        /* -------------------------------------------------------
+           테이블 스타일 (영업시간 & 테이블 타입)
+        ------------------------------------------------------- */
+        .table-container { margin-top: 15px; }
+        .table-container h3 { 
+            margin-bottom: 10px; 
+            padding-top: 5px;
+        }
+        table { width: 100%; border-collapse: collapse; background: var(--cream-card); border-radius: var(--radius-s); overflow: hidden; border: 1px solid var(--border-light); }
+        th, td { border: none; border-bottom: 1px solid var(--border-light); padding: 10px 15px; text-align: center; font-size: 13px; }
+        
+        /* 테이블 헤더: 강조 색상 적용 */
+        th { 
+            background-color: var(--choco-accent); /* 부드러운 초코 강조 */
+            color: var(--cream-card); /* 텍스트는 흰색/크림색 */
+            font-weight: 700; 
+        }
+        tr:nth-child(even) { background-color: #fcfcf9; } /* 은은한 줄무늬 */
+        tr:hover { background-color: var(--cream-dark); } /* 호버 배경색 변경 */
+        
+        /* -------------------------------------------------------
+           버튼/링크 스타일
+        ------------------------------------------------------- */
+        .btn-link, .btn-primary, .btn-secondary, button[type="submit"] {
+            padding: 10px 18px;
+            border-radius: var(--radius-s);
+            cursor: pointer;
+            font-weight: 700;
+            transition: all .15s ease;
+            display: inline-block;
+            text-decoration: none;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+        
+        /* 주 버튼 (Dark Choco) */
+        .btn-primary {
+            background: var(--choco-main);
+            color: var(--cream-light);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: var(--choco-dark);
+        }
+
+        /* 보조 버튼/링크 (Cream Border) */
+        .btn-secondary, .btn-link {
+            background: var(--cream-card);
+            color: var(--choco-main);
+            border: 1px solid var(--border-light);
+        }
+        .btn-secondary:hover, .btn-link:hover {
+            background: var(--cream-dark);
+            color: var(--choco-dark);
+        }
+        
+        /* 테이블 안의 작은 버튼 (삭제 버튼) */
+        td form button {
+            padding: 5px 10px;
+            font-size: 13px;
+            font-weight: 500;
+            background: var(--cream-dark); /* 연한 배경 */
+            border: 1px solid var(--border-light); /* 연한 테두리 */
+            border-radius: 6px;
+            color: var(--choco-dark); /* 어두운 텍스트 */
+            margin: 0;
+        }
+        td form button:hover {
+            background: var(--choco-accent);
+            color: var(--cream-card);
+        }
+    </style>
 </head>
 <body>
-<h1>매장 대시보드</h1>
+<div th:replace="~{common/header :: headerFragment}"></div>
 
-<div th:if="${waitingCount > 0}" class="alert alert-warning" style="margin-bottom: 16px;">
-    <strong>새로운 예약이 있습니다.</strong><br/>
-    현재 대기 중인 예약이
-    <span th:text="${waitingCount}">0</span>건 있습니다.
-    <a th:href="@{/store/reservations/today}">당일 예약 리스트 보기</a>
+<div class="wrap-container">
+
+<h1><i class="fas fa-chart-line" style="margin-right: 10px; color: var(--choco-main);"></i> 매장 대시보드</h1>
+
+<div th:if="${waitingCount > 0}" class="card waiting-alert-card alert-warning">
+    <div>
+        <strong>새로운 예약이 있습니다!</strong><br/>
+        <span th:text="${waitingCount}" class="waiting-count">0</span>
+        <span style="font-size: 18px;">건의 예약 요청이 대기 중입니다.</span>
+    </div>
+    <div>
+        <a th:href="@{/store/reservation/today}" class="btn-primary btn-link">
+            <i class="fas fa-arrow-right"></i> 당일 예약 처리하기
+        </a>
+    </div>
 </div>
 
-<div th:if="${waitingCount == 0}" class="alert alert-info" style="margin-bottom: 16px;">
-    현재 대기 중인 예약이 없습니다.
+<div th:if="${waitingCount == 0}" class="card waiting-alert-card alert-info">
+    <div style="font-size: 18px; color: var(--choco-dark);">
+        <i class="fas fa-check-circle" style="margin-right: 5px; color: var(--choco-accent);"></i> 현재 대기 중인 예약이 없습니다.
+    </div>
+    <div>
+        <a th:href="@{/store/reservation/today}" class="btn-secondary btn-link">
+            오늘 예약 전체 보기
+        </a>
+    </div>
 </div>
 
-<p th:text="'매장 이름: ' + ${store.name}"></p>
-<p th:text="'주소: ' + ${store.address}"></p>
-<p th:text="'전화번호: ' + ${store.phone}"></p>
+<div class="dashboard-grid">
 
-<!-- 현재 영업시간 간단 표시 -->
-<h3>영업시간 / 브레이크타임</h3>
-<table border="1">
-    <tr>
-        <th>요일</th>
-        <th>영업 여부</th>
-        <th>시작</th>
-        <th>종료</th>
-        <th>브레이크 시작</th>
-        <th>브레이크 종료</th>
-    </tr>
-    <tr th:each="s : ${schedules}">
-        <td th:text="${s.dayOfWeekName}">0</td>
-        <td th:text="${s.isOpen}">Y</td>
-        <td th:text="${s.openTime}">10:00</td>
-        <td th:text="${s.closeTime}">22:00</td>
-        <td th:text="${s.breakStart}">15:00</td>
-        <td th:text="${s.breakEnd}">17:00</td>
-    </tr>
-</table>
+    <div class="card store-info-card" style="margin-top: 15px;">
+        <h3><i class="fas fa-store" style="margin-right: 5px; color: var(--choco-accent);"></i> 매장 기본 정보</h3>
+        <p><strong>이름:</strong> <span th:text="${store.name}">매장 이름</span></p>
+        <p><strong>주소:</strong> <span th:text="${store.address}">주소</span></p>
+        <p><strong>전화번호:</strong> <span th:text="${store.phone}">전화번호</span></p>
 
-<a th:href="@{/store/schedule/edit}">영업시간 수정 및 생성</a>
+        <div class="action-group">
+            <a th:href="@{/store/reservation/today}" class="btn-primary btn-link">당일 예약 리스트</a>
+            <a th:href="@{/store/reservation/list}" class="btn-primary btn-link">날짜별 예약 리스트</a>
+        </div>
+        
+        <div class="logout-link">
+             <a th:href="@{/logout}" class="btn-secondary btn-link" style="color: var(--danger-color); border-color: var(--border-light);">
+                <i class="fas fa-sign-out-alt"></i> 로그아웃
+             </a>
+        </div>
+    </div>
+    
+    <div class="details-section">
+        
+        <div class="card table-container">
+            <h3><i class="fas fa-clock" style="margin-right: 5px; color: var(--choco-accent);"></i> 영업시간 / 브레이크타임</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>요일</th>
+                        <th>영업</th>
+                        <th>시작</th>
+                        <th>종료</th>
+                        <th>브레이크 시작</th>
+                        <th>브레이크 종료</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="s : ${schedules}">
+                        <td th:text="${s.dayOfWeekName}">월</td>
+                        <td th:text="${s.isOpen == 'Y' ? '영업' : '휴무'}">영업</td>
+                        <td th:text="${s.openTime}">10:00</td>
+                        <td th:text="${s.closeTime}">22:00</td>
+                        <td th:text="${s.breakStart ?: '-'}">-</td>
+                        <td th:text="${s.breakEnd ?: '-'}">-</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="action-group" style="justify-content: flex-end; margin-top: 15px;">
+                <a th:href="@{/store/schedule/edit}" class="btn-secondary btn-link">영업시간 수정</a>
+            </div>
+        </div>
 
-<hr>
+        <div class="card table-container" style="margin-top: 25px;">
+            <h3><i class="fas fa-utensils" style="margin-right: 5px; color: var(--choco-accent);"></i> 테이블 타입 관리</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>타입명</th>
+                        <th>최대 인원</th>
+                        <th>개수</th>
+                        <th>관리</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="t : ${tableTypes}">
+                        <td th:text="${t.name}">2인석</td>
+                        <td th:text="${t.capacity}">2</td>
+                        <td th:text="${t.quantity}">3</td>
+                        <td>
+                            <form th:action="@{|/store/table/delete/${t.seqStoreTable}|}" method="post"
+                                  style="display:inline;" onsubmit="return confirm('정말로 해당 테이블 타입을 삭제하시겠습니까?');">
+                                <button type="submit">삭제</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="action-group" style="justify-content: flex-end; margin-top: 15px;">
+                <a th:href="@{/store/table/edit}" class="btn-secondary btn-link">테이블 수정</a>
+                <a th:href="@{/store/table/add}" class="btn-primary btn-link">테이블 추가</a>
+            </div>
+        </div>
+        
+    </div> 
+</div> 
 
-<h3>테이블 타입</h3>
-<table border="1">
-    <tr>
-        <th>타입명</th>
-        <th>테이블 최대 인원</th>
-        <th>테이블 개수</th>
-        <th>관리</th>
-    </tr>
-    <tr th:each="t : ${tableTypes}">
-        <td th:text="${t.name}">2인석</td>
-        <td th:text="${t.capacity}">2</td>
-        <td th:text="${t.quantity}">3</td>
-        <td>
-            <form th:action="@{|/store/table/delete/${t.seqStoreTable}|}" method="post"
-                  style="display:inline;">
-                <button type="submit">삭제</button>
-            </form>
-        </td>
-    </tr>
-</table>
-
-<a th:href="@{/store/table/edit}" class="btn btn-secondary">|테이블수정|</a>
-
-<a th:href="@{/store/table/add}" class="btn btn-secondary">|테이블추가|</a>
-
-<a th:href="@{/store/reservation/today}">|당일 예약 리스트|</a>
-
-<a th:href="@{/store/reservation/list}">|날짜별 예약 리스트|</a>
-
-<a th:href="@{/logout}">로그아웃</a>
-
+</div>
 </body>
 </html>

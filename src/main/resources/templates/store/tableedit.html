@@ -1,47 +1,184 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta charset="UTF-8">
-	<title>테이블 타입 수정</title>
-	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+  <meta charset="UTF-8">
+  <title>테이블 타입 수정</title>
+  <style>
+    :root {
+      --color-primary: #ff3b1a;
+      --color-accent: #6D4C41;
+      --color-border: #eee;
+      --color-shadow: 0 4px 12px rgba(0,0,0,.06);
+      --border-radius: 12px;
+    }
+    body { font-family: 'Malgun Gothic', 'Dotum', sans-serif; background-color: #f8f8f8; color: #333; }
+    .wrap-container { max-width: 700px; margin: 40px auto; padding: 30px; background: #fff; border-radius: 18px; box-shadow: var(--color-shadow); }
+    h2 { color: var(--color-accent); border-bottom: 3px solid var(--color-primary); padding-bottom: 10px; margin-bottom: 25px; font-weight: 900; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; }
+    th, td { border: none; border-bottom: 1px solid var(--color-border); padding: 12px 10px; text-align: center; font-size: 14px; }
+    th { background-color: #f5f5f5; color: #555; font-weight: 700; border-bottom: 2px solid #ddd; }
+    tr:nth-child(even) { background-color: #fafafa; }
+    tr:hover { background-color: #fffaf8; }
+
+    input[type="text"], input[type="number"], select {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      width: 120px;
+      text-align: center;
+    }
+    .custom-name { width: 140px; }
+
+    .btn, button[type="submit"], a {
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all .15s ease;
+      margin-right: 10px;
+      display: inline-block;
+      text-decoration: none;
+      line-height: 1.4;
+    }
+    button[type="submit"] { background: var(--color-primary); color: #fff; border: none; }
+    button[type="submit"]:hover { background: #e63617; }
+    a { background: #fff; color: #555; border: 1px solid #ddd; }
+    a:hover { background: #f0f0f0; }
+    .action-group { margin-top: 30px; }
+  </style>
+
+  <script th:inline="javascript">
+    const PRESETS = ["홀", "룸", "바", "테라스", "창가"];
+
+    function renderPresetOptions(selectedValue) {
+      const opts = ['<option value="">-- 선택 --</option>'];
+      PRESETS.forEach(v => {
+        const sel = (v === selectedValue) ? 'selected' : '';
+        opts.push(`<option value="${v}" ${sel}>${v}</option>`);
+      });
+      opts.push(`<option value="_CUSTOM_" ${(selectedValue==="_CUSTOM_")?'selected':''}>기타(직접입력)</option>`);
+      return opts.join('');
+    }
+
+    function handlePresetChange(selectEl) {
+      const tr = selectEl.closest('tr');
+      const customInput = tr.querySelector('input[name="customName"]');
+
+      if (selectEl.value === "_CUSTOM_") {
+        customInput.disabled = false;
+        customInput.required = true;
+        customInput.focus();
+      } else {
+        customInput.value = "";
+        customInput.disabled = true;
+        customInput.required = false;
+      }
+    }
+
+    function beforeSubmit(e) {
+      const rows = document.querySelectorAll('tbody tr[data-row="1"]');
+      for (const row of rows) {
+        const sel = row.querySelector('select[name="namePreset"]');
+        const custom = row.querySelector('input[name="customName"]');
+        const realName = row.querySelector('input[name="name"]'); // 서버로 보낼 진짜 name
+
+        if (!sel || !realName) continue;
+
+        if (sel.value === "_CUSTOM_") {
+          if (!custom.value.trim()) {
+            alert("기타(직접입력)을 선택했으면 테이블명을 입력해야 합니다.");
+            e.preventDefault();
+            return;
+          }
+          realName.value = custom.value.trim();
+        } else {
+          if (!sel.value) {
+            alert("테이블 타입을 선택해 주세요.");
+            e.preventDefault();
+            return;
+          }
+          realName.value = sel.value;
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // 각 행의 기존 name 값을 보고 preset / custom 초기 세팅
+      document.querySelectorAll('tr[data-row="1"]').forEach(tr => {
+        const currentName = tr.getAttribute('data-current-name'); // th로 박아넣을 예정
+        const sel = tr.querySelector('select[name="namePreset"]');
+        const custom = tr.querySelector('input[name="customName"]');
+
+        if (!sel) return;
+
+        if (PRESETS.includes(currentName)) {
+          sel.innerHTML = renderPresetOptions(currentName);
+          custom.disabled = true;
+          custom.required = false;
+          custom.value = "";
+        } else {
+          sel.innerHTML = renderPresetOptions("_CUSTOM_");
+          custom.disabled = false;
+          custom.required = true;
+          custom.value = currentName || "";
+        }
+
+        sel.addEventListener('change', function(){ handlePresetChange(this); });
+      });
+
+      const form = document.querySelector('form');
+      if (form) form.addEventListener('submit', beforeSubmit);
+    });
+  </script>
 </head>
 <body>
-<h2>테이블 타입 수정 / 추가</h2>
+<div th:replace="~{common/header :: headerFragment}"></div>
 
-<form th:action="@{/store/table/edit}" method="post">
-    <table border="1">
-        <thead>
-        <tr>
-            <th>테이블명</th>
-            <th>정원</th>
-            <th>수량</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="t : ${tableTypes}">
-            <!-- seqStoreTable: 숨김 필드 -->
-            <input type="hidden" name="seqStoreTable"
-                   th:value="${t.seqStoreTable}"/>
+<div class="wrap-container">
+  <h2>테이블 타입 수정</h2>
 
-            <td>
-                <input type="text" name="name"
-                       th:value="${t.name}"/>
-            </td>
-            <td>
-                <input type="number" name="capacity"
-                       th:value="${t.capacity}"/>
-            </td>
-            <td>
-                <input type="number" name="quantity"
-                       th:value="${t.quantity}"/>
-            </td>
-        </tr>
-        </tbody>
+  <form th:action="@{/store/table/edit}" method="post">
+    <table>
+      <thead>
+      <tr>
+        <th>테이블명(타입)</th>
+        <th>정원</th>
+        <th>수량</th>
+      </tr>
+      </thead>
+
+      <tbody>
+      <tr th:each="t : ${tableTypes}"
+          data-row="1"
+          th:attr="data-current-name=${t.name}">
+        <input type="hidden" name="seqStoreTable" th:value="${t.seqStoreTable}"/>
+
+        <!-- 서버로 보내는 진짜 name (hidden으로) -->
+        <input type="hidden" name="name" th:value="${t.name}"/>
+
+        <td>
+          <select name="namePreset"></select>
+          <input type="text" class="custom-name" name="customName" placeholder="직접 입력" disabled />
+        </td>
+
+        <td>
+          <input type="number" name="capacity" min="1" th:value="${t.capacity}" required/>
+        </td>
+
+        <td>
+          <input type="number" name="quantity" min="1" th:value="${t.quantity}" required/>
+        </td>
+      </tr>
+      </tbody>
     </table>
 
-    <button type="submit">수정 저장</button>
-    <a th:href="@{/store/dashboard}">대시보드로 돌아가기</a>
-</form>
-
+    <div class="action-group">
+      <button type="submit">수정 저장</button>
+      <a th:href="@{/store/dashboard}">대시보드로 돌아가기</a>
+    </div>
+  </form>
+</div>
 </body>
 </html>

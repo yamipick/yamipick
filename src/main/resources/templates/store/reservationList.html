@@ -3,161 +3,269 @@
 <head>
 	<meta charset="UTF-8">
 	<title>날짜별 예약 리스트</title>
-	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 	<style>
-        body {
-            font-family: sans-serif;
-            max-width: 900px;
-            margin: 40px auto;
-        }
-        h1 {
-            margin-bottom: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            border-bottom: 1px solid #ddd;
-            padding: 8px 10px;
-            text-align: center;
-        }
-        th {
-            background-color: #f5f5f5;
-        }
-        .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-        }
-        .badge-wait {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        .badge-done {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .badge-cancel {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .badge-reject {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .badge-expired {
-		    background-color: #b2bec3; /* 회색 계열 예시 */
-		    color: #2d3436;
-		}
-        .badge-etc {
-            background-color: #e2e3e5;
-            color: #383d41;
+        /* -------------------------------------------------------
+           Warm Choco & Cream Theme Variables (대시보드와 통일)
+        ------------------------------------------------------- */
+        :root {
+            --choco-dark: #3E2723; /* 텍스트 및 최강조 (Dark Brown) */
+            --choco-main: #6D4C41; /* 메인 초코 브라운 (Primary) */
+            --choco-accent: #A1887F; /* 부드러운 강조색 (Point) */
+            --cream-light: #FFFCF5; /* 배경색 */
+            --cream-card: #fff; /* 카드 내부 배경 */
+            --cream-dark: #EFEBE9; /* 테이블 호버 배경 / 입력 필드 배경 */
+            --border-light: #D7CCC8; /* 연한 코코아색 테두리 */
+            --shadow: 0 4px 15px rgba(109, 76, 65, 0.08); /* 따뜻한 그림자 */
+            --danger-color: #B71C1C; /* 삭제/로그아웃 등 */
+            --success-color: #4CAF50; /* 완료 (시인성 위해 일반적인 성공색 사용) */
+            --radius-l: 18px;
+            --radius-s: 8px;
         }
 
-        .top-actions {
-            margin-bottom: 10px;
+        /* -------------------------------------------------------
+           기본 스타일 및 레이아웃
+        ------------------------------------------------------- */
+        body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; background-color: var(--cream-light); color: var(--choco-dark); padding-top: 60px; }
+        .wrap-container { 
+            max-width: 1100px; 
+            margin: 40px auto; 
+            padding: 30px; 
+            background: var(--cream-card); 
+            border-radius: var(--radius-l); 
+            box-shadow: var(--shadow); 
+        }
+        
+        h1 { 
+            color: var(--choco-dark); 
+            border-bottom: 3px solid var(--choco-accent); 
+            padding-bottom: 10px; 
+            margin-bottom: 25px; 
+            font-weight: 900; 
+            font-size: 26px;
+        }
+        a { text-decoration: none; color: var(--choco-main); }
+        a:hover { text-decoration: underline; }
+
+        /* -------------------------------------------------------
+           Form & Date Selector
+        ------------------------------------------------------- */
+        .date-selector-form {
             display: flex;
-            justify-content: space-between;
+            gap: 10px;
             align-items: center;
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-s);
+            background-color: var(--cream-dark);
         }
-        a.button {
-            padding: 6px 10px;
-            border-radius: 6px;
-            background: #007bff;
-            color: white;
+        .date-selector-form input[type="date"] {
+            padding: 8px 12px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-s);
+            background-color: var(--cream-card);
+            color: var(--choco-dark);
+            font-size: 16px;
+            outline: none;
+        }
+
+        /* -------------------------------------------------------
+           Table Style (대시보드와 통일)
+        ------------------------------------------------------- */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 10px; 
+            background: var(--cream-card); 
+            border-radius: var(--radius-s); 
+            overflow: hidden; 
+            border: 1px solid var(--border-light);
+        }
+        th, td { 
+            border: none; 
+            border-bottom: 1px solid var(--border-light); 
+            padding: 12px 10px; 
+            text-align: center; 
+            font-size: 14px; 
+        }
+        th { 
+            background-color: var(--choco-accent); 
+            color: var(--cream-card); 
+            font-weight: 700; 
+        }
+        tr:nth-child(even) { background-color: #fcfcf9; } 
+        tr:hover { background-color: var(--cream-dark); } 
+
+        /* -------------------------------------------------------
+           Badge Style (상태 표시)
+        ------------------------------------------------------- */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        /* 대기 (Waiting) */
+        .badge-wait {
+            background-color: #FFF8E1; /* Light Yellow */
+            color: var(--choco-main);
+            border: 1px solid #FFECB3;
+        }
+
+        /* 완료 (Confirmed/Done) */
+        .badge-done {
+            background-color: #E8F5E9; /* Light Green */
+            color: var(--success-color);
+            border: 1px solid #C8E6C9;
+        }
+
+        /* 취소 (Canceled) */
+        .badge-cancel, .badge-reject, .badge-expired {
+            background-color: var(--cream-dark); /* Grayish */
+            color: var(--choco-accent); 
+            border: 1px solid var(--border-light);
+        }
+        
+        /* -------------------------------------------------------
+           Button Style (대시보드와 통일)
+        ------------------------------------------------------- */
+        .btn-link, .btn-primary, .btn-secondary, button[type="submit"] {
+            padding: 8px 15px; /* 테이블 내부 버튼은 조금 작게 */
+            border-radius: var(--radius-s);
+            cursor: pointer;
+            font-weight: 700;
+            transition: all .15s ease;
+            display: inline-block;
             text-decoration: none;
-            font-size: 14px;
+            line-height: 1.2;
+            white-space: nowrap;
+            font-size: 13px; 
         }
-        a.button:hover {
-            background: #0056b3;
+        
+        /* 주 버튼 (Dark Choco) - 확정 */
+        .btn-primary {
+            background: var(--choco-main);
+            color: var(--cream-light);
+            border: none;
         }
+        .btn-primary:hover {
+            background: var(--choco-dark);
+        }
+
+        /* 보조 버튼/링크 (Cream Border) - 반려 */
+        .btn-secondary {
+            background: var(--cream-card);
+            color: var(--choco-main);
+            border: 1px solid var(--border-light);
+        }
+        .btn-secondary:hover {
+            background: var(--cream-dark);
+            color: var(--choco-dark);
+        }
+
+        /* 반려 사유 입력 필드 */
+        .reject-form input[type="text"] {
+             padding: 6px;
+             border: 1px solid var(--border-light);
+             border-radius: var(--radius-s);
+             width: 100px;
+             margin-right: 5px;
+        }
+
     </style>
 </head>
 <body>
 
-<h1 th:text="${store.name} + ' - 날짜별 예약 리스트'">날짜별 예약 리스트</h1>
+<div th:replace="~{common/header :: headerFragment}"></div>
 
-<a th:href="@{/store/dashboard}">← 매장 대시보드로</a>
-&nbsp;|&nbsp;
-<a th:href="@{/store/reservation/today}">당일 예약 리스트</a>
+<div class="wrap-container">
 
-<hr/>
+    <h1><i class="fas fa-calendar-alt" style="margin-right: 10px; color: var(--choco-main);"></i> 날짜별 예약 리스트</h1>
 
-<!-- 날짜 선택 폼 (GET으로 같은 페이지 호출) -->
-<form th:action="@{/store/reservation/list}" method="get" style="margin-bottom: 16px;">
-    <label for="date">조회 날짜: </label>
-    <input type="date"
-           id="date"
-           name="date"
-           th:value="${#temporals.format(date, 'yyyy-MM-dd')}" />
-    <button type="submit">조회</button>
-</form>
+    <form th:action="@{/store/reservation/list}" method="get" class="date-selector-form">
+        <label for="selectedDate" style="color: var(--choco-dark); font-weight: 600;">날짜 선택:</label>
+        <input type="date" id="selectedDate" name="date" th:value="${#temporals.format(selectedDate, 'yyyy-MM-dd')}"/>
+        <button type="submit" class="btn-primary">
+            <i class="fas fa-search"></i> 조회
+        </button>
+        <a th:href="@{/store/dashboard}" class="btn-secondary" style="margin-left: auto;">
+            <i class="fas fa-undo"></i> 대시보드로 돌아가기
+        </a>
+    </form>
 
-<table border="1" cellpadding="8" cellspacing="0">
-    <thead>
-    <tr>
-        <th>시간</th>
-        <th>손님 닉네임</th>
-        <th>인원</th>
-        <th>테이블 타입</th>
-        <th>상태</th>
-        <th>취소 사유</th>
-        <th>작업</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:if="${#lists.isEmpty(reservations)}">
-        <td colspan="7">해당 날짜에 예약이 없습니다.</td>
-    </tr>
+    <p style="margin-bottom: 15px; font-weight: 500; font-size: 1.1em;">
+        <span style="color: var(--choco-main);" th:text="${#temporals.format(selectedDate, 'yyyy년 MM월 dd일')}"></span> 예약 목록 (총 <span th:text="${reservations.size()}" style="font-weight: 700; color: var(--danger-color);">0</span>건)
+    </p>
 
-    <tr th:each="r : ${reservations}">
-        <td th:text="${r.reserveTime}">18:00</td>
-        <td th:text="${r.nickname}">손님닉네임</td>
-        <td th:text="${r.peopleCount}">2</td>
-        <td th:text="${r.tableTypeName}">창가석</td>
+    <table>
+        <thead>
+            <tr>
+                <th>순번</th>
+                <th>예약 시간</th>
+                <th>손님</th>
+                <th>인원</th>
+                <th>테이블 타입</th>
+                <th>요청 사항</th>
+                <th>상태</th>
+                <th>취소/반려 사유</th>
+                <th>작업</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="r, status : ${reservations}">
+                <td th:text="${status.count}">1</td>
+                <td th:text="${r.reserveTime}">18:00</td>
+                <td th:text="${r.nickname}">손님 닉네임</td>
+                <td th:text="${r.peopleCount}">4</td>
+                <td th:text="${r.tableTypeName}">2인석</td>
+                <td th:text="${r.request}">조용한 자리 부탁드립니다.</td>
+                <td>
+                    <span 
+                        th:text="${r.status}"
+                        th:class="'badge ' + (${r.status} == '대기' ? 'badge-wait' :
+                                  (${r.status} == '완료' ? 'badge-done' :
+                                  (${r.status} == '취소' ? 'badge-cancel' : 
+                                  (${r.status} == '반려' ? 'badge-reject' :
+                                  (${r.status} == '만료' ? 'badge-expired' : 'badge-etc')))))">
+                        예약 상태
+                    </span>
+                </td>
+                <td th:text="${r.cancelReason ?: '-'}">-</td>
 
-        <!-- 상태 뱃지: 너가 list에서 쓰던 방식에 맞춰서 작성 -->
-        <td>
-	            <span th:text="${r.status == '취소' ? '취소완료' : r.status}"
-			          th:class="'badge ' + (${r.status} == '대기' ? 'badge-wait' :
-			                                  (${r.status} == '완료' ? 'badge-done' :
-			                                  (${r.status} == '취소' ? 'badge-cancel' : 
-			                                  (${r.status} == '반려' ? 'badge-reject' :
-			                                  (${r.status} == '만료' ? 'badge-expired' : 'badge-etc')))))">
-			        예약 상태
-			    </span>
-	        </td>
-        <td th:text="${r.cancelReason}">취소 사유</td>
+                <td>
+                    <div th:if="${r.status == '대기'}">
+                        <form th:action="@{|/store/reservation/${r.seqReservation}/confirm|}"
+                              method="post"
+                              style="display:inline;"
+                              onsubmit="return confirm('정말 이 예약을 확정하시겠습니까?');">
+                            <button type="submit" class="btn-primary">확정</button>
+                        </form>
 
-        <td>
-            <!-- 대기 상태일 때만 확정/취소 버튼 노출 -->
-            <div th:if="${r.status == '대기'}">
-                <form th:action="@{|/store/reservation/${r.seqReservation}/confirm|}"
-                      method="post"
-                      style="display:inline;">
-                    <button type="submit">확정</button>
-                </form>
+                        <form th:action="@{|/store/reservation/${r.seqReservation}/cancel|}"
+                              method="post"
+                              style="display:inline; margin-top: 5px;"
+                              class="reject-form">
+                            <input type="text" name="reason" placeholder="반려 사유" required />
+                            <button type="submit" class="btn-secondary" 
+                                    style="color: var(--danger-color); border-color: var(--danger-color);">
+                                반려
+                            </button>
+                        </form>
+                    </div>
 
-                <form th:action="@{|/store/reservation/${r.seqReservation}/cancel|}"
-                      method="post"
-                      style="display:inline;"
-                      onsubmit="return confirm('정말 이 예약을 반려하시겠습니까?');">
-                    <input type="text" name="reason" placeholder="반려 사유" required />
-                    <button type="submit">반려</button>
-                </form>
-            </div>
+                    <div th:if="${r.status != '대기'}">
+                        -
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 
-            <!-- 대기 아니면 버튼 대신 간단 표시 (선택) -->
-            <div th:if="${r.status != '대기'}">
-                처리 완료
-            </div>
-        </td>
-    </tr>
-    </tbody>
-</table>
+</div>
 
 </body>
 </html>

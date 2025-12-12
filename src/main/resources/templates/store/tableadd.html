@@ -1,57 +1,214 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta charset="UTF-8">
-	<title>Thymeleaf</title>
-	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
-	<script>
-        // 행 추가용 간단 JS
-        function addRow() {
-            const tbody = document.getElementById('newTableBody');
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><input type="text" name="newTableTypeName" placeholder="테이블명"></td>
-                <td><input type="number" name="newTableCapacity" placeholder="정원"></td>
-                <td><input type="number" name="newTableQuantity" placeholder="수량"></td>
-                <td><button type="button" onclick="removeRow(this)">삭제</button></td>
-            `;
-            tbody.appendChild(tr);
+  <meta charset="UTF-8">
+  <title>테이블 타입 추가</title>
+  <style>
+    :root {
+      --color-primary: #ff3b1a;
+      --color-accent: #6D4C41;
+      --color-border: #eee;
+      --color-shadow: 0 4px 12px rgba(0,0,0,.06);
+      --border-radius: 12px;
+    }
+    body { font-family: 'Malgun Gothic', 'Dotum', sans-serif; background-color: #f8f8f8; color: #333; }
+    .wrap-container { max-width: 700px; margin: 40px auto; padding: 30px; background: #fff; border-radius: 18px; box-shadow: var(--color-shadow); }
+    h2 { color: var(--color-accent); border-bottom: 3px solid var(--color-primary); padding-bottom: 10px; margin-bottom: 25px; font-weight: 900; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; }
+    th, td { border: none; border-bottom: 1px solid var(--color-border); padding: 12px 10px; text-align: center; font-size: 14px; }
+    th { background-color: #f5f5f5; color: #555; font-weight: 700; border-bottom: 2px solid #ddd; }
+    tr:nth-child(even) { background-color: #fafafa; }
+    tr:hover { background-color: #fffaf8; }
+
+    input[type="text"], input[type="number"], select {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      width: 120px;
+      text-align: center;
+    }
+    .custom-name { width: 140px; }
+
+    .btn, button[type="submit"], button[type="button"], a {
+      padding: 8px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all .15s ease;
+      display: inline-block;
+      text-decoration: none;
+      margin-right: 5px;
+      line-height: 1.4;
+    }
+    button[type="submit"] { background: var(--color-primary); color: #fff; border: none; }
+    button[type="submit"]:hover { background: #e63617; }
+    button[type="button"], a { background: #f0f0f0; color: #555; border: 1px solid #ddd; }
+    button[type="button"]:hover, a:hover { background: #e0e0e0; }
+
+    .action-group { margin-top: 20px; }
+  </style>
+
+  <script>
+    const PRESETS = ["홀", "룸", "바", "테라스", "창가"];
+
+    function renderPresetOptions(selectedValue) {
+      const opts = ['<option value="">-- 선택 --</option>'];
+      PRESETS.forEach(v => {
+        const sel = (v === selectedValue) ? 'selected' : '';
+        opts.push(`<option value="${v}" ${sel}>${v}</option>`);
+      });
+      // 필요하면 기타(직접입력)도
+      opts.push(`<option value="_CUSTOM_" ${(selectedValue==="_CUSTOM_")?'selected':''}>기타(직접입력)</option>`);
+      return opts.join('');
+    }
+
+    function syncDisabledOptions() {
+      const selects = document.querySelectorAll('select[name="newTableTypeName"]');
+      const picked = new Set();
+      selects.forEach(s => {
+        const v = s.value;
+        if (v && v !== "_CUSTOM_") picked.add(v);
+      });
+
+      selects.forEach(s => {
+        const my = s.value;
+        Array.from(s.options).forEach(o => {
+          const v = o.value;
+          if (!v || v === "_CUSTOM_") return;
+          // 내가 선택한 건 살려두고, 남이 선택한 건 막기
+          o.disabled = picked.has(v) && v !== my;
+        });
+      });
+    }
+
+    function handlePresetChange(selectEl) {
+      const tr = selectEl.closest('tr');
+      const customInput = tr.querySelector('input[name="newTableCustomName"]');
+
+      if (selectEl.value === "_CUSTOM_") {
+        customInput.disabled = false;
+        customInput.required = true;
+        customInput.placeholder = "직접 입력";
+        customInput.focus();
+      } else {
+        customInput.value = "";
+        customInput.disabled = true;
+        customInput.required = false;
+      }
+
+      syncDisabledOptions();
+    }
+
+    function addRow() {
+      const tbody = document.getElementById('newTableBody');
+      const tr = document.createElement('tr');
+
+      tr.innerHTML = `
+        <td>
+          <select name="newTableTypeName" onchange="handlePresetChange(this)" required>
+            ${renderPresetOptions("")}
+          </select>
+          <input type="text" class="custom-name" name="newTableCustomName" placeholder="직접 입력"
+                 disabled />
+        </td>
+        <td><input type="number" name="newTableCapacity" placeholder="2" value="2" min="1" required></td>
+        <td><input type="number" name="newTableQuantity" placeholder="1" value="1" min="1" required></td>
+        <td><button type="button" onclick="removeRow(this)">삭제</button></td>
+      `;
+
+      tbody.appendChild(tr);
+      syncDisabledOptions();
+    }
+
+    function removeRow(btn) {
+      const tbody = document.getElementById('newTableBody');
+      if (tbody.children.length <= 1) {
+        alert('테이블 타입은 최소 1개 이상 필요합니다.');
+        return;
+      }
+      btn.closest('tr').remove();
+      syncDisabledOptions();
+    }
+
+    // 폼 제출 직전: 기타(_CUSTOM_)면 select 값 대신 custom을 name으로 보내기
+    function beforeSubmit(e) {
+      const rows = document.querySelectorAll('#newTableBody tr');
+      for (const row of rows) {
+        const sel = row.querySelector('select[name="newTableTypeName"]');
+        const custom = row.querySelector('input[name="newTableCustomName"]');
+
+        if (sel.value === "_CUSTOM_") {
+          if (!custom.value.trim()) {
+            alert("기타(직접입력)을 선택했으면 테이블명을 입력해야 합니다.");
+            e.preventDefault();
+            return;
+          }
+          // 서버로는 newTableTypeName에 최종 이름이 들어가게 강제
+          sel.value = custom.value.trim();
         }
 
-        function removeRow(btn) {
-            const tr = btn.parentElement.parentElement;
-            tr.remove();
+        if (!sel.value) {
+          alert("테이블 타입을 선택해 주세요.");
+          e.preventDefault();
+          return;
         }
-    </script>
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // 초기 1줄도 select로 세팅
+      const firstSel = document.querySelector('select[name="newTableTypeName"]');
+      if (firstSel) {
+        firstSel.innerHTML = renderPresetOptions("");
+        firstSel.addEventListener('change', function() { handlePresetChange(this); });
+      }
+      syncDisabledOptions();
+
+      const form = document.querySelector('form');
+      if (form) form.addEventListener('submit', beforeSubmit);
+    });
+  </script>
 </head>
 <body>
+<div th:replace="~{common/header :: headerFragment}"></div>
 
-	<h2>매장 테이블 추가</h2>
-<form th:action="@{/store/table/add}" method="post">
-    <table border="1">
-        <thead>
-        <tr>
-            <th>테이블명</th>
-            <th>정원</th>
-            <th>수량</th>
-            <th>관리</th>
-        </tr>
-        </thead>
-        <tbody id="newTableBody">
-        <!-- 기본 한 줄 -->
-        <tr>
-            <td><input type="text" name="newTableTypeName" placeholder="테이블명"></td>
-            <td><input type="number" name="newTableCapacity" placeholder="정원"></td>
-            <td><input type="number" name="newTableQuantity" placeholder="수량"></td>
-            <td><button type="button" onclick="removeRow(this)">삭제</button></td>
-        </tr>
-        </tbody>
+<div class="wrap-container">
+  <h2>매장 테이블 추가</h2>
+
+  <form th:action="@{/store/table/add}" method="post">
+    <table>
+      <thead>
+      <tr>
+        <th>테이블명(타입)</th>
+        <th>정원</th>
+        <th>수량</th>
+        <th>관리</th>
+      </tr>
+      </thead>
+
+      <tbody id="newTableBody">
+      <tr>
+        <td>
+          <select name="newTableTypeName" onchange="handlePresetChange(this)" required>
+            <!-- DOMContentLoaded에서 옵션 채움 -->
+          </select>
+          <input type="text" class="custom-name" name="newTableCustomName" placeholder="직접 입력" disabled />
+        </td>
+        <td><input type="number" name="newTableCapacity" value="1" min="1" required></td>
+        <td><input type="number" name="newTableQuantity" value="1" min="1" required></td>
+        <td><button type="button" onclick="removeRow(this)">삭제</button></td>
+      </tr>
+      </tbody>
     </table>
 
-    <button type="button" onclick="addRow()">행 추가</button>
-    <button type="submit">추가 저장</button>
-    <a th:href="@{/store/dashboard}">대시보드로 돌아가기</a>
-</form>
-	
+    <div class="action-group">
+      <button type="button" onclick="addRow()">행 추가</button>
+      <button type="submit">추가 저장</button>
+      <a th:href="@{/store/dashboard}">대시보드로 돌아가기</a>
+    </div>
+  </form>
+</div>
 </body>
 </html>

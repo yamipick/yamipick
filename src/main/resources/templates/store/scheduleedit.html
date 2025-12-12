@@ -3,15 +3,89 @@
 <head>
 <meta charset="UTF-8">
 <title>영업 시간 수정</title>
-<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+<style>
+    /* YamiPick Admin 공통 스타일 */
+    :root {
+        --color-primary: #ff3b1a;
+        --color-accent: #6D4C41;
+        --color-border: #eee;
+        --color-shadow: 0 4px 12px rgba(0,0,0,.06);
+        --border-radius: 12px;
+    }
+    body { font-family: 'Malgun Gothic', 'Dotum', sans-serif; background-color: #f8f8f8; color: #333; }
+    .wrap-container { max-width: 900px; margin: 40px auto; padding: 30px; background: #fff; border-radius: 18px; box-shadow: var(--color-shadow); }
+    h1 { color: var(--color-accent); border-bottom: 3px solid var(--color-primary); padding-bottom: 10px; margin-bottom: 25px; font-weight: 900; }
+
+    /* 테이블 스타일 */
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; }
+    th, td { border: none; border-bottom: 1px solid var(--color-border); padding: 12px 10px; text-align: center; font-size: 14px; }
+    th { background-color: #f5f5f5; color: #555; font-weight: 700; border-bottom: 2px solid #ddd; }
+    tr:nth-child(even) { background-color: #fafafa; }
+    tr:hover { background-color: #fffaf8; }
+
+    /* 입력 필드/셀렉트 박스 */
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color .15s ease;
+    }
+    select:focus {
+        border-color: var(--color-primary);
+        outline: none;
+    }
+    
+    /* 버튼 공통 */
+    .btn, button[type="submit"] {
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 700;
+        transition: all .15s ease;
+        margin-right: 10px;
+        display: inline-block;
+        text-decoration: none;
+    }
+    
+    /* 주 버튼 (등록/저장) */
+    .btn-primary, button[type="submit"] {
+        background: var(--color-primary);
+        color: #fff;
+        border: none;
+    }
+    .btn-primary:hover, button[type="submit"]:hover {
+        background: #e63617;
+    }
+
+    /* 보조 버튼 (취소/돌아가기/링크) */
+    .btn-secondary, a.btn-secondary, .btn-link {
+        background: #fff;
+        color: #555;
+        border: 1px solid #ddd;
+        text-decoration: none;
+        padding: 10px 20px;
+        line-height: 1; 
+    }
+    .btn-secondary:hover, a.btn-secondary:hover {
+        background: #f0f0f0;
+    }
+    
+    .action-group { margin-top: 30px; }
+    
+    a:not(.btn-secondary):not(.btn-link) { color: var(--color-primary); text-decoration: none; font-weight: 600; margin-left: 10px; }
+</style>
 </head>
 <body>
+<div th:replace="~{common/header :: headerFragment}"></div>
+
+<div class="wrap-container">
 
 	<h1>영업 시간 수정</h1>
 
 	<form th:action="@{/store/schedule/edit}" method="post">
 
-		<table border="1">
+		<table>
 			<thead>
 				<tr>
 					<th>요일</th>
@@ -24,7 +98,6 @@
 			</thead>
 			<tbody>
 				<tr th:each="s : ${schedules}">
-					<!-- ★ 여기! 각 행마다 seqSchedule hidden으로 보냄 -->
 					<input type="hidden" name="seqSchedule" th:value="${s.seqSchedule}" />
 
 					<td th:text="${s.dayOfWeekName}">월</td>
@@ -50,6 +123,7 @@
 					</select></td>
 
 					<td><select name="breakStart">
+                        	<option value="">— 없음 —</option>
 							<option th:each="h : ${#numbers.sequence(0,23)}"
 								th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
 								th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}"
@@ -58,6 +132,7 @@
 					</select></td>
 
 					<td><select name="breakEnd">
+                        	<option value="">— 없음 —</option>
 							<option th:each="h : ${#numbers.sequence(0,23)}"
 								th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
 								th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}"
@@ -67,12 +142,13 @@
 				</tr>
 			</tbody>
 		</table>
-
-		<button type="submit">저장</button>
-		<a th:href="@{/store/dashboard}">취소</a>
+		
+        <div class="action-group">
+		    <button type="submit" class="btn-primary">수정 저장</button>
+            <a th:href="@{/store/dashboard}" class="btn-secondary link-btn">취소하고 돌아가기</a>
+        </div>
 	</form>
 
-	<a th:href="@{/store/dashboard}">대시보드로 돌아가기</a>
-
+</div>
 </body>
 </html>

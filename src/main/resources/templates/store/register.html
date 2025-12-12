@@ -3,31 +3,136 @@
 <head>
 	<meta charset="UTF-8">
 	<title>매장등록</title>
-	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
+	<link rel="stylesheet" th:href="@{/css/common.css}">
 	
-	<!-- Kakao 지도 JS (★ JavaScript 키로 교체해야 함, REST 키 아님) -->
-    <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=7ef5d0a137417135a1ff1e08560fcc98&libraries=services"></script>
+	<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=7ef5d0a137417135a1ff1e08560fcc98&libraries=services"></script>
+    <style>
+        /* YamiPick Admin 공통 스타일 */
+        :root {
+            --color-primary: #ff3b1a;
+            --color-accent: #6D4C41;
+            --color-border: #eee;
+            --color-shadow: 0 4px 12px rgba(0,0,0,.06);
+            --border-radius: 12px;
+        }
+        body { font-family: 'Malgun Gothic', 'Dotum', sans-serif; background-color: #f8f8f8; color: #333; }
+        .wrap-container { max-width: 700px; margin: 40px auto; padding: 30px; background: #fff; border-radius: 18px; box-shadow: var(--color-shadow); }
+        h1 { color: var(--color-accent); border-bottom: 3px solid var(--color-primary); padding-bottom: 10px; margin-bottom: 25px; font-weight: 900; }
+        h3 { color: #444; margin: 30px 0 15px; font-weight: 800; }
+
+        /* Form/Input/Label 스타일 */
+        form > div, .search-area { margin-bottom: 15px; padding: 5px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 14px; }
+        
+        input[type="text"], input[type="number"], input[type="date"], select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            width: 100%; /* 기본적으로 100% 사용 */
+            box-sizing: border-box;
+            transition: border-color .15s ease;
+        }
+        select { width: auto; min-width: 150px; }
+        input[readonly] { background-color: #f5f5f5; color: #777; }
+        
+        /* 매장 검색 영역 */
+        .search-area { display: flex; gap: 10px; margin-bottom: 20px; }
+        .search-area input { flex: 1; }
+        .search-area button { 
+            width: 80px; 
+            background: var(--color-primary);
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .search-area button:hover { background: #e63617; }
+
+        /* 검색 결과 리스트 */
+        #search-result { list-style: none; padding: 0; border: 1px solid #ddd; border-radius: 8px; margin-top: 15px; max-height: 200px; overflow-y: auto; }
+        #search-result li { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 14px; }
+        #search-result li:hover { background-color: #fffaf8; color: var(--color-primary); }
+        #search-result li:last-child { border-bottom: none; }
+        
+        /* 지도 */
+        #map { width: 100% !important; height: 300px !important; margin-top: 20px; border-radius: 8px; }
+
+        /* 주 버튼 (등록/저장) */
+        button[type="submit"] {
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all .15s ease;
+            margin-top: 20px;
+            background: var(--color-primary);
+            color: #fff;
+            border: none;
+            width: 100%;
+        }
+        button[type="submit"]:hover {
+            background: #e63617;
+        }
+        
+        /* 테이블 타입 프리셋 */
+        #tableTypePreset {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        #tableTypePreset label { margin-bottom: 0; font-weight: 500; }
+
+        #selectedTableTypes > div {
+            border: 1px dashed #ddd;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        #selectedTableTypes input[type="number"] { width: 60px; padding: 5px; }
+        #selectedTableTypes button { 
+            padding: 4px 8px; 
+            font-size: 12px; 
+            font-weight: 500;
+            background: #eee;
+            border: 1px solid #ccc;
+            color: #555;
+            border-radius: 4px;
+        }
+        #selectedTableTypes button:hover { background: #e0e0e0; }
+        
+    </style>
 </head>
 <body>
+<div th:replace="~{common/header :: headerFragment}"></div>
+
+<div class="wrap-container">
+
 <h1>매장 등록</h1>
 
-<!-- 1) 매장 검색 영역 -->
-<div>
+<div class="search-area">
     <input type="text" id="keyword" placeholder="매장 이름 또는 주소를 입력하세요">
     <button type="button" onclick="searchPlaces()">검색</button>
 </div>
 
-<div id="map" style="width: 600px; height: 400px; margin-top: 10px;"></div>
+<div id="map"></div>
 
-<!-- 검색 결과 리스트 -->
 <ul id="search-result"></ul>
 
-<hr>
+<hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
 
-<!-- 2) 선택된 매장 정보 + 추가 정보 입력 폼 -->
 <form th:action="@{/store/register}" method="post">
 
-    <!-- ★ Kakao에서 넘어온 값들을 담을 hidden / readonly 필드 -->
     <div>
         <label>장소 ID</label>
         <input type="text" id="kakaoPlaceId" name="kakaoPlaceId" readonly required>
@@ -48,61 +153,56 @@
         <input type="text" id="storePhone" name="phone">
     </div>
 
-    <hr>
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
 
-    <!-- ========================= -->
-<!-- 영업 시간 / 브레이크 타임 -->
-<!-- ========================= -->
-<h3>영업 시간 설정</h3>
+    <h3>영업 시간 설정</h3>
 
-<label>영업 시작 시간</label><br>
-<select name="openTime">
-    <option th:each="h : ${#numbers.sequence(0,23)}"
-            th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
-            th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
-    </option>
-</select>
+<div>
+    <label>영업 시작 시간</label>
+    <select name="openTime">
+        <option th:each="h : ${#numbers.sequence(0,23)}"
+                th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
+        </option>
+    </select>
+</div>
 
-<br><br>
+<div>
+    <label>영업 종료 시간</label>
+    <select name="closeTime">
+        <option th:each="h : ${#numbers.sequence(0,23)}"
+                th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
+        </option>
+    </select>
+</div>
 
-<label>영업 종료 시간</label><br>
-<select name="closeTime">
-    <option th:each="h : ${#numbers.sequence(0,23)}"
-            th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
-            th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
-    </option>
-</select>
+<div style="margin-top: 25px;">
+    <label>브레이크 시작 시간</label>
+    <select name="breakStart">
+        <option value="">— 없음 —</option>
+        <option th:each="h : ${#numbers.sequence(0,23)}"
+                th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
+        </option>
+    </select>
+</div>
 
-<br><br>
+<div>
+    <label>브레이크 종료 시간</label>
+    <select name="breakEnd">
+        <option value="">— 없음 —</option>
+        <option th:each="h : ${#numbers.sequence(0,23)}"
+                th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
+        </option>
+    </select>
+</div>
 
-<label>브레이크 시작 시간</label><br>
-<select name="breakStart">
-    <option value="">— 없음 —</option>
-    <option th:each="h : ${#numbers.sequence(0,23)}"
-            th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
-            th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
-    </option>
-</select>
+<hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
 
-<br><br>
-
-<label>브레이크 종료 시간</label><br>
-<select name="breakEnd">
-    <option value="">— 없음 —</option>
-    <option th:each="h : ${#numbers.sequence(0,23)}"
-            th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
-            th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
-    </option>
-</select>
-
-<hr>
-
-<!-- ========================= -->
-<!-- 테이블 타입 설정 (프리셋 선택) -->
-<!-- ========================= -->
 <h3>테이블 타입 설정</h3>
 
-<!-- 프리셋 선택 -->
 <div id="tableTypePreset">
     <label><input type="checkbox" value="홀" onchange="toggleTableType(this)"> 홀</label>
     <label><input type="checkbox" value="바" onchange="toggleTableType(this)"> 바</label>
@@ -113,53 +213,20 @@
 
 <br>
 
-<!-- 선택된 테이블 타입 입력 영역 -->
 <div id="selectedTableTypes"></div>
 	
-	<div th:if="${errorMessage}" style="color:red;">
+	<div th:if="${errorMessage}" style="color:red; margin-top: 15px; font-weight: 600;">
 	    [[${errorMessage}]]
 	</div>
 	
     <button type="submit">매장 등록</button>
 </form>
 
-<script>
-    function addTableTypeRow() {
-        const container = document.getElementById('tableTypeContainer');
-        const firstRow = container.querySelector('.table-type-row');
-        const newRow = firstRow.cloneNode(true);
-
-        // 새 줄의 input 값들 초기화
-        newRow.querySelectorAll('input').forEach(input => {
-            if (input.type === 'number') {
-                input.value = input.name === 'tableCapacity' ? 2 : 1;
-            } else {
-                input.value = '';
-            }
-        });
-
-        container.appendChild(newRow);
-    }
-
-    function removeTableTypeRow(btn) {
-        const container = document.getElementById('tableTypeContainer');
-        const rows = container.querySelectorAll('.table-type-row');
-
-        if (rows.length === 1) {
-            alert('최소 1개 이상의 테이블 타입이 필요합니다.');
-            return;
-        }
-
-        btn.closest('.table-type-row').remove();
-    }
-</script>
-
-<script>
+</div> <script>
     let map;
     let markers = [];
     let ps; // Places 서비스
 
-    // 지도 초기화
     window.onload = function() {
         const container = document.getElementById('map');
         const options = {
@@ -171,7 +238,6 @@
         ps = new kakao.maps.services.Places();
     };
 
-    // 검색 버튼 클릭 시 호출
     function searchPlaces() {
         const keyword = document.getElementById('keyword').value.trim();
         if (!keyword) {
@@ -179,11 +245,9 @@
             return;
         }
 
-        // 우리 서버로 AJAX 요청 -> KakaoSearchService 사용
         fetch('/api/store/search?q=' + encodeURIComponent(keyword))
             .then(res => res.json())
             .then(data => {
-                // data = RestaurantDTO 리스트
                 displayPlaces(data);
             })
             .catch(err => {
@@ -192,9 +256,7 @@
             });
     }
 
-    // 검색 결과 표시 + 지도에 마커 찍기
     function displayPlaces(places) {
-        // 이전 마커 제거
         markers.forEach(m => m.setMap(null));
         markers = [];
 
@@ -202,7 +264,7 @@
         listEl.innerHTML = '';
 
         if (!places || places.length === 0) {
-            listEl.innerHTML = '<li>검색 결과가 없습니다.</li>';
+            listEl.innerHTML = '<li style="cursor: default;">검색 결과가 없습니다.</li>';
             return;
         }
 
@@ -220,12 +282,10 @@
             markers.push(marker);
             bounds.extend(position);
 
-            // 리스트 요소
             const li = document.createElement('li');
             li.style.cursor = 'pointer';
             li.innerText = `${p.name} / ${p.address} ${p.phone ? ' / ' + p.phone : ''}`;
 
-            // 마커 & 리스트 클릭 시 해당 매장 선택
             const clickHandler = function() {
                 selectPlace(p);
                 map.panTo(position);
@@ -237,11 +297,9 @@
             listEl.appendChild(li);
         });
 
-        // 지도 범위 조정
         map.setBounds(bounds);
     }
 
-    // 매장 선택 시 폼에 값 세팅
     function selectPlace(p) {
         document.getElementById('kakaoPlaceId').value = p.id;
         document.getElementById('storeName').value = p.name;
@@ -253,10 +311,10 @@
 </script>
 <script>
 	document.querySelector("form").addEventListener("submit", function (e) {
-	    const openTime = document.querySelector("input[name='openTime']").value;
-	    const closeTime = document.querySelector("input[name='closeTime']").value;
-	    const breakStart = document.querySelector("input[name='breakStart']").value;
-	    const breakEnd = document.querySelector("input[name='breakEnd']").value;
+	    const openTime = document.querySelector("select[name='openTime']").value;
+	    const closeTime = document.querySelector("select[name='closeTime']").value;
+	    const breakStart = document.querySelector("select[name='breakStart']").value;
+	    const breakEnd = document.querySelector("select[name='breakEnd']").value;
 	
 	    if (!openTime || !closeTime) {
 	        alert("영업 시작 / 종료 시간은 반드시 설정해야 합니다.");
@@ -264,7 +322,6 @@
 	        return;
 	    }
 	
-	    // 브레이크 하나만 입력한 경우 차단
 	    if ((breakStart && !breakEnd) || (!breakStart && breakEnd)) {
 	        alert("브레이크 타임은 시작과 종료를 모두 입력해야 합니다.");
 	        e.preventDefault();
@@ -283,17 +340,16 @@ function toggleTableType(checkbox) {
 
         const div = document.createElement("div");
         div.id = rowId;
-        div.style.marginBottom = "8px";
 
         div.innerHTML = `
             <strong>${typeName}</strong>
             <input type="hidden" name="tableTypeName" value="${typeName}">
 
             <label> 테이블 최대 인원</label>
-            <input type="number" name="tableCapacity" min="1" required style="width:80px;">
+            <input type="number" name="tableCapacity" min="1" required style="width:80px;" value="2">
 
             <label> 테이블 개수</label>
-            <input type="number" name="tableQuantity" min="1" required style="width:80px;">
+            <input type="number" name="tableQuantity" min="1" required style="width:80px;" value="1">
 
             <button type="button" onclick="removeTableType('${typeName}')">삭제</button>
         `;
@@ -314,7 +370,6 @@ function removeTableType(typeName) {
     if (checkbox) checkbox.checked = false;
 }
 
-// 최소 1개 선택 검증
 document.querySelector("form").addEventListener("submit", function (e) {
     const count = document.querySelectorAll(
         "#selectedTableTypes input[name='tableTypeName']"
