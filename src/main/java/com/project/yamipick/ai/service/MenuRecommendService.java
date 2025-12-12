@@ -26,6 +26,7 @@ public class MenuRecommendService {
 
     	List<String> selectedTags = req.getPositiveTags();
         List<String> negativeTags = req.getNegativeTags();
+        List<Long> excludeMenuIds = req.getExcludeMenuIds();
         
         if (selectedTags == null || selectedTags.isEmpty()) {
             return Collections.emptyList();
@@ -35,33 +36,32 @@ public class MenuRecommendService {
         List<Menu> menus = menuRepository.findAll();
 
         return menus.stream()
+        		//최근 추천 메뉴 제외
         		.filter(menu -> {
-        			List<String> menuTags = parseTags(menu.getFlavorTags());
-        			
-        			boolean matchPositive = selectedTags.stream().allMatch(menuTags::contains);
-        			
-        			boolean avoidNegative = false;
-        			if (negativeTags != null && !negativeTags.isEmpty()) {
-        				avoidNegative = negativeTags.stream().anyMatch(menuTags::contains);
+        			if (excludeMenuIds == null || excludeMenuIds.isEmpty()) {
+        				return true;
         			}
-        			
-        			return matchPositive && !avoidNegative;
+        			return !excludeMenuIds.contains(menu.getSeqMenu());
         		})
                 .map(menu -> {
 
                     List<String> menuTags = parseTags(menu.getFlavorTags());
                     int score = 0;
+
+                    //positive + 10
+                    if (selectedTags != null) {
+                    	for (String tag : selectedTags) {
+                    		if (menuTags.contains(tag)) {
+                    			score += 10;
+                    		}
+                    	}
+                    }
                     
-                    //negative 태그 포함하면 점수 -999
-                    if (negativeTags != null && menuTags.stream().anyMatch(negativeTags::contains)) {
-                    	score = -999;
-                    } else {
-                    	//positive 태그: 하나당 +10
-                    	if (selectedTags != null) {
-                    		for (String tag : selectedTags) {
-                    			if (menuTags.contains(tag)) {
-                    				score += 10;
-                    			}
+                    //negative -999
+                    if (negativeTags != null) {
+                    	for (String tag : negativeTags) {
+                    		if (menuTags.contains(tag)) {
+                    			score = -999;
                     		}
                     	}
                     }
@@ -84,6 +84,7 @@ public class MenuRecommendService {
                             .allTags(menuTags)
                             .matchedTags(matched)
                             .score(score)
+                            .reason(null)
                             .build();
                 })
                 //점수 높은 순으로 정렬

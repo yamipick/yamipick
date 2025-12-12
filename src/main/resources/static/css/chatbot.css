@@ -257,3 +257,41 @@ body {
     0% { opacity: 0; transform: translateY(10px); }
     100% { opacity: 1; transform: translateY(0); }
 }
+
+.message.bot.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message.bot.loading img {
+  width: 140px;
+}
+
+/* 로딩 → 텍스트 전환 애니메이션 */
+.message.bot {
+  opacity: 1;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.message.bot.loading {
+  opacity: 0.85;
+}
+
+/* 답변 등장 효과 */
+.message.bot.fade-in {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.message.bot.fade-in.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 로딩 이미지 크기 */
+.message.bot.loading img {
+  width: 50px;
+}
+
+

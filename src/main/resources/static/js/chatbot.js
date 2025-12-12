@@ -38,6 +38,45 @@ function addMessage(text, type) {
     scrollToBottom();
 }
 
+// AI 로딩 말풍선 추가
+function addLoadingMessage() {
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("message-wrapper", "bot");
+    wrapper.id = "ai-loading";
+
+    const icon = document.createElement("div");
+    icon.classList.add("chat-icon");
+    icon.innerHTML = "🐻";
+
+    const msg = document.createElement("div");
+    msg.classList.add("message", "bot", "loading");
+    msg.innerHTML = `
+        <img src="/img/chat/loading.gif" alt="AI 응답 중...">
+    `;
+
+    wrapper.appendChild(icon);
+    wrapper.appendChild(msg);
+
+    chatBox.appendChild(wrapper);
+    scrollToBottom();
+}
+
+function replaceLoadingMessage(text) {
+    const wrapper = document.getElementById("ai-loading");
+    if (!wrapper) return;
+
+    const msg = wrapper.querySelector(".message");
+    msg.classList.remove("loading");
+    msg.innerText = text;
+
+	requestAnimationFrame(() => {
+		msg.classList.add("show");
+	});
+	
+    wrapper.removeAttribute("id");
+    scrollToBottom();
+}
+
 // REST API 호출
 async function sendMessage() {
     const msg = input.value.trim();
@@ -46,6 +85,9 @@ async function sendMessage() {
 	//user 메시지
 	addMessage(msg, "user");
 	input.value = "";
+	
+	//로딩 말풍선 먼저
+	addLoadingMessage();
 
 	try {
 		const res = await fetch("/api/chat/send", {
@@ -62,8 +104,8 @@ async function sendMessage() {
 		//세션 메시지 출력
 		sessionId = data.seqSession;
 		
-		//AI 메시지
-		addMessage(data.aiMessage ?? "응답 오류", "bot");
+		//로딩 말풍선을 AI 응답으로 교체
+		replaceLoadingMessage(data.aiMessage ?? "응답 오류", "bot");
 		
 		//메뉴 추천 UI
 		const best = data.recommendList[0];
@@ -72,7 +114,7 @@ async function sendMessage() {
 		}
 			
 	} catch (err) {
-		addMessage("⚠ 오류 발생: " + err, "bot");
+		replaceLoadingMessage("⚠ 오류 발생: " + err, "bot");
 	}
 }
 

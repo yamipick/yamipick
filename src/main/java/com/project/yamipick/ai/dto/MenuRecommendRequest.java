@@ -19,5 +19,6 @@ public class MenuRecommendRequest {
     private String userInput;        // 챗봇 입력 문장
     private Long seqSession;         // 챗봇 세션 (태그 추천은 null)
     private String emotion;
+    private List<Long> excludeMenuIds;
 }
 

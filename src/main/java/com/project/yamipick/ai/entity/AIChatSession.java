@@ -38,4 +38,8 @@ public class AIChatSession {
     // 이전 감정
     @Column(length = 50)
     private String lastEmotion;
+    
+    //이전 추천 메뉴
+    @Column(name = "lastRecommendMenuId")
+    private Long lastRecommendMenuId;
 }
