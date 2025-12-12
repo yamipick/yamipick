@@ -18,13 +18,38 @@
 	    display: flex;
 	    gap: 10px;
 	}
-	.search-box input {
-	    flex: 1;
-	    padding: 10px;
-	    font-size: 16px;
-	    border: 1px solid #aaa;
-	    border-radius: 6px;
+	
+	.search-bar {
+	  display: flex;
+	  width: 100%;
+	  gap: 10px;
+	  margin-bottom: 50px;
 	}
+	
+	.search-bar input {
+	  flex: 1;                 /* 왼쪽부터 끝까지 */
+	  padding: 12px;
+	  font-size: 16px;
+	  border: 1px solid #aaa;
+	  border-radius: 6px;
+	}
+	
+	.search-bar input:focus {
+	    border: 1px solid #4A2D1A;
+	    outline: none; /* 기본 파란 테두리 제거 */
+	}
+	
+	.search-bar .search-btn {
+	  padding: 12px 26px;
+	  background: #4A2D1A;
+	  color: #fff;
+	  border: none;
+	  border-radius: 6px;
+	  font-size: 16px;
+	  cursor: pointer;
+	  white-space: nowrap;
+	}
+	
 	.search-btn {
 	    padding: 10px 24px;
 	    background: #4A2D1A;
@@ -81,6 +106,12 @@
 	.sort-menu .photo-filter input {
 	    cursor: pointer;
 	}
+	
+	.sort-menu form {
+	    display: flex;
+	    align-items: center;
+	    gap: 15px;
+	}
 
 
 	/* 리뷰 리스트 --------------------------- */
@@ -99,13 +130,21 @@
 		flex-shrink: 0;
 	}
 
-	.no-img {
-		background: #eee;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		color: #555;
-		font-size: 13px;
+	.review-item.no-photo {
+	    padding-left: 0;
+	}
+	
+	.review-item.no-photo .thumb {
+	    display: none;
+	}
+	
+	.thumb.no-img {
+	    background: #eee;
+	    display: flex;
+	    align-items: center;
+	    justify-content: center;
+	    color: #777;
+	    font-size: 13px;
 	}
 
 	.review-info h3 {
@@ -215,72 +254,109 @@
 	    border-color: #4A2D1A;
 	}
 		
+	a {
+	  text-decoration: none;   /* 밑줄 제거 */
+	  color: inherit;          /* 부모 색상 그대로 */
+	}
 	
+	a:visited {
+	  color: inherit;
+	}
+	
+	a:hover {
+	  text-decoration: none;
+	}
 
 </style>
 </head>
 <body>
 
-<!-- 검색창 -->
-<div class="container">
-    <div class="section" style="width: 100%; margin-top: 40px;">
-        <div class="search-box">
-            <input type="text" placeholder="리뷰 검색(가게명 / 키워드)">
-            <button class="search-btn">검색</button>
-        </div>
-    </div>
-</div>
+	<!-- 검색창 -->
+	<div class="container" style="margin-top:40px;">
+	    <form th:action="@{/review/reviewlist}" method="get" class="search-bar">
+	        <input type="text"
+	               name="keyword"
+	               placeholder="리뷰 검색(가게명 / 키워드)"
+	               required>
+	        <button type="submit" class="search-btn">검색</button>
+	    </form>
+	</div>
 
-<!-- 메인 + 사이드 -->
-<div class="container">
+	<!-- 메인 + 사이드 -->
+	<div class="container">
 
-    <!-- 메인 컨텐츠 -->
-    <div class="main">
+    	<!-- 메인 컨텐츠 -->
+    	<div class="main">
 
         <!-- 정렬 메뉴 -->
 		<div class="section sort-menu">
+		    <form th:action="@{/review/reviewlist}" method="get">
 		
-		    <!-- 정렬 기준 선택 -->
-		    <select class="sort-select">
-		        <option value="latest">최신순</option>
-		        <option value="views">조회수순</option>
-		        <option value="rating-high">평점 높은 순</option>
-		        <option value="rating-low">평점 낮은 순</option>
-		    </select>
+		        <!-- 기존 검색어 유지 -->
+		        <input type="hidden" name="keyword" th:value="${keyword}">
+		        <input type="hidden" name="page" th:value="${page}">
 		
-		    <!-- 사진 리뷰만 -->
-		    <label class="photo-filter">
-		        <input type="checkbox"> 사진 리뷰만
-		    </label>
+		        <!-- 정렬 기준 -->
+		        <select class="sort-select"
+		                name="sort"
+		                onchange="this.form.submit()">
+		            <option value="latest" th:selected="${sort == 'latest'}">최신순</option>
+		            <option value="views" th:selected="${sort == 'views'}">조회수순</option>
+		            <option value="favoritest" th:selected="${sort == 'favoritest'}">좋아요순</option>
+		        </select>
+				
+		        <!-- 사진 리뷰만 (아직 로직 안 붙이면 그냥 유지) -->
+		        <label class="photo-filter">
+		            <input type="checkbox" name="photo"
+		                   th:checked="${photo}">
+		            사진 리뷰만
+		        </label>
 		
+		    </form>
 		</div>
 
 
         <!-- 검색 결과 리스트 -->
         <div class="section">
-
-            <!-- 1 -->
-            <div class="review-item">
-                <div class="thumb"></div>
-                <div class="review-info">
-                    <h3>리뷰 제목 예시</h3>
-                    <div class="meta">⭐ 4.5 / 작성자 홍길동 / 조회수 32</div>
-                    <p class="content-preview">
-                        여기에 리뷰 내용 일부가 2~3줄 정도 들어갑니다...
-                    </p>
-                </div>
-            </div>
-
-            <!-- 2 -->
-            <div class="review-item no-photo">
-                <div class="review-info">
-                    <h3>사진 없는 리뷰</h3>
-                    <div class="meta">⭐ 5.0 / 작성자 사용자1 / 조회수 12</div>
-                    <p class="content-preview">
-                        사진 없이 텍스트로만 작성한 리뷰입니다.
-                    </p>
-                </div>
-            </div>
+        
+            <div class="review-item"
+			     th:each="r : ${list}"
+			     th:classappend="${r.attach == null || r.attach == ''} ? ' no-photo' : ''">
+			
+			    <!-- 사진 있을 때 -->
+			    <div class="thumb"
+			         th:if="${r.attach != null && r.attach != ''}">
+			        <img th:src="${r.attach}"
+			             style="width:100%; height:100%; object-fit:cover;">
+			    </div>
+			
+			    <!-- 사진 없을 때 -->
+			    <div class="thumb no-img"
+			         th:if="${r.attach == null || r.attach == ''}">
+			        이미지 없음
+			    </div>
+			
+			    <div class="review-info">
+			        <h3>
+			            <a th:href="@{/review/reviewview(seqReview=${r.seqReview})}"
+			               th:text="${r.title}">제목</a>
+			        </h3>
+			
+			        <div class="meta">
+			            <span th:text="${r.starRating}">0</span>
+			            <span th:text="${r.nickname}">닉네임</span>
+			            |
+			            조회수 <span th:text="${r.readCount}">0</span>
+			            |
+					    <span th:text="${r.displayDate}"></span>
+			        </div>
+			
+			        <p class="content-preview"
+			           th:text="${#strings.abbreviate(r.reviewContent, 80)}">
+			            미리보기
+			        </p>
+			    </div>
+			</div>
             
 		    <!-- 페이징 -->
 			<div class="pagination">
@@ -308,49 +384,58 @@
 			</div>
 			
 			<a href="/review/activity?tab=review" class="list-item activity-item">
-			        📝 내가 쓴 리뷰 <span class="count">0개</span>
+			    📝 내가 쓴 리뷰 <span class="count" th:text="${activity != null ? activity['review'] : 0} + '개'">0개</span>
 			</a>
 			
 			<a href="/review/activity?tab=comment" class="list-item activity-item">
-			        💬 내가 쓴 댓글 <span class="count">0개</span>
+			    💬 내가 쓴 댓글 <span class="count" th:text="${activity != null ? activity['comment'] : 0} + '개'">0개</span>
 			</a>
 			
 			<a href="/review/activity?tab=favorite" class="list-item activity-item">
-			        ❤️ 좋아요한 리뷰 <span class="count">0개</span>
+			    ❤️ 좋아요한 리뷰 <span class="count" th:text="${activity != null ? activity['favorite'] : 0} + '개'">0개</span>
 			</a>
 			
 			<a href="/review/activity?tab=scrap" class="list-item activity-item">
-			        📌 즐겨찾기한 리뷰 <span class="count">0개</span>
+			    📌 즐겨찾기한 리뷰 <span class="count" th:text="${activity != null ? activity['scrap'] : 0} + '개'">0개</span>
 			</a>
 		</div>
 	
 	    <!-- 최근 본 리뷰 -->
 	    <div class="section">
-	        <h2>최근 본 리뷰</h2>
-	        <div class="list-item">👁 최근 본 리뷰 1</div>
-	        <div class="list-item">👁 최근 본 리뷰 2</div>
-	    </div>
-	
-	    <!-- 인기 리뷰 (일간/주간 탭) -->
-	    <div class="section">
-	
-	        <div class="popular-tabs">
-	            <button class="tab-btn active" onclick="showPopular('daily')">일간</button>
-	            <button class="tab-btn" onclick="showPopular('weekly')">주간</button>
-	        </div>
-	
-	        <div id="popular-daily" class="popular-list">
-	            <div class="list-item">🔥 일간 인기 리뷰 1</div>
-	            <div class="list-item">🔥 일간 인기 리뷰 2</div>
-	            <div class="list-item">🔥 일간 인기 리뷰 3</div>
-	        </div>
-	
-	        <div id="popular-weekly" class="popular-list" style="display:none;">
-	            <div class="list-item">📈 주간 인기 리뷰 1</div>
-	            <div class="list-item">📈 주간 인기 리뷰 2</div>
-	            <div class="list-item">📈 주간 인기 리뷰 3</div>
-	        </div>
-	    </div>
+            <h2>최근 본 리뷰</h2>
+            <div class="list-item">👁 최근 본 리뷰 1</div>
+            <div class="list-item">👁 최근 본 리뷰 2</div>
+        </div>
+
+        <!-- 인기 리뷰 (일간/주간 탭) -->
+		<div class="section">
+		
+		    <!-- 탭 버튼 -->
+		    <div class="popular-tabs">
+		        <button class="tab-btn active" onclick="showPopular('daily', event)">일간</button>
+		        <button class="tab-btn" onclick="showPopular('weekly', event)">주간</button>
+		    </div>
+		
+		    <!-- 일간 인기 리뷰 -->
+		    <div id="popular-daily" class="popular-list">
+				<div class="list-item"
+				     th:each="r : ${popularDaily}">
+				    🔥
+				    <a th:href="@{/review/reviewview(seqReview=${r.seqReview})}"
+				       th:text="${r.title}">제목</a>
+				</div>
+			</div>
+		
+		    <!-- 주간 인기 리뷰 -->
+		    <div id="popular-weekly" class="popular-list" style="display:none;">
+				<div class="list-item"
+				     th:each="r : ${popularWeekly}">
+				    📈
+				    <a th:href="@{/review/reviewview(seqReview=${r.seqReview})}"
+				       th:text="${r.title}">제목</a>
+				</div>
+			</div>
+		</div>
 	</div>
 
     

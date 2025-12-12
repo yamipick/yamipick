@@ -1,6 +1,7 @@
 package com.project.yamipick.review.service;
 
 import java.util.List;
+import java.util.Map;
 
 import com.project.yamipick.review.dto.BoardReviewDTO;
 import com.project.yamipick.review.dto.CommentDTO;
@@ -46,5 +47,21 @@ public interface ReviewService {
 	void edit(BoardReviewDTO dto);
 
 	void deleteReview(Long seqReview, Long seqUser);
+
+	List<BoardReviewDTO> getPopularDaily();
+
+	List<BoardReviewDTO> getPopularWeekly();
+	
+	List<BoardReviewDTO> getRecommendReviews();
+
+	List<BoardReviewDTO> getPhotoReviews();
+
+	List<BoardReviewDTO> getNearReviews(); // 위치는 나중에 확장
+
+	Map<String, Long> getMyActivitySummary(Long seqUser);
+
+	List<BoardReviewDTO> findAll();
+
+	List<BoardReviewDTO> getList(String keyword, String sort, int page);
 
 }

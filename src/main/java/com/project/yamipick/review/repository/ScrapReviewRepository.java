@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.project.yamipick.review.entity.BoardReview;
 import com.project.yamipick.review.entity.ScrapReview;
+import com.project.yamipick.user.entity.User;
 
 public interface ScrapReviewRepository extends JpaRepository<ScrapReview, Long> {
 
@@ -14,5 +15,7 @@ public interface ScrapReviewRepository extends JpaRepository<ScrapReview, Long> 
 	boolean existsByUserSeqUserAndReviewSeqReview(Long seqUser, Long seqReview);
 
 	void deleteByReview(BoardReview review);
+
+	long countByUser(User user);
 
 }

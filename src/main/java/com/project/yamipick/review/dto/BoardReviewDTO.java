@@ -1,6 +1,6 @@
 package com.project.yamipick.review.dto;
 
-import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
@@ -35,7 +35,7 @@ public class BoardReviewDTO {
 	private MultipartFile file;
 	
 	private String place;
-	private Date regdate;
+	private Timestamp regdate;
 	private Integer readCount;
 	private Integer favoriteCount;
 	private String contentState; // 일반글 / 비밀글
@@ -45,6 +45,7 @@ public class BoardReviewDTO {
 	private String tags;
 	private List<String> tagList;
 	private String existingAttach;
+	private String displayDate;
 	
 	public BoardReview toEntity(User user) {
 		

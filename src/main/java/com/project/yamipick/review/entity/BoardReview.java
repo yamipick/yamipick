@@ -1,6 +1,8 @@
 package com.project.yamipick.review.entity;
 
-import java.sql.Date;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,7 +70,7 @@ public class BoardReview {
 	private String place;
 	
 	@Column(nullable = false)
-	private Date regdate;
+	private Timestamp regdate;
 	
 	@Column(nullable = false)
 	private Integer readCount;
@@ -88,6 +90,16 @@ public class BoardReview {
 	
 	public BoardReviewDTO toDTO() {
 		
+		LocalDateTime now = LocalDateTime.now();
+	    LocalDateTime reg = this.regdate.toLocalDateTime();
+
+	    String displayDate;
+	    if (reg.isAfter(now.minusHours(24))) {
+	        displayDate = reg.format(DateTimeFormatter.ofPattern("HH:mm"));
+	    } else {
+	        displayDate = reg.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+	    }
+		
 		return BoardReviewDTO.builder()
 							.seqReview(this.seqReview)
 							//.seqStore(this.store.getSeqStore())
@@ -99,6 +111,8 @@ public class BoardReview {
 							.attach(this.attach)
 							.place(this.place)
 							.regdate(this.regdate)
+							.displayDate(displayDate)
+							.readCount(readCount)
 							.contentState(this.contentState)
 							.state(this.state)
 							.build();

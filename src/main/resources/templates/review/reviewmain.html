@@ -12,18 +12,35 @@
 	    overflow-y: scroll;
 	}
 	
-
-	.search-box {
-	    display: flex;
-	    gap: 10px;
+	.search-bar {
+	  display: flex;
+	  width: 100%;
+	  gap: 10px;
+	  margin-bottom: 50px;
 	}
 	
-	.search-box input {
-	    flex: 1;               /* 가로 꽉 채우기 */
-	    padding: 10px;
-	    font-size: 16px;
-	    border: 1px solid #aaa;
-	    border-radius: 6px;
+	.search-bar input {
+	  flex: 1;                 /* 왼쪽부터 끝까지 */
+	  padding: 12px;
+	  font-size: 16px;
+	  border: 1px solid #aaa;
+	  border-radius: 6px;
+	}
+	
+	.search-bar input:focus {
+	    border: 1px solid #4A2D1A;
+	    outline: none; /* 기본 파란 테두리 제거 */
+	}
+	
+	.search-bar .search-btn {
+	  padding: 12px 26px;
+	  background: #4A2D1A;
+	  color: #fff;
+	  border: none;
+	  border-radius: 6px;
+	  font-size: 16px;
+	  cursor: pointer;
+	  white-space: nowrap;
 	}
 	
 	.search-btn {
@@ -133,6 +150,19 @@
 	    color: white;
 	    border-color: #4A2D1A;
 	}
+	
+	a {
+	  text-decoration: none;   /* 밑줄 제거 */
+	  color: inherit;          /* 부모 색상 그대로 */
+	}
+	
+	a:visited {
+	  color: inherit;
+	}
+	
+	a:hover {
+	  text-decoration: none;
+	}
 		
 	
 </style>
@@ -154,13 +184,14 @@
 	-->
 	
 	<!-- 검색창 -->
-	<div class="container">
-	    <div class="section" style="width: 100%; margin-top: 40px;">
-	        <div class="search-box">
-	            <input type="text" placeholder="리뷰 검색(가게명 / 키워드)">
-	            <button class="search-btn">검색</button>
-	        </div>
-	    </div>
+	<div class="container" style="margin-top:40px;">
+	    <form th:action="@{/review/reviewlist}" method="get" class="search-bar">
+	        <input type="text"
+	               name="keyword"
+	               placeholder="리뷰 검색(가게명 / 키워드)"
+	               required>
+	        <button type="submit" class="search-btn">검색</button>
+	    </form>
 	</div>
 
     <div class="container">
@@ -171,10 +202,8 @@
             <!-- 인기 게시글 -->
             <div class="section">
                 <h2>추천 게시글</h2>
-
-                <div class="list-item">⭐ 추천 게시글 1</div>
-                <div class="list-item">⭐ 추천 게시글 2</div>
-                <div class="list-item">⭐ 추천 게시글 3</div>
+                
+                <div class="list-item" th:each="r : ${recommendReviews}">⭐ <a th:href="@{/review/reviewview(seqReview=${r.seqReview})}" th:text="${r.title}">제목</a></div>
             </div>
 
             <!-- 사진 리뷰 갤러리 -->
@@ -182,22 +211,19 @@
                 <h2>사진 리뷰 갤러리</h2>
 
                 <div class="gallery">
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                    <div></div>
+                    <a th:each="r : ${photoReviews}"
+				       th:href="@{/review/reviewview(seqReview=${r.seqReview})}">
+				        <img th:src="${r.attach}"
+				             style="width:100%; height:120px; object-fit:cover;">
+				    </a>
                 </div>
             </div>
 
             <!-- 사용자 위치 근처 맛집 리뷰 -->
             <div class="section">
-                <h2>사용자 위치 근처 맛집 리뷰</h2>
+                <h2>내 근처 맛집 리뷰</h2>
 
-                <div class="list-item">📍 근처 리뷰 1</div>
-                <div class="list-item">📍 근처 리뷰 2</div>
-                <div class="list-item">📍 근처 리뷰 3</div>
+                <div class="list-item" th:each="r : ${nearReviews}">📍 <a th:href="@{/review/reviewview(seqReview=${r.seqReview})}" th:text="${r.title}">제목</a></div>
             </div>
 
         </div>
@@ -214,19 +240,19 @@
 			    </div>
 			
 			    <a href="/review/activity?tab=review" class="list-item activity-item">
-			        📝 내가 쓴 리뷰 <span class="count">0개</span>
+			        📝 내가 쓴 리뷰 <span class="count" th:text="${activity != null ? activity['review'] : 0} + '개'">0개</span>
 			    </a>
 			
 			    <a href="/review/activity?tab=comment" class="list-item activity-item">
-			        💬 내가 쓴 댓글 <span class="count">0개</span>
+			        💬 내가 쓴 댓글 <span class="count" th:text="${activity != null ? activity['comment'] : 0} + '개'">0개</span>
 			    </a>
 			
 			    <a href="/review/activity?tab=favorite" class="list-item activity-item">
-			        ❤️ 좋아요한 리뷰 <span class="count">0개</span>
+			        ❤️ 좋아요한 리뷰 <span class="count" th:text="${activity != null ? activity['favorite'] : 0} + '개'">0개</span>
 			    </a>
 			
 			    <a href="/review/activity?tab=scrap" class="list-item activity-item">
-			        📌 즐겨찾기한 리뷰 <span class="count">0개</span>
+			        📌 즐겨찾기한 리뷰 <span class="count" th:text="${activity != null ? activity['scrap'] : 0} + '개'">0개</span>
 			    </a>
 			</div>
 
@@ -244,23 +270,29 @@
 		
 		        <!-- 탭 버튼 -->
 		        <div class="popular-tabs">
-		            <button class="tab-btn active" onclick="showPopular('daily')">일간</button>
-		            <button class="tab-btn" onclick="showPopular('weekly')">주간</button>
+		            <button class="tab-btn active" onclick="showPopular('daily', event)">일간</button>
+		            <button class="tab-btn" onclick="showPopular('weekly', event)">주간</button>
 		        </div>
 		
 		        <!-- 일간 인기 리뷰 -->
 		        <div id="popular-daily" class="popular-list">
-		            <div class="list-item">🔥 일간 인기 리뷰 1</div>
-		            <div class="list-item">🔥 일간 인기 리뷰 2</div>
-		            <div class="list-item">🔥 일간 인기 리뷰 3</div>
-		        </div>
+				    <div class="list-item"
+				         th:each="r : ${popularDaily}">
+				        🔥
+				        <a th:href="@{/review/reviewview(seqReview=${r.seqReview})}"
+				           th:text="${r.title}">제목</a>
+				    </div>
+				</div>
 		
 		        <!-- 주간 인기 리뷰 -->
 		        <div id="popular-weekly" class="popular-list" style="display:none;">
-		            <div class="list-item">📈 주간 인기 리뷰 1</div>
-		            <div class="list-item">📈 주간 인기 리뷰 2</div>
-		            <div class="list-item">📈 주간 인기 리뷰 3</div>
-		        </div>
+				    <div class="list-item"
+				         th:each="r : ${popularWeekly}">
+				        📈
+				        <a th:href="@{/review/reviewview(seqReview=${r.seqReview})}"
+				           th:text="${r.title}">제목</a>
+				    </div>
+				</div>
 			</div>
 		</div>
 		
@@ -270,13 +302,13 @@
 </body>
 
 <script>
-
-	function showPopular(type) {
-	    document.getElementById("popular-daily").style.display = (type === 'daily') ? 'block' : 'none';
-	    document.getElementById("popular-weekly").style.display = (type === 'weekly') ? 'block' : 'none';
 	
-	    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-	    event.target.classList.add('active');
+	function showPopular(type, e) {
+	  document.getElementById("popular-daily").style.display = (type === 'daily') ? 'block' : 'none';
+	  document.getElementById("popular-weekly").style.display = (type === 'weekly') ? 'block' : 'none';
+	
+	  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+	  e.target.classList.add('active');
 	}
 	
 </script>

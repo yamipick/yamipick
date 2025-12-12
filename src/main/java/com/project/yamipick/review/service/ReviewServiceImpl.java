@@ -1,6 +1,6 @@
 package com.project.yamipick.review.service;
 
-import java.sql.Date;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -10,9 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.project.yamipick.aws.S3Uploader;
 import com.project.yamipick.review.dto.BoardReviewDTO;
 import com.project.yamipick.review.dto.CommentDTO;
 import com.project.yamipick.review.dto.FavoriteReviewDTO;
@@ -45,7 +49,120 @@ public class ReviewServiceImpl implements ReviewService {
     private final CommentRepository commentRepository;
     private final FavoriteReviewRepository favoriteReviewRepository;
     private final ScrapReviewRepository scrapReviewRepository;
+    private final S3Uploader s3Uploader;
 
+    @Override
+    public List<BoardReviewDTO> getPopularDaily() {
+        return boardReviewRepository
+            .findPopular(LocalDateTime.now().minusDays(1),
+                         PageRequest.of(0, 5))
+            .stream().map(BoardReview::toDTO)
+            .toList();
+    }
+    
+    @Override
+    public List<BoardReviewDTO> getPopularWeekly() {
+
+        LocalDateTime from = LocalDateTime.now().minusDays(7);
+        PageRequest page = PageRequest.of(0, 5);
+
+        return boardReviewRepository
+                .findPopular(from, page)
+                .stream()
+                .map(BoardReview::toDTO)
+                .toList();
+    }
+    
+    @Override
+    public List<BoardReviewDTO> getList(String keyword, String sort, int page) {
+
+        Sort sortOption;
+
+        switch (sort) {
+            case "views":
+                sortOption = Sort.by(Sort.Direction.DESC, "readCount");
+                break;
+            case "favoritest":
+                sortOption = Sort.by(Sort.Direction.DESC, "favoriteCount");
+                break;
+            case "latest":
+            default:
+                sortOption = Sort.by(Sort.Direction.DESC, "regdate");
+        }
+
+        Pageable pageable = PageRequest.of(page, 20, sortOption);
+
+        List<BoardReview> result;
+
+        if (keyword == null || keyword.isBlank()) {
+            result = boardReviewRepository.findByState("ACTIVE", pageable);
+        } else {
+            result = boardReviewRepository.search(keyword, pageable);
+        }
+
+        return result.stream()
+                .map(BoardReview::toDTO)
+                .toList();
+    }
+    
+    @Override
+    public List<BoardReviewDTO> getRecommendReviews() {
+        return boardReviewRepository
+                .findRecommendReviews(PageRequest.of(0, 5))
+                .stream()
+                .map(BoardReview::toDTO)
+                .toList();
+    }
+    
+    @Override
+    public Map<String, Long> getMyActivitySummary(Long seqUser) {
+
+        User user = userRepository.findById(seqUser)
+                .orElseThrow(() -> new IllegalArgumentException("유저 없음"));
+
+        Map<String, Long> map = new HashMap<>();
+
+        map.put("review",
+                boardReviewRepository.countByUserAndState(user, "ACTIVE"));
+
+        map.put("comment",
+                commentRepository.countByUserAndState(user, "ACTIVE"));
+
+        map.put("favorite",
+                favoriteReviewRepository.countByUser(user));
+
+        map.put("scrap",
+                scrapReviewRepository.countByUser(user));
+
+        return map;
+    }
+
+    @Override
+    public List<BoardReviewDTO> getPhotoReviews() {
+        return boardReviewRepository
+                .findPhotoReviews(PageRequest.of(0, 6))
+                .stream()
+                .map(BoardReview::toDTO)
+                .toList();
+    }
+
+    @Override
+    public List<BoardReviewDTO> getNearReviews() {
+        // 위치 기반은 나중에
+        return boardReviewRepository
+                .findRecommendReviews(PageRequest.of(0, 5))
+                .stream()
+                .map(BoardReview::toDTO)
+                .toList();
+    }
+    
+    @Override
+    public List<BoardReviewDTO> findAll() {
+        return boardReviewRepository.findAll()
+                .stream()
+                .map(BoardReview::toDTO)
+                .toList();
+    }
 
     @Override
     public Long add(BoardReviewDTO dto) {
@@ -68,7 +185,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .reviewContent(dto.getReviewContent())
                 .attach(dto.getAttach())
                 .place(dto.getPlace())          // "이름|위도|경도|placeId" 그대로 저장
-                .regdate(new Date(System.currentTimeMillis()))
+                .regdate(Timestamp.valueOf(LocalDateTime.now()))
                 .readCount(0)
                 .favoriteCount(0)
                 .contentState(state)
@@ -128,18 +245,50 @@ public class ReviewServiceImpl implements ReviewService {
         review.setPlace(dto.getPlace());
         review.setContentState(dto.getContentState());
 
-        // 🔥 여기
-        if (dto.getFile() == null || dto.getFile().isEmpty()) {
-            // 새 파일 안 올렸으면 기존 이미지 유지
-            review.setAttach(dto.getExistingAttach());
-        } else {
-            // 새 파일 올렸으면 새 이미지로 교체
-            review.setAttach(dto.getAttach());
+        try {
+            if (dto.getFile() != null && !dto.getFile().isEmpty()) {
+                // 🔥 새 이미지 → S3 업로드
+                String imageUrl = s3Uploader.upload(dto.getFile(), "review");
+                review.setAttach(imageUrl);
+            } else {
+                // 🔥 새 파일 없으면 기존 이미지 유지
+                review.setAttach(dto.getExistingAttach());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("S3 업로드 실패", e);
         }
 
         // 태그는 기존 삭제 후 재삽입
         taggingRepository.deleteByReview(review);
         // add() 때 쓰던 태그 저장 로직 재사용
+        // 4. 태그 저장
+        String tags = dto.getTags();
+        if (tags != null && !tags.isBlank()) {
+
+            for (String raw : tags.split(",")) {
+                String name = raw.trim();
+                if (name.isEmpty()) continue;
+
+                // orElseGet 안 쓰는 버전
+                Hashtag hashtag = hashtagRepository.findByHashtag(name)
+                        .orElse(null);
+
+                if (hashtag == null) {
+                    hashtag = hashtagRepository.save(
+                            Hashtag.builder()
+                                    .hashtag(name)
+                                    .build()
+                    );
+                }
+
+                taggingRepository.save(
+                        Tagging.builder()
+                                .review(review)
+                                .hashtag(hashtag)
+                                .build()
+                );
+            }
+        }
     }
     
     @Override
