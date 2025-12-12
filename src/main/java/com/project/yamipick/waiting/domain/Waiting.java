@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.project.yamipick.user.entity.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -36,40 +37,39 @@ public class Waiting {
     @Column(name = "seqWaiting")
     private Long id;
 
-    // ★ [변경] Store 대신 Operation 연결
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seqOperation")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private WaitingOperation operation;
 
+    // ✅ 핵심 변경: WaitingMember → User
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seqUser")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private WaitingMember member;
+    private User user;  // ✅ 필드명도 member → user로 변경
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "seqWaitingStatus")
     private WaitingStatus waitingStatus;
 
-    // ★ [추가] 고정된 대기번호 (1번, 2번...)
     @Column(name = "waitingNumber")
     private int waitingNumber;
 
     @Column(name = "teamSize")
     private int teamSize;
-    
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
-    @Column(name = "regDate") 
+    @Column(name = "regDate")
     private LocalDateTime regDate;
-    
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     @Column(name = "calledTime")
     private LocalDateTime calledTime;
-    
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     @Column(name = "seatedTime")
     private LocalDateTime seatedTime;
-    
+
     @PrePersist
     public void prePersist() {
         if (this.regDate == null) this.regDate = LocalDateTime.now();

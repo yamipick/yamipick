@@ -57,37 +57,20 @@
         </table>
     </div>
 
-    <script>
-        // 전역 변수 (초기값 null)
-        let myStoreId = null;
 
-        document.getElementById('date-picker').valueAsDate = new Date();
+		<script th:inline="javascript">
+		    // ★ [핵심] 컨트롤러에서 넘겨준 storeId 받기
+		    const myStoreId = /*[[${storeId}]]*/ null;
+		    document.getElementById('date-picker').valueAsDate = new Date();
 
-        window.onload = function() {
-            // ★ [수정] 세션에서 내 가게 정보 가져오기
-            fetch('/api/me')
-                .then(res => {
-                    if (res.ok) return res.json();
-                    throw new Error("로그인 필요");
-                })
-                .then(user => {
-                    // 점주인지, 가게는 있는지 확인
-                    const role = user.role || "";
-                    if ((!role.includes('STORE') && !role.includes('ADMIN')) || !user.hasStore) {
-                        alert("권한이 없습니다.");
-                        location.href = "/";
-                        return;
-                    }
-                    
-                    myStoreId = user.seqStore; // 내 가게 번호 저장
-                    loadDailyLog(); // 로그 조회 시작
-                })
-                .catch(() => {
-                    alert("로그인이 필요합니다.");
-                    location.href = "/login";
-                });
-        };
-
+		    window.onload = function() {
+		        if (!myStoreId) {
+		            alert("가게 권한이 없거나 로그인이 필요합니다.");
+		            location.href = "/login";
+		            return;
+		        }
+		        loadDailyLog();
+		    };
         function loadDailyLog() {
             if (!myStoreId) return;
 

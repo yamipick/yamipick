@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,13 +12,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.project.yamipick.user.entity.User;
+import com.project.yamipick.user.repository.UserRepository;
 import com.project.yamipick.waiting.domain.WaitingLog;
+import com.project.yamipick.waiting.domain.WaitingStore;
 import com.project.yamipick.waiting.dto.StoreInfoDTO;
 import com.project.yamipick.waiting.dto.StoreScheduleDTO;
 import com.project.yamipick.waiting.dto.WaitingDTO;
 import com.project.yamipick.waiting.dto.WaitingNoticeDTO;
+import com.project.yamipick.waiting.repository.WaitingStoreRepository;
 import com.project.yamipick.waiting.service.WaitingService;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -25,111 +31,143 @@ import lombok.RequiredArgsConstructor;
 public class StoreWaitingController {
 
     private final WaitingService waitingService;
+    private final UserRepository userRepository;
+    private final WaitingStoreRepository storeRepository;
+
+    // ✅ 헬퍼 메소드: 세션 또는 인증정보에서 storeId 가져오기
+    private Long getStoreId(HttpSession session, Authentication auth) {
+        // 1. 세션에서 storeId 확인 (CustomLoginSuccessHandler가 저장한 경우)
+        Long storeId = (Long) session.getAttribute("storeId");
+        
+        if (storeId != null) {
+            return storeId;
+        }
+
+        // 2. 세션에 없으면 User 조회해서 매장 찾기
+        if (auth != null && auth.isAuthenticated()) {
+            String userId = auth.getName();
+            User user = userRepository.findByUserId(userId).orElseThrow();
+            WaitingStore store = storeRepository.findByOwnerId(user.getSeqUser()).orElse(null);
+            if (store != null) {
+                return store.getId();
+            }
+        }
+
+        // 3. 못 찾으면 기본값 (개발용) - 나중에 예외 처리로 변경
+        return 1L;
+    }
 
     @GetMapping("/waiting/list")
-    public List<WaitingDTO> list(@RequestParam(value = "storeId", defaultValue = "1") Long storeId) {
+    public List<WaitingDTO> list(HttpSession session, Authentication auth) {
+        Long storeId = getStoreId(session, auth);
         return waitingService.getStoreList(storeId);
     }
 
     @GetMapping("/waiting/store-info")
-//    public WaitingStore storeInfo(@RequestParam(value = "storeId", defaultValue = "1") Long storeId) { return waitingService.getStoreInfo(storeId); }
-    public StoreInfoDTO storeInfo(@RequestParam(value = "storeId", defaultValue = "1") Long storeId) { 
-        return waitingService.getStoreInfo(storeId); 
+    public StoreInfoDTO storeInfo(HttpSession session, Authentication auth) {
+        Long storeId = getStoreId(session, auth);
+        return waitingService.getStoreInfo(storeId);
     }
 
-    // ★ 수정: 서비스 메소드 이름(toggleWaitingOpen)과 일치시킴
     @PostMapping("/waiting/toggle")
-    public boolean toggle(@RequestParam(value = "storeId", defaultValue = "1") Long storeId) {
+    public boolean toggle(HttpSession session, Authentication auth) {
+        Long storeId = getStoreId(session, auth);
         return waitingService.toggleWaitingOpen(storeId);
     }
 
     @PostMapping("/waiting/call/{id}")
-    public String call(@PathVariable("id") Long id) { waitingService.call(id); return "ok"; }
+    public String call(@PathVariable("id") Long id) {
+        waitingService.call(id);
+        return "ok";
+    }
 
     @PostMapping("/waiting/enter/{id}")
-    public String enter(@PathVariable("id") Long id) { waitingService.enter(id); return "ok"; }
+    public String enter(@PathVariable("id") Long id) {
+        waitingService.enter(id);
+        return "ok";
+    }
 
     @PostMapping("/waiting/reject/{id}")
-    public String reject(@PathVariable("id") Long id) { waitingService.cancel(id, true); return "ok"; }
+    public String reject(@PathVariable("id") Long id) {
+        waitingService.cancel(id, true);
+        return "ok";
+    }
 
     @PostMapping("/waiting/notice")
-    public String notice(@RequestParam("content") String content) { waitingService.notice(content); return "ok"; }
-    
-    
- // 공지사항 조회 API
+    public String notice(@RequestParam("content") String content) {
+        waitingService.notice(content);
+        return "ok";
+    }
+
     @GetMapping("/waiting/notices")
-    public List<WaitingNoticeDTO> getNotices(@RequestParam(value="storeId", defaultValue="1") Long storeId) {
+    public List<WaitingNoticeDTO> getNotices(HttpSession session, Authentication auth) {
+        Long storeId = getStoreId(session, auth);
         return waitingService.getNoticeList(storeId);
     }
 
-    // 공지사항 등록 API
     @PostMapping("/waiting/notice/create")
-    public String createNotice(@RequestBody Map<String, Object> payload) {
-        //Long storeId = 1L; // 테스트용 고정
-        Long storeId = Long.valueOf(String.valueOf(payload.get("storeId")));
+    public String createNotice(@RequestBody Map<String, Object> payload, 
+                               HttpSession session, Authentication auth) {
+        Long storeId = getStoreId(session, auth);
         String title = (String) payload.get("title");
         String content = (String) payload.get("content");
-        boolean isPinned = Boolean.TRUE.equals(payload.get("isPinned")); // 체크박스 값
-        
+        boolean isPinned = Boolean.TRUE.equals(payload.get("isPinned"));
         waitingService.createNotice(storeId, title, content, isPinned);
         return "ok";
     }
-    
-    // 공지사항 수정 API
+
     @PostMapping("/waiting/notice/update")
     public String updateNotice(@RequestBody Map<String, Object> payload) {
         Long id = Long.valueOf(String.valueOf(payload.get("id")));
         String title = (String) payload.get("title");
         String content = (String) payload.get("content");
         boolean isPinned = Boolean.TRUE.equals(payload.get("isPinned"));
-
         waitingService.updateNotice(id, title, content, isPinned);
         return "ok";
     }
 
-    // 공지사항 삭제 API
     @PostMapping("/waiting/notice/delete/{id}")
     public String deleteNotice(@PathVariable("id") Long id) {
         waitingService.deleteNotice(id);
         return "ok";
     }
-    
- // 로그 조회 API
+
     @GetMapping("/waiting/logs")
-    public List<WaitingLog> getLogs(@RequestParam(value="storeId", defaultValue="1") Long storeId) {
+    public List<WaitingLog> getLogs(HttpSession session, Authentication auth) {
+        Long storeId = getStoreId(session, auth);
         return waitingService.getStoreLogs(storeId);
     }
-    
+
     @GetMapping("/waiting/logs/daily")
     public Map<String, Object> getDailyLogs(
-            @RequestParam(value = "storeId", defaultValue = "1") Long storeId,
-            @RequestParam(value = "date") String date // yyyy-MM-dd
+            @RequestParam(value = "date") String date,
+            HttpSession session, Authentication auth
     ) {
+        Long storeId = getStoreId(session, auth);
         return waitingService.getDailyReport(storeId, date);
     }
-    
+
     @PostMapping("/waiting/schedule/update")
-    public String updateSchedule(@RequestBody StoreScheduleDTO dto) {
+    public String updateSchedule(@RequestBody StoreScheduleDTO dto,
+                                  HttpSession session, Authentication auth) {
+        Long storeId = getStoreId(session, auth);
+        dto.setStoreId(storeId);
         waitingService.updateSchedule(dto);
         return "ok";
     }
-    
+
     @GetMapping("/waiting/schedule/all")
-    public List<StoreScheduleDTO> getAllSchedules(@RequestParam("storeId") Long storeId) {
+    public List<StoreScheduleDTO> getAllSchedules(HttpSession session, Authentication auth) {
+        Long storeId = getStoreId(session, auth);
         return waitingService.getAllSchedules(storeId);
     }
-    
- // ★ [추가] 특정 요일의 스케줄 상세 조회 (설정창 채우기용)
+
     @GetMapping("/waiting/schedule/info")
-    public ResponseEntity<?> getScheduleInfo(
-            @RequestParam("storeId") Long storeId,
-            @RequestParam("day") int day // 0:일 ~ 6:토
+    public ResponseEntity<StoreScheduleDTO> getScheduleInfo(
+            @RequestParam("day") int day,
+            HttpSession session, Authentication auth
     ) {
-        // 서비스에 메소드 추가가 필요하지만, 간단하게 Repository 직접 호출 혹은 서비스 위임
-        // 여기서는 서비스에 위임하는 정석 코드로 작성하겠습니다.
+        Long storeId = getStoreId(session, auth);
         return ResponseEntity.ok(waitingService.getScheduleInfo(storeId, day));
     }
-    
-    
-    
 }

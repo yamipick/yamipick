@@ -11,20 +11,24 @@ import com.project.yamipick.waiting.domain.Waiting;
 
 public interface WaitingRepository extends JpaRepository<Waiting, Long> {
 
-    // 1. 매장용 목록 (오늘 날짜 + 특정 매장).
+    // 1. 매장용 목록 (오늘 날짜 + 특정 매장)
     @Query("SELECT w FROM Waiting w " +
-           "JOIN FETCH w.member m " + 
+           "JOIN FETCH w.user u " +  // ✅ member → user
            "WHERE w.operation.store.id = :storeId " +
            "AND w.operation.operationDate = :today " +
            "AND w.waitingStatus.statusName IN :statuses " +
            "ORDER BY w.waitingNumber ASC")
-    List<Waiting> findStoreList(@Param("storeId") Long storeId, 
-                                @Param("today") LocalDate today, 
-                                @Param("statuses") List<String> statuses);
+    List<Waiting> findStoreList(@Param("storeId") Long storeId,
+                                 @Param("today") LocalDate today,
+                                 @Param("statuses") List<String> statuses);
 
     // 2. 손님용 기록
-    @Query("SELECT w FROM Waiting w WHERE w.member.id = :memberId AND w.waitingStatus.statusName IN :statuses ORDER BY w.regDate DESC")
-    List<Waiting> findMemberHistory(@Param("memberId") Long memberId, @Param("statuses") List<String> statuses);
+    @Query("SELECT w FROM Waiting w " +
+           "WHERE w.user.seqUser = :userId " +  // ✅ member.id → user.seqUser
+           "AND w.waitingStatus.statusName IN :statuses " +
+           "ORDER BY w.regDate DESC")
+    List<Waiting> findMemberHistory(@Param("userId") Long userId,  // ✅ memberId → userId
+                                     @Param("statuses") List<String> statuses);
 
     // 3. 내 앞 대기 수
     @Query("SELECT COUNT(w) FROM Waiting w " +
@@ -32,11 +36,12 @@ public interface WaitingRepository extends JpaRepository<Waiting, Long> {
            "AND w.waitingStatus.statusName = 'WAITING' " +
            "AND w.waitingNumber < :myNum")
     long countAhead(@Param("opId") Long opId, @Param("myNum") int myNum);
-    
+
     // 4. 유효한 웨이팅 찾기
     @Query("SELECT w FROM Waiting w " +
-           "WHERE w.member.id = :memberId " +
+           "WHERE w.user.seqUser = :userId " +  // ✅ member.id → user.seqUser
            "AND w.waitingStatus.statusName IN :statuses " +
            "ORDER BY w.regDate DESC")
-    List<Waiting> findActiveWaiting(@Param("memberId") Long memberId, @Param("statuses") List<String> statuses);
+    List<Waiting> findActiveWaiting(@Param("userId") Long userId,  // ✅ memberId → userId
+                                     @Param("statuses") List<String> statuses);
 }

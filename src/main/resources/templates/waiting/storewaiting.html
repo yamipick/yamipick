@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- ★ CSRF 토큰 메타 태그 추가 -->
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>웨이팅 관리</title>
     <style>
+        /* (스타일 내용은 변경 없음) */
         /* -------------------------------------------------------
          * YamiPick Theme: Warm Choco & Cream
          * ------------------------------------------------------- */
@@ -333,7 +331,6 @@
             <button id="btn-status" class="btn-toggle on" onclick="toggleStatus()">접수 중</button>
         </div>
 
-        <!-- 알림 전송 -->
         <div class="section-box" style="background: #FFF8E1; border-color: #FFE082;">
             <h3 class="section-title" style="color:#F57F17; margin-bottom: 10px;">🔔 알림 전송</h3>
             <div style="display: flex; gap: 8px;">
@@ -342,7 +339,6 @@
             </div>
         </div>
 
-        <!-- 공지사항 -->
         <div class="section-box">
             <div style="display:flex; justify-content:space-between; align-items:center;" onclick="toggleNoticeBoard()">
                 <h3 class="section-title">📝 매장 공지사항</h3>
@@ -370,7 +366,6 @@
             </div>
         </div>
 
-        <!-- 영업 시간 설정 -->
         <div class="section-box">
             <div style="display:flex; justify-content:space-between; align-items:center; cursor: pointer;" onclick="toggleSchedule()">
                 <h3 class="section-title">⏰ 영업 시간 설정</h3>
@@ -429,7 +424,6 @@
             </div>
         </div>
 
-        <!-- 로그 -->
         <div class="section-box">
             <div style="display:flex; justify-content:space-between; align-items:center;" onclick="toggleLogs()">
                 <h3 class="section-title">🕒 최근 활동 로그</h3>
@@ -449,7 +443,6 @@
             </div>
         </div>
 
-        <!-- 대기 목록 -->
         <div style="margin-top: 30px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
                 <span style="font-size: 1.2em; font-weight: bold; color: var(--primary);">현재 대기 팀</span>
@@ -470,47 +463,32 @@
         </div>
     </div>
 
-    <script>
-        /* -----------------------------------------------------------
-         * 1. CSRF 토큰 & 전역 변수
-         * ----------------------------------------------------------- */
-        const csrfToken = document.querySelector('meta[name="_csrf"]').content;
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
 
-        let storeId = null; // 2으로 고정 (테스트용!)
-        let loadedNotices = [];
+	<script th:inline="javascript">
+	    // ★ [핵심] 컨트롤러에서 넘겨준 storeId 받기 (없으면 null)
+	        /* -----------------------------------------------------------
+         * 1. CSRF 토큰 & 전역 변수 (주석 처리됨)
+         * ----------------------------------------------------------- */
+        // const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+        // const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+ 		const storeId = /*[[${storeId}]]*/ null;   
+         let loadedNotices = [];
         const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
         /* -----------------------------------------------------------
          * 2. 페이지 로드 시
          * ----------------------------------------------------------- */
-        window.onload = function() {
-            // 사용자 정보 가져오기 (로그인 상태 확인)
-            fetch('/api/me')
-                .then(res => {
-                    if (res.ok) return res.json();
-                    throw new Error('로그인 필요');
-                })
-                .then(user => {
-                    // STORE 또는 ADMIN 권한이 있고, 매장 정보가 있는지 확인
-                    const role = user.role;
-                    if (!role.includes('STORE') && !role.includes('ADMIN') && !user.hasStore) {
-                        alert('매장 관리자 권한이 필요합니다.');
-                        location.href = '/';
-                        return;
-                    }
-
-                    // 매장 ID 설정 (실제 로그인한 매장 ID 사용!)
-                    storeId = user.seqStore;
-                    console.log('✅ 매장 로그인 완료. Store ID:', storeId);
-
-                    initStoreApp();
-                })
-                .catch(() => {
-                    alert('로그인이 필요합니다.');
-                    location.href = '/login';
-                });
-        };
+		 window.onload = function() {
+		        if (!storeId) {
+		            // Store ID가 없다는 건 로그인 안 했거나 가게가 없는 계정
+		            alert("가게 정보가 없습니다. 점주 계정으로 로그인해주세요.");
+		            location.href = "/login";
+		            return;
+		        }
+		        console.log("Store ID Loaded:", storeId);
+		        initStoreApp();
+		    };
 
         /* -----------------------------------------------------------
          * 3. 앱 초기화
@@ -748,7 +726,7 @@
                 });
         }
 
-        /* ★ CSRF 헤더 추가 */
+        /* ★ CSRF 헤더 추가 (주석 처리됨) */
         function saveNotice() {
             const id = document.getElementById('n-id').value;
             const title = document.getElementById('n-title').value;
@@ -763,7 +741,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    [csrfHeader]: csrfToken
+                    // [csrfHeader]: csrfToken
                 },
                 body: JSON.stringify({ id, storeId, title, content, isPinned })
             })
@@ -778,13 +756,13 @@
             });
         }
 
-        /* ★ CSRF 헤더 추가 */
+        /* ★ CSRF 헤더 추가 (주석 처리됨) */
         function deleteNotice(id) {
             if (confirm('공지사항을 삭제하시겠습니까?')) {
                 fetch('/waiting/notice/delete/' + id, {
                     method: 'POST',
                     headers: {
-                        [csrfHeader]: csrfToken
+                        // [csrfHeader]: csrfToken
                     }
                 }).then(r => {
                     if (r.ok) loadNotices();
@@ -824,12 +802,12 @@
                 .then(s => updateStatusUI(s.waitingOpen));
         }
 
-        /* ★ CSRF 헤더 추가 */
+        /* ★ CSRF 헤더 추가 (주석 처리됨) */
         function toggleStatus() {
             fetch('/waiting/toggle?storeId=' + storeId, {
                 method: 'POST',
                 headers: {
-                    [csrfHeader]: csrfToken
+                    // [csrfHeader]: csrfToken
                 }
             })
             .then(r => r.json())
@@ -850,7 +828,7 @@
             }
         }
 
-        /* ★ CSRF 헤더 추가 */
+        /* ★ CSRF 헤더 추가 (주석 처리됨) */
         function sendWsNotice() {
             const c = document.getElementById('ws-content').value;
             if (!c) return alert('메시지를 입력하세요');
@@ -859,7 +837,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                    [csrfHeader]: csrfToken
+                    // [csrfHeader]: csrfToken
                 },
                 body: 'content=' + c
             }).then(() => {
@@ -868,7 +846,7 @@
             });
         }
 
-        /* ★ CSRF 헤더 추가 */
+        /* ★ CSRF 헤더 추가 (주석 처리됨) */
         function saveSchedule() {
             const checkboxes = document.querySelectorAll('input[name="days"]:checked');
             if (checkboxes.length === 0) return alert('요일을 선택하세요');
@@ -896,7 +874,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    [csrfHeader]: csrfToken
+                    // [csrfHeader]: csrfToken
                 },
                 body: JSON.stringify(payload)
             })
@@ -909,7 +887,7 @@
             });
         }
 
-        /* ★ CSRF 헤더 추가 */
+        /* ★ CSRF 헤더 추가 (주석 처리됨) */
         function action(t, i) {
             let msg = '처리하시겠습니까?';
             if (t === 'call') msg = '호출하시겠습니까?';
@@ -920,7 +898,7 @@
                 fetch('/waiting/' + t + '/' + i, {
                     method: 'POST',
                     headers: {
-                        [csrfHeader]: csrfToken
+                        // [csrfHeader]: csrfToken
                     }
                 }).then(loadList);
             }

@@ -1,5 +1,6 @@
 package com.project.yamipick.waiting.handler;
 
+
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,8 +19,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WaitingWebSocketHandler extends TextWebSocketHandler {
 
-    // 접속한 세션 관리 (Key: waitingId, Value: Session)
+    // 접속한 세션 관리 (Key: waitingId, Value: WebSocketSession)
     private static final Map<Long, WebSocketSession> waitingSessions = new ConcurrentHashMap<>();
+    
     private final ObjectMapper objectMapper;
 
     // 1. 연결 성공 시
@@ -33,7 +35,7 @@ public class WaitingWebSocketHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String payload = message.getPayload();
         System.out.println("📩 [웹소켓] 메시지 수신: " + payload);
-
+        
         try {
             // {"waitingId": 1} 형태의 JSON을 파싱
             Map<String, Object> data = objectMapper.readValue(payload, Map.class);
@@ -41,8 +43,12 @@ public class WaitingWebSocketHandler extends TextWebSocketHandler {
             if (data.containsKey("waitingId")) {
                 Long waitingId = Long.valueOf(String.valueOf(data.get("waitingId")));
                 
-                // ★ 여기가 제일 중요합니다 (매핑 저장)
+                // ★ 매핑 저장
                 waitingSessions.put(waitingId, session);
+                
+                // ✅ 세션 속성에도 저장 (연결 종료 시 사용)
+                session.getAttributes().put("waitingId", waitingId);
+                
                 System.out.println("✅ [웹소켓] 매핑 성공! (WaitingID " + waitingId + " <-> Session " + session.getId() + ")");
                 System.out.println("   현재 접속중인 대기자 수: " + waitingSessions.size() + "명");
             } else {
@@ -85,27 +91,28 @@ public class WaitingWebSocketHandler extends TextWebSocketHandler {
             if (s.isOpen()) {
                 try {
                     s.sendMessage(new TextMessage("NOTICE:" + msg));
-                } catch (IOException e) {}
+                } catch (IOException e) {
+                    System.err.println("❌ [웹소켓] 공지 발송 실패: " + e.getMessage());
+                }
             }
         });
+        
+        System.out.println("✅ [웹소켓] 전체 공지 발송 완료");
     }
 
     // 5. 연결 해제
-//    @Override
-//    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-//    	waitingSessions.values().removeIf(s -> s.getId().equals(session.getId()));
-//        System.out.println("🔌 [웹소켓] 연결 끊김 (Session ID: " + session.getId() + ")");
-//    }
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        // 세션에 저장해둔 ID를 꺼냅니다. (반복문 X, 바로 조회 O)
+        // 세션에 저장해둔 waitingId를 꺼냅니다.
         Long waitingId = (Long) session.getAttributes().get("waitingId");
         
         if (waitingId != null) {
-            waitingSessions.remove(waitingId); 
-            System.out.println("🔌 [웹소켓] 연결 종료 및 삭제 완료 (ID: " + waitingId + ")");
+            waitingSessions.remove(waitingId);
+            System.out.println("🔌 [웹소켓] 연결 종료 및 삭제 완료 (WaitingID: " + waitingId + ")");
         } else {
             System.out.println("🔌 [웹소켓] 단순 연결 종료 (매핑된 ID 없음)");
         }
+        
+        System.out.println("   현재 접속자 수: " + waitingSessions.size() + "명");
     }
 }
