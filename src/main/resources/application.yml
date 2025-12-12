@@ -20,8 +20,8 @@ spring:
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver
     url: jdbc:oracle:thin:@llgabbhp32n2794c_medium?TNS_ADMIN=C:/dev/Wallet_Yamipick 
-    username: yamipick 
-    password: Java123456789  
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     
     # 오라클클라우드 세션 관리
     hikari:

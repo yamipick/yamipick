@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  springboot-app:
+    build: .
+    container_name: my-springboot-app
+    ports:
+      - "8080:8080"  # 호스트포트:컨테이너포트
+    volumes:
+      # [호스트(EC2)의 지갑 경로] : [컨테이너 내부 경로]
+      - ./wallet:/app/wallet
+    environment:
+      # 타임존 설정 (한국 시간)
+      - TZ=Asia/Seoul
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@llgabbhp32n2794c_medium?TNS_ADMIN=/app/wallet
+      - SPRING_DATASOURCE_USERNAME=yamipick
+      - SPRING_DATASOURCE_PASSWORD=Java123456789
+      - DB_USERNAME=yamipick
+      - DB_PASSWORD=Java123456789
+    restart: always

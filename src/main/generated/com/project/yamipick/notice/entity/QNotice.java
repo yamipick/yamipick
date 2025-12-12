@@ -32,7 +32,7 @@ public class QNotice extends EntityPathBase<Notice> {
 
     public final StringPath title = createString("title");
 
-    public final NumberPath<Long> viewCount = createNumber("viewCount", Long.class);
+    public final NumberPath<Integer> viewCount = createNumber("viewCount", Integer.class);
 
     public final com.project.yamipick.user.entity.QUser writer;
 

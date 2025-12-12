@@ -19,7 +19,7 @@ public class QUser extends EntityPathBase<User> {
 
     public static final QUser user = new QUser("user");
 
-    public final DatePath<java.time.LocalDate> createdAt = createDate("createdAt", java.time.LocalDate.class);
+    public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
 
     public final StringPath email = createString("email");
 
@@ -38,6 +38,8 @@ public class QUser extends EntityPathBase<User> {
     public final NumberPath<Long> seqUser = createNumber("seqUser", Long.class);
 
     public final StringPath statusUser = createString("statusUser");
+
+    public final DateTimePath<java.time.LocalDateTime> suspendedUntil = createDateTime("suspendedUntil", java.time.LocalDateTime.class);
 
     public final StringPath userId = createString("userId");
 
