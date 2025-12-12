@@ -89,15 +89,17 @@
 	    <div th:if="${notifications != null and !#lists.isEmpty(notifications)}">
 	        <h3>알림</h3>
 	        <ul>
-	            <li th:each="n : ${notifications}"
-	                th:text="${#temporals.format(n.reserveDate, 'yyyy-MM-dd') 
-	                         + ' ' 
-	                         + n.reserveTime
-	                         + ' 예약이 '
-	                         + (n.status == '완료' ? '확정' : n.status)
-	                         + '되었습니다.'}">
-	                알림 내용
-	            </li>
+	            <li th:each="n : ${notifications}">
+				    <span th:text="${#temporals.format(n.reserveDate, 'yyyy-MM-dd') + ' ' + n.reserveTime}"></span>
+				    <span>'</span>
+				    <span th:text="${n.storeName}"></span>
+				    <span>' 예약이 </span>
+				    <span th:text="${n.status == '완료' ? '확정'
+				                   : (n.status == '반려' ? '반려'
+				                      : (n.status == '만료' ? '만료'
+				                         : n.status))}"></span>
+				    <span>되었습니다.</span>
+				</li>
 	        </ul>
 	    </div>
 	

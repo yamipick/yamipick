@@ -16,8 +16,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.project.yamipick.reservation.auth.CustomUserDetails; // ★ 네가 만든 클래스 import
+import com.project.yamipick.reservation.dto.HolidayDTO;
 import com.project.yamipick.reservation.dto.ReservationDTO;
 import com.project.yamipick.reservation.repository.StoreTableTypeRepository;
+import com.project.yamipick.reservation.service.HolidayService;
 import com.project.yamipick.reservation.service.ReservationService;
 import com.project.yamipick.store.repository.StoreRepository;
 import com.project.yamipick.store.service.StoreService;
@@ -34,6 +36,7 @@ public class ReservationPageController {
 	private final StoreRepository storeRepository;
 	private final StoreTableTypeRepository storeTableTypeRepository;
 	private final StoreService storeService;
+	private final HolidayService holidayService;
 
 	// 예약 메인화면
 	@GetMapping("/main")
@@ -215,6 +218,16 @@ public class ReservationPageController {
 	        @RequestParam("month") int month) {
 
 		return reservationService.getHolidayDatesForMonth(seqStore, year, month);
+	}
+	
+	//공휴일API
+	@GetMapping("/public-holidays")
+	@ResponseBody
+	public List<HolidayDTO> publicHolidays(
+	        @RequestParam("year") int year,
+	        @RequestParam("month") int month) {
+
+	    return holidayService.getHolidays(year, month);
 	}
 
 }

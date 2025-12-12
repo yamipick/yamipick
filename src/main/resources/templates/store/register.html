@@ -98,31 +98,23 @@
 <hr>
 
 <!-- ========================= -->
-<!-- 테이블 타입 / 인원 / 개수 -->
+<!-- 테이블 타입 설정 (프리셋 선택) -->
 <!-- ========================= -->
-	<h3>테이블 타입 설정</h3>
+<h3>테이블 타입 설정</h3>
 
-		<div id="tableTypeContainer">
-		    <!-- 기본 1개 타입 -->
-		    <div class="table-type-row" style="margin-bottom: 8px;">
-		        <label>테이블 타입 이름</label>
-		        <input type="text" name="tableTypeName" placeholder="예: 2인석" required>
-		
-		        <label>테이블당 최대 인원</label>
-		        <input type="number" name="tableCapacity" min="1" value="2" required style="width:80px;">
-		
-		        <label>테이블 개수</label>
-		        <input type="number" name="tableQuantity" min="1" value="1" required style="width:80px;">
-		
-		        <button type="button"
-		                class="removeTableTypeBtn"
-		                onclick="removeTableTypeRow(this)">
-		            삭제
-		        </button>
-		    </div>
-		</div>
-		
-		<button type="button" onclick="addTableTypeRow()">테이블 타입 추가</button>
+<!-- 프리셋 선택 -->
+<div id="tableTypePreset">
+    <label><input type="checkbox" value="홀" onchange="toggleTableType(this)"> 홀</label>
+    <label><input type="checkbox" value="바" onchange="toggleTableType(this)"> 바</label>
+    <label><input type="checkbox" value="룸" onchange="toggleTableType(this)"> 룸</label>
+    <label><input type="checkbox" value="테라스" onchange="toggleTableType(this)"> 테라스</label>
+    <label><input type="checkbox" value="창가" onchange="toggleTableType(this)"> 창가</label>
+</div>
+
+<br>
+
+<!-- 선택된 테이블 타입 입력 영역 -->
+<div id="selectedTableTypes"></div>
 	
 	<div th:if="${errorMessage}" style="color:red;">
 	    [[${errorMessage}]]
@@ -280,5 +272,60 @@
 	    }
 	});
 </script>
+<script>
+function toggleTableType(checkbox) {
+    const typeName = checkbox.value;
+    const container = document.getElementById("selectedTableTypes");
+    const rowId = "table-type-" + typeName;
+
+    if (checkbox.checked) {
+        if (document.getElementById(rowId)) return;
+
+        const div = document.createElement("div");
+        div.id = rowId;
+        div.style.marginBottom = "8px";
+
+        div.innerHTML = `
+            <strong>${typeName}</strong>
+            <input type="hidden" name="tableTypeName" value="${typeName}">
+
+            <label> 테이블 최대 인원</label>
+            <input type="number" name="tableCapacity" min="1" required style="width:80px;">
+
+            <label> 테이블 개수</label>
+            <input type="number" name="tableQuantity" min="1" required style="width:80px;">
+
+            <button type="button" onclick="removeTableType('${typeName}')">삭제</button>
+        `;
+
+        container.appendChild(div);
+    } else {
+        removeTableType(typeName);
+    }
+}
+
+function removeTableType(typeName) {
+    const row = document.getElementById("table-type-" + typeName);
+    if (row) row.remove();
+
+    const checkbox = document.querySelector(
+        `#tableTypePreset input[value="${typeName}"]`
+    );
+    if (checkbox) checkbox.checked = false;
+}
+
+// 최소 1개 선택 검증
+document.querySelector("form").addEventListener("submit", function (e) {
+    const count = document.querySelectorAll(
+        "#selectedTableTypes input[name='tableTypeName']"
+    ).length;
+
+    if (count === 0) {
+        alert("테이블 타입을 최소 1개 이상 선택해주세요.");
+        e.preventDefault();
+    }
+});
+</script>
+
 </body>
 </html>

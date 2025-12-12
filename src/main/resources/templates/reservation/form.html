@@ -9,6 +9,12 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+<style>
+    .public-holiday-day {
+	    color: rgba(200, 70, 70, 0.65) !important; /* 옅은 빨강 + 약간 회색 */
+	    font-weight: 700;
+	}
+</style>
 </head>
 <body>
 
@@ -61,328 +67,331 @@
     </form>
 
 <script th:inline="javascript">
-    window.addEventListener('DOMContentLoaded', function () {
+window.addEventListener('DOMContentLoaded', function () {
 
-        // 🔹 DOM 요소들
-        const hiddenDateInput = document.getElementById('reserveDate');      // hidden input (th:field="*{reserveDate}")
-        const calendarEl      = document.getElementById('reserveDateCalendar'); // 항상 떠있는 달력 div
-        const timeSelect      = document.getElementById('reserveTime');
-        const peopleInput     = document.getElementById('peopleCount');
-        const form            = document.getElementById('reservationForm');
+    const hiddenDateInput = document.getElementById('reserveDate');
+    const calendarEl      = document.getElementById('reserveDateCalendar');
+    const timeSelect      = document.getElementById('reserveTime');
+    const peopleInput     = document.getElementById('peopleCount');
+    const form            = document.getElementById('reservationForm');
 
-        // 🔹 서버에서 내려보낸 seqStore (Thymeleaf)
-        const seqStore = /*[[${reservation.seqStore}]]*/ null;
+    const seqStore = /*[[${reservation.seqStore}]]*/ null;
 
-        // 🔹 휴무일 세트 (yyyy-MM-dd 문자열)
-        let holidaySet = new Set();
-        let fpInstance = null;
+    let holidaySet = new Set();
+    let fpInstance = null;
 
-        if (!seqStore) {
-            console.error('seqStore가 없습니다. (예약 폼 진입 시 매장 ID 필요)');
+    let publicHolidaySet = new Set();
+    let publicHolidayMap = new Map();
+
+    if (!seqStore) {
+        console.error('seqStore가 없습니다.');
+        return;
+    }
+
+    // ===============================
+    // 1) 시간 옵션 로딩
+    // ===============================
+    function loadTimeSlots(dateStr) {
+        if (!timeSelect) return;
+
+        const dateVal   = dateStr || hiddenDateInput.value;
+        const peopleVal = peopleInput ? peopleInput.value : null;
+
+        if (!dateVal || !peopleVal) {
+            timeSelect.innerHTML = '';
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = '날짜와 인원을 선택해주세요';
+            opt.selected = true;
+            timeSelect.appendChild(opt);
             return;
         }
 
-        // ===============================
-        // 1) 시간 옵션 로딩 함수
-        // ===============================
-        function loadTimeSlots(dateStr) {
+        // ✅ 휴무일/공휴일이면 시간 막기
+        if (holidaySet.has(dateVal) || publicHolidaySet.has(dateVal)) {
+            timeSelect.innerHTML = '';
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = publicHolidaySet.has(dateVal)
+                ? `공휴일(${publicHolidayMap.get(dateVal) || '공휴일'})에는 예약할 수 없습니다.`
+                : '휴무일에는 예약할 수 없습니다.';
+            opt.disabled = true;
+            opt.selected = true;
+            timeSelect.appendChild(opt);
+            return;
+        }
 
-            if (!timeSelect) return;
+        const url = `/reservation/available-times`
+            + `?seqStore=${encodeURIComponent(seqStore)}`
+            + `&reserveDate=${encodeURIComponent(dateVal)}`
+            + `&peopleCount=${encodeURIComponent(peopleVal)}`;
 
-            const dateVal   = dateStr || hiddenDateInput.value;
-            const peopleVal = peopleInput ? peopleInput.value : null;
-
-            // 날짜 / 인원 둘 다 있어야 시간 불러옴
-            if (!dateVal || !peopleVal) {
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
                 timeSelect.innerHTML = '';
-                const opt = document.createElement('option');
-                opt.value = '';
-                opt.textContent = '날짜와 인원을 선택해주세요';
-                opt.selected = true;
-                timeSelect.appendChild(opt);
-                return;
-            }
 
-            // 선택한 날짜가 휴무일이면 막기
-            if (holidaySet.has(dateVal)) {
-                timeSelect.innerHTML = '';
-                const opt = document.createElement('option');
-                opt.value = '';
-                opt.textContent = '휴무일에는 예약할 수 없습니다.';
-                opt.disabled = true;
-                opt.selected = true;
-                timeSelect.appendChild(opt);
-                return;
-            }
-
-            const url = `/reservation/available-times`
-                + `?seqStore=${encodeURIComponent(seqStore)}`
-                + `&reserveDate=${encodeURIComponent(dateVal)}`
-                + `&peopleCount=${encodeURIComponent(peopleVal)}`;
-
-            fetch(url)
-                .then(res => res.json())
-                .then(data => {
-                    timeSelect.innerHTML = '';
-
-                    if (!data || data.length === 0) {
-                        const opt = document.createElement('option');
-                        opt.value = '';
-                        opt.textContent = '예약 가능한 시간이 없습니다. (휴무/마감)';
-                        opt.disabled = true;
-                        opt.selected = true;
-                        timeSelect.appendChild(opt);
-                        return;
-                    }
-
-                    const placeholder = document.createElement('option');
-                    placeholder.value = '';
-                    placeholder.textContent = '-- 시간 선택 --';
-                    placeholder.disabled = true;
-                    placeholder.selected = true;
-                    timeSelect.appendChild(placeholder);
-
-                    let hasAnyAvailable = false;
-
-                    data.forEach(slot => {
-                        const opt = document.createElement('option');
-                        opt.value = slot.time;
-
-                        if (slot.available) {
-                            opt.textContent = slot.time;
-                            hasAnyAvailable = true;
-                        } else {
-                            opt.textContent = slot.time + ' (예약 불가)';
-                            opt.disabled = true;
-                        }
-
-                        timeSelect.appendChild(opt);
-                    });
-
-                    if (!hasAnyAvailable) {
-                        alert('선택하신 날짜에는 예약 가능한 시간이 없습니다.\n(휴무일이거나 모든 시간이 만석입니다.)');
-                    }
-                })
-                .catch(err => {
-                    console.error('시간 로딩 실패', err);
-                    timeSelect.innerHTML = '';
+                if (!data || data.length === 0) {
                     const opt = document.createElement('option');
                     opt.value = '';
-                    opt.textContent = '시간 정보를 불러오지 못했습니다.';
+                    opt.textContent = '예약 가능한 시간이 없습니다. (휴무/마감)';
                     opt.disabled = true;
                     opt.selected = true;
                     timeSelect.appendChild(opt);
+                    return;
+                }
+
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = '-- 시간 선택 --';
+                placeholder.disabled = true;
+                placeholder.selected = true;
+                timeSelect.appendChild(placeholder);
+
+                data.forEach(slot => {
+                    const opt = document.createElement('option');
+                    opt.value = slot.time;
+
+                    if (slot.available) {
+                        opt.textContent = slot.time;
+                    } else {
+                        opt.textContent = slot.time + ' (예약 불가)';
+                        opt.disabled = true;
+                    }
+
+                    timeSelect.appendChild(opt);
                 });
-        }
+            })
+            .catch(err => {
+                console.error('시간 로딩 실패', err);
+            });
+    }
 
-        // ===============================
-        // 2) 휴무일 로딩 + flatpickr disable 적용
-        // ===============================
-        function updateFlatpickrDisable() {
-            if (!fpInstance) return;
+    // ===============================
+    // 2) disable 규칙 적용 (instance 기반)
+    // ===============================
+    function updateFlatpickrDisable(instance) {
+        const inst = instance || fpInstance;
+        if (!inst) return;
 
-            fpInstance.set('disable', [
-                function(date) {
-                    const yyyy = date.getFullYear();
-                    const mm = String(date.getMonth() + 1).padStart(2, '0');
-                    const dd = String(date.getDate()).padStart(2, '0');
-                    const s = `${yyyy}-${mm}-${dd}`;
+        inst.set('disable', [
+            function(date) {
+                const yyyy = date.getFullYear();
+                const mm = String(date.getMonth() + 1).padStart(2, '0');
+                const dd = String(date.getDate()).padStart(2, '0');
+                const s = `${yyyy}-${mm}-${dd}`;
 
-                    // true 반환하면 "선택 불가능" (휴무일)
-                    return holidaySet.has(s);
+                return holidaySet.has(s) || publicHolidaySet.has(s);
+            }
+        ]);
+    }
+
+    // ===============================
+    // 3) 휴무일 로딩 (Promise 반환)
+    // ===============================
+    function loadHolidays(year, month, instance) {
+        const url = `/reservation/holiday-dates`
+            + `?seqStore=${encodeURIComponent(seqStore)}`
+            + `&year=${year}`
+            + `&month=${month}`;
+
+        return fetch(url)
+            .then(res => res.json())
+            .then(list => {
+                if (!Array.isArray(list)) {
+                    console.error('휴무일 응답 형식이 이상함:', list);
+                    return;
                 }
-            ]);
-        }
+                holidaySet = new Set(list);
 
-        function loadHolidays(year, month) {
-            const url = `/reservation/holiday-dates`
-                + `?seqStore=${encodeURIComponent(seqStore)}`
-                + `&year=${year}`
-                + `&month=${month}`;
+                updateFlatpickrDisable(instance);
 
-            fetch(url)
-                .then(res => res.json())
-                .then(holidays => {
+                // ✅ 색칠(=dayCreate) 다시 돌리기
+                if (instance) instance.redraw();
+            })
+            .catch(err => console.error('휴무일 로딩 실패', err));
+    }
 
-                    if (!Array.isArray(holidays)) {
-                        console.error('휴무일 응답 형식이 이상함:', holidays);
-                        return;
-                    }
+    // ===============================
+    // 4) 공휴일 로딩 (Promise 반환)
+    // ===============================
+    function loadPublicHolidays(year, month, instance) {
+        const url = `/reservation/public-holidays?year=${year}&month=${month}`;
 
-                    holidaySet = new Set(holidays);
-                    updateFlatpickrDisable();
+        return fetch(url)
+            .then(res => res.json())
+            .then(list => {
+                publicHolidaySet = new Set();
+                publicHolidayMap = new Map();
 
-                    // 현재 선택된 날짜가 휴무일이 되어버린 상황이면 처리
-                    const currentVal = hiddenDateInput.value;
-                    if (currentVal && holidaySet.has(currentVal)) {
-                        alert('선택하신 날짜가 매장 휴무일입니다. 다른 날짜를 선택해 주세요.');
-                        hiddenDateInput.value = '';
-                        if (timeSelect) {
-                            timeSelect.innerHTML = '';
-                            const opt = document.createElement('option');
-                            opt.value = '';
-                            opt.textContent = '날짜와 인원을 선택해주세요';
-                            opt.selected = true;
-                            timeSelect.appendChild(opt);
+                console.log('공휴일 응답:', list); // ✅ 이 로그 꼭 확인
+
+                if (Array.isArray(list)) {
+                    list.forEach(h => {
+                        if (h && h.date) {
+                            publicHolidaySet.add(h.date);
+                            publicHolidayMap.set(h.date, h.name || '공휴일');
                         }
+                    });
+                }
+
+                updateFlatpickrDisable(instance);
+
+                // ✅ 색칠(=dayCreate) 다시 돌리기
+                if (instance) instance.redraw();
+            })
+            .catch(err => console.error('공휴일 로딩 실패', err));
+    }
+
+    // ===============================
+    // 5) flatpickr 초기화
+    // ===============================
+    if (calendarEl && hiddenDateInput) {
+        const today = new Date();
+        const maxDate = new Date(today);
+        maxDate.setMonth(maxDate.getMonth() + 1);
+
+        fpInstance = flatpickr(calendarEl, {
+            inline: true,
+            locale: 'ko',
+            dateFormat: 'Y-m-d',
+            minDate: 'today',
+            maxDate: maxDate,
+
+            onReady: function(selectedDates, dateStr, instance) {
+                // ✅ 여기서 instance를 확정(타이밍 문제 방지)
+                fpInstance = instance;
+
+                let initialDateStr = hiddenDateInput.value;
+                if (!initialDateStr) {
+                    const yyyy = today.getFullYear();
+                    const mm = String(today.getMonth() + 1).padStart(2, '0');
+                    const dd = String(today.getDate()).padStart(2, '0');
+                    initialDateStr = `${yyyy}-${mm}-${dd}`;
+                    hiddenDateInput.value = initialDateStr;
+                }
+
+                instance.setDate(initialDateStr, true);
+
+                const y = today.getFullYear();
+                const m = today.getMonth() + 1;
+
+                // ✅ 둘 다 불러오고 redraw까지 보장
+                loadHolidays(y, m, instance);
+                loadPublicHolidays(y, m, instance);
+
+                loadTimeSlots(initialDateStr);
+            },
+
+            onMonthChange: function(selectedDates, dateStr, instance) {
+                const year  = instance.currentYear;
+                const month = instance.currentMonth + 1;
+                loadHolidays(year, month, instance);
+                loadPublicHolidays(year, month, instance);
+            },
+
+            onDayCreate: function(dObj, dStr, fp, dayElem) {
+                const date = dayElem.dateObj;
+                const yyyy = date.getFullYear();
+                const mm = String(date.getMonth() + 1).padStart(2, '0');
+                const dd = String(date.getDate()).padStart(2, '0');
+                const s = `${yyyy}-${mm}-${dd}`;
+
+                // ✅ 공휴일 색칠
+                if (publicHolidaySet.has(s)) {
+                    dayElem.classList.add('public-holiday-day');
+                    dayElem.setAttribute('title', publicHolidayMap.get(s) || '공휴일');
+                }
+            },
+
+            onChange: function(selectedDates, dateStr, instance) {
+                if (!dateStr) return;
+
+                // ✅ 휴무일/공휴일 막기
+                if (holidaySet.has(dateStr) || publicHolidaySet.has(dateStr)) {
+                    alert(publicHolidaySet.has(dateStr)
+                        ? `공휴일(${publicHolidayMap.get(dateStr) || '공휴일'})에는 예약할 수 없습니다.`
+                        : '해당 날짜는 매장 휴무일입니다. 다른 날짜를 선택해 주세요.'
+                    );
+
+                    instance.clear();
+                    hiddenDateInput.value = '';
+                    if (timeSelect) {
+                        timeSelect.innerHTML = '';
+                        const opt = document.createElement('option');
+                        opt.value = '';
+                        opt.textContent = '날짜와 인원을 선택해주세요';
+                        opt.selected = true;
+                        timeSelect.appendChild(opt);
                     }
-                })
-                .catch(err => {
-                    console.error('휴무일 로딩 실패', err);
-                });
-        }
-
-        // ===============================
-        // 3) flatpickr (inline) 초기화
-        // ===============================
-        if (calendarEl && hiddenDateInput) {
-
-        	const today = new Date();
-        	const maxDate = new Date(today);
-        	maxDate.setMonth(maxDate.getMonth() + 1);   // 한 달 뒤
-        	
-            fpInstance = flatpickr(calendarEl, {
-                inline: true,           // 🔥 항상 떠있는 달력
-                locale: 'ko',
-                dateFormat: 'Y-m-d',    // 백엔드 LocalDate와 동일 (yyyy-MM-dd)
-                
-            	minDate: 'today',
-            	maxDate: maxDate, // 한 달 뒤까지만 선택 가능
-
-                // 달력 준비되면 현재 월 휴무일 + 기본 날짜 세팅
-                onReady: function(selectedDates, dateStr, instance) {
-                    const today = new Date();
-
-                    // hidden에 값이 이미 있으면 그걸 기본으로, 아니면 오늘날짜
-                    let initialDateStr = hiddenDateInput.value;
-                    if (!initialDateStr) {
-                        const yyyy = today.getFullYear();
-                        const mm = String(today.getMonth() + 1).padStart(2, '0');
-                        const dd = String(today.getDate()).padStart(2, '0');
-                        initialDateStr = `${yyyy}-${mm}-${dd}`;
-                        hiddenDateInput.value = initialDateStr;
-                    }
-
-                    // 캘린더에도 선택 반영
-                    instance.setDate(initialDateStr, true);
-
-                    // 휴무일 로딩 + 시간 로딩
-                    loadHolidays(today.getFullYear(), today.getMonth() + 1);
-                    loadTimeSlots(initialDateStr);
-                },
-
-                // 월 바뀔 때마다 해당 연월 휴무일 다시 로딩
-                onMonthChange: function(selectedDates, dateStr, instance) {
-                    const year  = instance.currentYear;
-                    const month = instance.currentMonth + 1; // 0-based → 1-based
-                    loadHolidays(year, month);
-                },
-
-                // 날짜 선택 시 시간 슬롯 로딩
-                onChange: function(selectedDates, dateStr, instance) {
-                    if (!dateStr) return;
-
-                    // 선택한 날짜가 휴무일이면 막기
-                    if (holidaySet.has(dateStr)) {
-                        alert('해당 날짜는 매장 휴무일입니다. 다른 날짜를 선택해 주세요.');
-                        instance.clear();
-                        hiddenDateInput.value = '';
-                        if (timeSelect) {
-                            timeSelect.innerHTML = '';
-                            const opt = document.createElement('option');
-                            opt.value = '';
-                            opt.textContent = '날짜와 인원을 선택해주세요';
-                            opt.selected = true;
-                            timeSelect.appendChild(opt);
-                        }
-                        return;
-                    }
-
-                    // ✅ 선택된 날짜를 hidden input에 저장
-                    hiddenDateInput.value = dateStr;
-
-                    // ✅ 시간 목록 갱신
-                    loadTimeSlots(dateStr);
-                }
-            });
-        }
-
-        // ===============================
-        // 4) 인원 변경 시 시간 다시 계산
-        // ===============================
-        if (peopleInput) {
-            peopleInput.addEventListener('input', function () {
-                const dateVal = hiddenDateInput.value;
-                if (dateVal) {
-                    loadTimeSlots(dateVal);
-                }
-            });
-        }
-
-        // ===============================
-        // 5) 폼 submit 검증
-        // ===============================
-        if (form) {
-            form.addEventListener('submit', function (e) {
-                const dateVal   = hiddenDateInput.value;
-                const peopleVal = peopleInput ? peopleInput.value : null;
-                const timeVal   = timeSelect ? timeSelect.value : null;
-
-                if (!dateVal) {
-                    alert('예약 날짜를 선택해 주세요.');
-                    e.preventDefault();
                     return;
                 }
-                if (holidaySet.has(dateVal)) {
-                    alert('휴무일에는 예약할 수 없습니다.');
-                    e.preventDefault();
-                    return;
-                }
-                if (!timeVal) {
-                    alert('예약 시간을 선택해 주세요.');
-                    e.preventDefault();
-                    return;
-                }
-                if (!peopleVal || Number(peopleVal) <= 0) {
-                    alert('인원 수를 입력해 주세요.');
-                    e.preventDefault();
-                    return;
-                }
-            });
+
+                hiddenDateInput.value = dateStr;
+                loadTimeSlots(dateStr);
+            }
+        });
+    }
+
+    // 인원 변경 시 시간 다시 계산
+    if (peopleInput) {
+        peopleInput.addEventListener('input', function () {
+            const dateVal = hiddenDateInput.value;
+            if (dateVal) loadTimeSlots(dateVal);
+        });
+    }
+
+    // submit 검증 (공휴일도 포함)
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            const dateVal   = hiddenDateInput.value;
+            const peopleVal = peopleInput ? peopleInput.value : null;
+            const timeVal   = timeSelect ? timeSelect.value : null;
+
+            if (!dateVal) {
+                alert('예약 날짜를 선택해 주세요.');
+                e.preventDefault();
+                return;
+            }
+            if (holidaySet.has(dateVal) || publicHolidaySet.has(dateVal)) {
+                alert('휴무일/공휴일에는 예약할 수 없습니다.');
+                e.preventDefault();
+                return;
+            }
+            if (!timeVal) {
+                alert('예약 시간을 선택해 주세요.');
+                e.preventDefault();
+                return;
+            }
+            if (!peopleVal || Number(peopleVal) <= 0) {
+                alert('인원 수를 입력해 주세요.');
+                e.preventDefault();
+                return;
+            }
+        });
+    }
+
+    // 인원수 제한
+    const MAX_PEOPLE = 20;
+    const tableSelectBtn = document.getElementById('tableSelectBtn');
+
+    function checkPeopleLimit() {
+        const p = Number(peopleInput.value);
+        if (p >= MAX_PEOPLE) {
+            tableSelectBtn.disabled = true;
+            tableSelectBtn.textContent = `${MAX_PEOPLE}명 이상의 예약은 매장으로 문의 바랍니다.`;
+        } else {
+            tableSelectBtn.disabled = false;
+            tableSelectBtn.textContent = "테이블 타입 선택";
         }
-        
-     // ===============================
-     // 6) 인원수 최대 제한 (예: 20명)
-     // ===============================
-     const MAX_PEOPLE = 20;
-     const tableSelectBtn = document.getElementById('tableSelectBtn');
+    }
 
-     function checkPeopleLimit() {
-         const p = Number(peopleInput.value);
+    if (peopleInput) peopleInput.addEventListener('input', checkPeopleLimit);
+    checkPeopleLimit();
 
-         if (p >= MAX_PEOPLE) {
-             // 버튼 비활성화
-             tableSelectBtn.disabled = true;
-             // 문구 변경
-             tableSelectBtn.textContent = `${MAX_PEOPLE}명 이상의 예약은 매장으로 문의 바랍니다.`;
-         } else {
-             // 다시 활성화
-             tableSelectBtn.disabled = false;
-             // 기존 문구 복구
-             tableSelectBtn.textContent = "테이블 타입 선택";
-         }
-     }
-
-     // 인원 입력 시마다 검사 실행
-     if (peopleInput) {
-         peopleInput.addEventListener('input', checkPeopleLimit);
-     }
-
-     // 페이지 로드시 초기 검사(수정 화면 대비)
-     checkPeopleLimit();
-
-    });
+});
 </script>
+
 
 </body>
 </html>
