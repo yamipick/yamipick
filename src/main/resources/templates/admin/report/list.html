@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>신고 관리 - Yamipick Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="/css/admin.css" rel="stylesheet">
+    <style>
+        .nav-pills .nav-link.active { background-color: #dc3545; }
+        .table th { background-color: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{admin/common/header :: header}"></div>
+
+<div class="admin-content">
+    <div class="container-fluid">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold text-dark"><i class="fas fa-exclamation-triangle me-2 text-danger"></i>신고 관리</h2>
+        </div>
+
+        <ul class="nav nav-pills mb-3">
+            <li class="nav-item">
+                <a class="nav-link" th:classappend="${status == 'ALL'} ? 'active'" href="/admin/report/list?status=ALL">전체</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" th:classappend="${status == 'PENDING'} ? 'active'" href="/admin/report/list?status=PENDING">처리 대기</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" th:classappend="${status == 'PROCESSED'} ? 'active'" href="/admin/report/list?status=PROCESSED">처리 완료</a>
+            </li>
+        </ul>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <table class="table table-hover table-bordered m-0 align-middle text-center">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>유형</th>
+                            <th>대상ID</th>
+                            <th>사유</th>
+                            <th>신고자</th>
+                            <th>접수일</th>
+                            <th>상태</th>
+                            <th>관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${list == null or list.isEmpty()}">
+                            <td colspan="8" class="py-5 text-muted">접수된 신고 내역이 없습니다.</td>
+                        </tr>
+                        <tr th:each="report : ${list}">
+                            <td th:text="${report.seqReport}">1</td>
+                            <td><span class="badge bg-light text-dark border" th:text="${report.targetType}">REVIEW</span></td>
+                            <td th:text="${report.targetId}">101</td>
+                            <td class="text-start text-truncate" style="max-width: 200px;" th:text="${report.reason}">욕설</td>
+                            <td th:text="${report.reporterId}">user1</td>
+                            <td th:text="${report.createdAt}">2024-01-01</td>
+                            <td>
+                                <span class="badge" th:classappend="${report.status == 'PENDING' ? 'bg-warning text-dark' : 'bg-success'}"
+                                      th:text="${report.status}">PENDING</span>
+                            </td>
+                            <td>
+                                <button th:if="${report.status == 'PENDING'}" class="btn btn-sm btn-outline-danger"
+                                        th:onclick="openReportProcessModal([[${report.seqReport}]], [[${report.reason}]])">
+                                    <i class="fas fa-gavel"></i> 판결
+                                </button>
+                                <button th:if="${report.status == 'PROCESSED'}" class="btn btn-sm btn-secondary" disabled>완료됨</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        </div>
+</div>
+
+<div class="modal fade" id="processModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-gavel me-2"></i>신고 처리 및 제재</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/admin/report/process" method="post">
+                <div class="modal-body">
+                    <input type="hidden" id="modalSeqReport" name="seqReport">
+                    <input type="hidden" name="currentFilter" th:value="${status}">
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">신고 내용</label>
+                        <input type="text" id="modalReason" class="form-control bg-light" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-danger">판결 (제재 수위)</label>
+                        <select class="form-select" name="penaltyType" required>
+                            <option value="NONE" selected>⚠️ 기각 / 경고 (제재 없음)</option>
+                            <option value="SUSPEND_3">⛔ 3일 이용 정지</option>
+                            <option value="SUSPEND_7">⛔ 7일 이용 정지</option>
+                            <option value="SUSPEND_PERMANENT">🚫 영구 이용 정지</option>
+                            <option value="WITHDRAW">💀 강제 탈퇴 처리</option>
+                        </select>
+                        <div class="form-text small">선택 시 해당 회원의 상태가 즉시 변경됩니다.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">관리자 코멘트 (처리 사유)</label>
+                        <textarea class="form-control" name="comment" rows="3" required placeholder="예: 욕설 확인되어 3일 정지 처리함"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="submit" class="btn btn-danger">판결 확정</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/admin.js"></script>
+<script>
+    // 모달 데이터 바인딩 함수 (admin.js에 없으면 여기 사용)
+    function openReportProcessModal(seq, reason) {
+        document.getElementById('modalSeqReport').value = seq;
+        document.getElementById('modalReason').value = reason;
+        const modal = new bootstrap.Modal(document.getElementById('processModal'));
+        modal.show();
+    }
+</script>
+</body>
+</html>
