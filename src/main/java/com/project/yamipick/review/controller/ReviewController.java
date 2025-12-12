@@ -165,9 +165,12 @@ public class ReviewController {
 	    var comments = reviewService.getComments(seqReview);
 	    
 	    model.addAttribute("comments", reviewService.getComments(seqReview));
-	    model.addAttribute("commentCount", comments.size());
+	    model.addAttribute("comments", comments);
+	    model.addAttribute("commentCount",
+	            reviewService.getCommentCount(seqReview));
 	    model.addAttribute("isFavorite", reviewService.isFavorite(seqReview, seqUser));
 	    model.addAttribute("isScrap", reviewService.isScrap(seqReview, seqUser));
+
 
 	    return "review/reviewview";
 	}
@@ -223,21 +226,36 @@ public class ReviewController {
 	}
 	
 	@GetMapping("/review/reviewedit")
-	public String reviewedit() {
+	public String reviewEdit(@RequestParam("seqReview") Long seqReview, Model model) {
 		
-		return "review/reviewedit";
+	    BoardReviewDTO dto = reviewService.getReviewForEdit(seqReview);
+	    
+	    model.addAttribute("review", dto);
+	    model.addAttribute("kakaoAppKey", kakaoAppKey);
+	    
+	    return "review/reviewedit";
 	}
 	
 	@PostMapping("/review/revieweditok")
-	public String revieweditok() {
-		
-		return "review/revieweditok";
+	public String reviewEditOk(BoardReviewDTO dto, Principal principal) {
+
+	    Long userId = principal != null ? Long.parseLong(principal.getName()) : 1L;
+	    dto.setSeqUser(userId);
+
+	    reviewService.edit(dto);
+	    return "redirect:/review/reviewview?seqReview=" + dto.getSeqReview();
 	}
 	
 	@PostMapping("/review/reviewdeleteok")
-	public String reviewdeleteok() {
+	public String reviewDeleteOk(
+	        @RequestParam("seqReview") Long seqReview,
+	        Principal principal) {
 		
-		return "review/reviewdeleteok";
+		Long seqUser = (principal != null) ? Long.parseLong(principal.getName()) : 1L;
+
+	    reviewService.deleteReview(seqReview, seqUser);
+
+	    return "redirect:/review/reviewlist";
 	}
 	
 	@PostMapping("/review/comment/edit")

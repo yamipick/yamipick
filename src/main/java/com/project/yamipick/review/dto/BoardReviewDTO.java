@@ -38,12 +38,13 @@ public class BoardReviewDTO {
 	private Date regdate;
 	private Integer readCount;
 	private Integer favoriteCount;
-	private String contentState;
-	private String state;
+	private String contentState; // 일반글 / 비밀글
+	private String state; // ACTIVE / DELETED
 	
 	private String nickname;
 	private String tags;
 	private List<String> tagList;
+	private String existingAttach;
 	
 	public BoardReview toEntity(User user) {
 		

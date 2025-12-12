@@ -11,5 +11,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findByReviewSeqReviewOrderByRegdateAsc(Long seqReview);
     
     List<Comment> findByReviewSeqReviewOrderBySeqCommentAsc(Long seqReview);
+    
+    int countByReviewSeqReviewAndState(Long seqReview, String state);
 
 }

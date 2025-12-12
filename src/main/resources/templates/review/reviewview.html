@@ -324,6 +324,30 @@ h2 {
     gap: 4px;
 }
 
+.right-btns {
+    display: flex;
+    gap: 4px;           /* 수정 / 삭제 간격 */
+}
+
+.inline-form {
+    display: inline;    /* form이 줄바꿈 안 하게 */
+}
+
+.inline-form button {
+    all: unset;         /* 기본 button 스타일 제거 */
+    padding: 8.5px 15.5px;
+    background: #8f857d;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.inline-form button:hover {
+    background: #7c726b;
+}
+
 .btn {
 	padding: 8.5px 15.5px;
 	background: #4A2D1A;
@@ -497,7 +521,7 @@ h2 {
 		<div id="commentList">
 		    <div class="comment-item"
 			     th:each="c : ${comments}"
-			     th:attr="data-id=${c.seqComment}"
+			     th:attr="data-id=${c.seqComment}, data-deleted=${c.state}"
 			     th:style="|margin-left: ${c.depth * 30}px|">
 		        
 		        <div class="comment-meta">
@@ -572,11 +596,13 @@ h2 {
 			<a th:href="@{/review/reviewlist}" class="btn">목록</a>
 			<a th:href="@{/review/reviewadd}" class="btn">글쓰기</a>
 		</div>
-		<div>
-			<a th:href="@{/review/edit/{seq}(seq=${review.seqReview})}"
-				class="btn btn-gray">수정</a> <a
-				th:href="@{/review/delete/{seq}(seq=${review.seqReview})}"
-				class="btn btn-gray">삭제</a>
+		<div class="right-btns">
+			<a th:href="@{/review/reviewedit(seqReview=${review.seqReview})}"
+				class="btn btn-gray">수정</a>
+			<form th:action="@{/review/reviewdeleteok}" method="post" class="inline-form" onsubmit="return confirmDelete();">
+			    <input type="hidden" name="seqReview" th:value="${review.seqReview}">
+			    <button type="submit" class="btn btn-gray">삭제</button>
+			</form>
 		</div>
 	</div>
 
@@ -906,12 +932,61 @@ h2 {
 	
 	    if (result.success) {
 		    const el = document.querySelector(`[data-id="${id}"]`);
+		
+		    el.dataset.deleted = "DELETED";
 		    el.classList.add("deleted-comment");
-		    el.innerHTML = `<div class="comment-content">삭제된 댓글입니다.</div>`;
+		
+		    const meta = el.querySelector(".comment-meta");
+		    if (meta) meta.style.display = "none";
+		
+		    const actions = el.querySelector(".comment-action-right");
+		    if (actions) actions.style.display = "none";
+		
+		    const replyBtn = el.querySelector(".reply-btn");
+		    if (replyBtn) replyBtn.style.display = "none";
+		
+		    const replyForm = el.querySelector(".reply-form");
+		    if (replyForm) replyForm.style.display = "none";
+		
+		    const content = el.querySelector(".comment-content");
+		    if (content) {
+		        content.textContent = "삭제된 댓글입니다.";
+		    }
 		}
 	}
 	
+	document.addEventListener("DOMContentLoaded", () => {
+	    document.querySelectorAll(".comment-item").forEach(item => {
+	        if (item.dataset.deleted === "DELETED") {
+	        
+	        	item.classList.add("deleted-comment");
+	        	
+	            // 메타 숨기기
+	            const meta = item.querySelector(".comment-meta");
+	            if (meta) meta.style.display = "none";
 	
+	            // 버튼 영역 숨기기
+	            const actions = item.querySelector(".comment-action-right");
+	            if (actions) actions.style.display = "none";
+	
+	            const replyBtn = item.querySelector(".reply-btn");
+	            if (replyBtn) replyBtn.style.display = "none";
+	
+	            const replyForm = item.querySelector(".reply-form");
+	            if (replyForm) replyForm.style.display = "none";
+	
+	            // 내용 교체
+	            const content = item.querySelector(".comment-content");
+	            if (content) {
+	                content.textContent = "삭제된 댓글입니다.";
+	            }
+	        }
+	    });
+	});
+	
+	function confirmDelete() {
+	    return confirm("정말 삭제하시겠습니까?");
+	}
   
 </script>
 

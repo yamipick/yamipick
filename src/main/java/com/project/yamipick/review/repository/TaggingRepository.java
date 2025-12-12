@@ -11,4 +11,6 @@ public interface TaggingRepository extends JpaRepository<Tagging, Long> {
 
 	List<Tagging> findByReview(BoardReview review);
 
+	void deleteByReview(BoardReview review);
+
 }

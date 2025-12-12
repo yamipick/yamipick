@@ -39,4 +39,12 @@ public interface ReviewService {
 
 	boolean deleteComment(Long seqComment, Long seqUser);
 
+	int getCommentCount(Long seqReview);
+
+	BoardReviewDTO getReviewForEdit(Long seqReview);
+
+	void edit(BoardReviewDTO dto);
+
+	void deleteReview(Long seqReview, Long seqUser);
+
 }

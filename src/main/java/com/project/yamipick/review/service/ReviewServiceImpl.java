@@ -110,6 +110,89 @@ public class ReviewServiceImpl implements ReviewService {
         return saved.getSeqReview();
     }
     
+    @Transactional
+    public void edit(BoardReviewDTO dto) {
+
+        BoardReview review = boardReviewRepository
+            .findById(dto.getSeqReview())
+            .orElseThrow();
+
+        // 작성자 체크
+        if (!review.getUser().getSeqUser().equals(dto.getSeqUser())) {
+            throw new RuntimeException("권한 없음");
+        }
+
+        review.setTitle(dto.getTitle());
+        review.setReviewContent(dto.getReviewContent());
+        review.setStarRating(dto.getStarRating());
+        review.setPlace(dto.getPlace());
+        review.setContentState(dto.getContentState());
+
+        // 🔥 여기
+        if (dto.getFile() == null || dto.getFile().isEmpty()) {
+            // 새 파일 안 올렸으면 기존 이미지 유지
+            review.setAttach(dto.getExistingAttach());
+        } else {
+            // 새 파일 올렸으면 새 이미지로 교체
+            review.setAttach(dto.getAttach());
+        }
+
+        // 태그는 기존 삭제 후 재삽입
+        taggingRepository.deleteByReview(review);
+        // add() 때 쓰던 태그 저장 로직 재사용
+    }
+    
+    @Override
+    public BoardReviewDTO getReviewForEdit(Long seqReview) {
+
+        BoardReview review = boardReviewRepository.findById(seqReview)
+                .orElseThrow(() -> new IllegalArgumentException("리뷰 없음"));
+
+        BoardReviewDTO dto = review.toDTO();
+
+        // 태그도 수정 화면에 필요하면 같이 넣기
+        dto.setTagList(
+            taggingRepository.findByReview(review)
+                .stream()
+                .map(t -> t.getHashtag().getHashtag())
+                .toList()
+        );
+
+        return dto;
+    }
+    
+    @Override
+    @Transactional
+    public void deleteReview(Long seqReview, Long seqUser) {
+
+        BoardReview review = boardReviewRepository.findById(seqReview)
+                .orElseThrow(() -> new IllegalArgumentException("리뷰 없음"));
+
+        // 작성자 체크
+        if (!review.getUser().getSeqUser().equals(seqUser)) {
+            throw new RuntimeException("권한 없음");
+        }
+
+        // 🔥 삭제 처리 (soft delete)
+        review.setState("DELETED");
+        review.setTitle("삭제된 리뷰입니다");
+        review.setReviewContent("삭제된 리뷰입니다");
+        review.setAttach(null);
+        review.setPlace(null);
+        review.setStarRating(null);
+        
+        if (review.getContentState() == null) {
+            review.setContentState("일반글");
+        }
+
+        // 태그 전부 제거
+        taggingRepository.deleteByReview(review);
+
+        // 좋아요 / 스크랩 제거
+        favoriteReviewRepository.deleteByReview(review);
+        scrapReviewRepository.deleteByReview(review);
+    }
+    
     @Override
     public List<CommentDTO> getComments(Long seqReview) {
         List<Comment> raw = commentRepository
@@ -122,6 +205,13 @@ public class ReviewServiceImpl implements ReviewService {
 
         for (Comment c : raw) {
             CommentDTO dto = c.toDTO();
+            
+            if ("Y".equals(c.getState())) {
+                dto.setNickname(null);
+                dto.setRegdate(null);
+                dto.setContent("삭제된 댓글입니다.");
+                dto.setState("Y");
+            }
 
             Long parentId = (c.getParentComment() != null)
                     ? c.getParentComment().getSeqComment()
@@ -261,6 +351,11 @@ public class ReviewServiceImpl implements ReviewService {
     }
     
     @Override
+    public int getCommentCount(Long seqReview) {
+        return commentRepository.countByReviewSeqReviewAndState(seqReview, "ACTIVE");
+    }
+    
+    @Override
     public CommentDTO editComment(Long seqComment, Long seqUser, String content) {
 
         Comment entity = commentRepository.findById(seqComment).orElseThrow();
@@ -331,6 +426,10 @@ public class ReviewServiceImpl implements ReviewService {
 	    // 1. 리뷰 엔티티 조회
 	    BoardReview review = boardReviewRepository.findById(seqReview)
 	            .orElseThrow(() -> new IllegalArgumentException("리뷰 없음"));
+	    
+	    if ("DELETED".equals(review.getState())) {
+	        throw new IllegalStateException("삭제된 리뷰");
+	    }
 
 	    // 2. 조회수 증가
 	    review.setReadCount(review.getReadCount() + 1);
