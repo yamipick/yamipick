@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,14 +33,14 @@ public class ChatService {
     private final AIRecommendService aiRecommendService;
     
     @Transactional
-    public ChatResponse processChat(ChatRequest req) {
+    public ChatResponse processChat(ChatRequest req, Long seqUser) {
 
     	Long sessionId = req.getSeqSession();
         String userMsg = req.getMessage();
 
         // 세션이 없거나 잘못된 경우 → 새 세션 생성
         if (sessionId == null || !aiSessionService.exists(sessionId)) {
-            sessionId = aiSessionService.createSession(1L); // 임시로 유저 1번
+            sessionId = aiSessionService.createSession(seqUser);
             req.setSeqSession(sessionId);
         }
 

@@ -36,6 +36,8 @@ public class SecurityConfig {
             .requestMatchers("/css/**", "/js/**", "/img/**", "/upload/**").permitAll()
             .requestMatchers("/", "/login", "/join", "/joinok").permitAll()
             .requestMatchers("/api/log/**").permitAll()
+            .requestMatchers("/ai/recommend", "/api/ai/recommend/**").permitAll()
+            .requestMatchers("/ai/chatbot", "/api/ai/chatbot/**").authenticated()
             .requestMatchers("/admin/**").hasRole("ADMIN")
             .anyRequest().permitAll() // 개발 끝나면 authenticated()로 변경!
         );

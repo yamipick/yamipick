@@ -141,6 +141,19 @@ header {
     }
     
     .nav-menu.active { display: flex; }
+	
+	.dropdown-menu {
+	        position: static;
+	        display: block;
+	        box-shadow: none;
+	        background-color: transparent;
+	        padding: 0;
+	    }
+
+	    .dropdown-menu li a {
+	        padding: 14px 0;
+	        font-size: 15px;
+	    }
 }
 
 /* -------------------------------------------------------
@@ -205,3 +218,47 @@ header {
     opacity: 1;
     transform: translateX(-50%) translateY(0px);
 }	
+
+/* -----------------------------
+   메뉴 추천 드롭다운
+----------------------------- */
+
+.nav-item.dropdown {
+    position: relative;
+}
+
+/* 드롭다운 메뉴 */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 110%;
+    left: 0;
+    background-color: #FFFCF5; /* 헤더랑 동일한 크림 */
+    border-radius: 14px;
+    min-width: 190px;
+    padding: 8px 0;
+    box-shadow: 0 10px 25px rgba(109, 76, 65, 0.15);
+    z-index: 2000;
+}
+
+/* 드롭다운 항목 */
+.dropdown-menu li a {
+    display: block;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6D4C41;
+    border-radius: 0;
+    transition: 0.2s;
+}
+
+/* 호버 효과 */
+.dropdown-menu li a:hover {
+    background-color: #EFEBE9;
+    color: #3E2723;
+}
+
+/* 마우스 올리면 열림 */
+.nav-item.dropdown:hover .dropdown-menu {
+    display: block;
+}
