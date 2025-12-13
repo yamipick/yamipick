@@ -1,5 +1,10 @@
 @charset "UTF-8";
-
+/* ==========================================================================
+   0. RESET (박스 크기 계산 통일 - 쏠림 방지 핵심)
+   ========================================================================== */
+* {
+    box-sizing: border-box; /* 패딩이 너비를 넓히지 않도록 설정 */
+}
 /* ==========================================================================
    1. ROOT VARIABLES & THEME (공통 테마)
    ========================================================================== */
@@ -388,3 +393,49 @@ td { border-bottom: 1px solid #EFEBE9; padding: 12px 5px; text-align: center; co
     font-weight: bold;
     color: var(--primary);
 }
+
+
+/* ==========================================================================
+   ★ [최종_진짜_수정] 헤더 햄버거 버튼 강제 중앙 정렬 + 시각적 보정
+   ========================================================================== */
+   .hamburger {
+       /* 1. 강제 위치 지정(absolute) 해제 -> 헤더의 흐름에 따름 */
+       position: relative !important;
+       top: auto !important;
+       right: auto !important;
+       transform: none !important;
+       
+       /* 2. 그림자 및 붕 뜨는 효과 제거 */
+       box-shadow: none !important; 
+       background: transparent !important;
+       border: none !important;
+       
+       /* 3. 크기 및 정렬 */
+       width: 48px !important;
+       height: 48px !important;
+       padding: 0 !important;
+       margin: 0 !important;
+       
+       /* 아이콘을 버튼 정중앙에 배치 */
+       display: flex !important;
+       align-items: center;
+       justify-content: center; /* 아이콘이 박스 한가운데로 옴 */
+       
+       /* 텍스트 폰트 특성상 위로 쏠리는 것을 보정 */
+       padding-top: 4px !important; 
+       line-height: 1 !important;
+       font-size: 26px !important;
+       z-index: 9999;
+   }
+
+   /* 마우스 올렸을 때 흔들림 방지 */
+   .hamburger:hover {
+       transform: none !important;
+   }
+
+   /* PC에서는 숨김 */
+   @media screen and (min-width: 769px) {
+       .hamburger {
+           display: none !important;
+       }
+   }
