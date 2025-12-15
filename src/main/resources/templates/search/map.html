@@ -245,9 +245,8 @@
 		                <span style="color:#ddd;">|</span> 
 		                리뷰 [[${place.reviewCount}]]
 		            </div>
-		            <div style="font-size: 13px; color: #999;">[[${place.roadAddress}]]</div>
-		            <a th:href="${place.url}" target="_blank" style="font-size: 12px; color: #007bff; text-decoration: none;">상세보기 ></a>
-
+		          	<div style="font-size: 13px; color: #999;">[[${place.roadAddress}]]</div>
+<a th:href="${place.url}" target="_blank" class="link-detail">상세보기 ></a>
 		        </div>
     </div> 
 	<div id="map" class="map-area"></div>
@@ -266,7 +265,7 @@
             <button class="bubble-close" onclick="closeWidget(event)">×</button>
         </div>
         <div class="weather-icon-btn" onclick="toggleBubble()">
-            🐻
+            🍽️
         </div>
     </div>
 </div>

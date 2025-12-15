@@ -67,10 +67,20 @@
    [섹션 3] 리스트 아이템 디자인 (★ 이름 색상 복구됨)
    ======================================================= */
 .item {
-    position: relative; /* 버튼 위치 기준점 */
-    padding: 18px 0;
-    padding-right: 90px; /* 버튼 공간 확보 */
-    min-height: 110px;   
+    position: relative;
+    
+    /* ★ [핵심 수정] 박스 구조를 Flex로 변경해서 내용물만큼 무조건 늘어나게 함 */
+    display: flex;
+    flex-direction: column; 
+    justify-content: center;
+    
+    /* 높이 강제 자동 조절 (겹침 방지) */
+    height: auto !important; 
+    
+    /* 여백 설정: 아래쪽(bottom)을 40px로 늘려서 '상세보기' 자리를 확실히 확보 */
+    padding: 20px 0 40px 0;
+    padding-right: 90px; /* 오른쪽 예약버튼 공간 */
+    
     border-bottom: 1px solid #EFEBE9;
     cursor: pointer;
     transition: 0.25s;
@@ -150,7 +160,18 @@
     transform: translateY(-1px);
 }
 
-
+/* 상세보기 링크 스타일 */
+.link-detail {
+    display: block;
+    margin-top: 12px;      /* 주소와의 간격을 조금 더 넉넉하게 12px로 */
+    font-size: 12px;
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 600;
+}
+.link-detail:hover {
+    text-decoration: underline;
+}
 /* =======================================================
    [섹션 4] 필터 버튼 디자인
    ======================================================= */
