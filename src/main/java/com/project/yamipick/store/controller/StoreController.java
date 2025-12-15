@@ -3,11 +3,16 @@ package com.project.yamipick.store.controller;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails; // ✅
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.project.yamipick.reservation.dto.ReservationDTO;
@@ -75,9 +80,13 @@ public class StoreController {
         return "store/dashboard";
     }
 
-    @GetMapping("/register")
-    public String registerForm() {
-        return "store/register";
+    @Value("${yamipick.api.kakao.js-key}")
+    private String kakaoJsKey;
+    
+    @GetMapping("/store/register") // 네 매핑에 맞게
+    public String registerForm(Model model) {
+        model.addAttribute("kakaoJsKey", kakaoJsKey);
+        return "store/register";   // 네 템플릿 경로
     }
 
     @PostMapping("/register")

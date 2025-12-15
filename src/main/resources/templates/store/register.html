@@ -5,7 +5,7 @@
 	<title>매장등록</title>
 	<link rel="stylesheet" th:href="@{/css/common.css}">
 	
-	<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=7ef5d0a137417135a1ff1e08560fcc98&libraries=services"></script>
+	<script th:src="'//dapi.kakao.com/v2/maps/sdk.js?appkey=' + ${kakaoJsKey} + '&libraries=services'"></script>
     <style>
         /* YamiPick Admin 공통 스타일 */
         :root {
