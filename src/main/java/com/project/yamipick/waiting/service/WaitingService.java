@@ -21,11 +21,11 @@ import com.project.yamipick.waiting.domain.WaitingStatus;
 import com.project.yamipick.waiting.domain.WaitingStatusType;
 import com.project.yamipick.waiting.domain.WaitingStore;
 import com.project.yamipick.waiting.dto.StoreInfoDTO;
-import com.project.yamipick.waiting.dto.StoreScheduleDTO;
+import com.project.yamipick.waiting.dto.WaitingStoreScheduleDTO;
 import com.project.yamipick.waiting.dto.WaitingDTO;
 import com.project.yamipick.waiting.dto.WaitingNoticeDTO;
 import com.project.yamipick.waiting.handler.WaitingWebSocketHandler;
-import com.project.yamipick.waiting.repository.StoreScheduleRepository;
+import com.project.yamipick.waiting.repository.WaitingStoreScheduleRepository;
 import com.project.yamipick.waiting.repository.WaitingLogRepository;
 import com.project.yamipick.waiting.repository.WaitingNoticeRepository;
 import com.project.yamipick.waiting.repository.WaitingOperationRepository;
@@ -46,7 +46,7 @@ public class WaitingService {
     private final WaitingStatusRepository statusRepository;
     private final WaitingOperationRepository operationRepository;
     private final WaitingNoticeRepository noticeRepository;
-    private final StoreScheduleRepository scheduleRepository;
+    private final WaitingStoreScheduleRepository scheduleRepository;
     private final WaitingLogService logService;
     private final WaitingLogRepository logRepository;
     private final WaitingWebSocketHandler webSocketHandler;
@@ -427,7 +427,7 @@ public class WaitingService {
     // 8. 스케줄 관리
     // ================================================================================
     
-    public void updateSchedule(StoreScheduleDTO dto) {
+    public void updateSchedule(WaitingStoreScheduleDTO dto) {
         WaitingStore store = storeRepository.findById(dto.getStoreId())
                 .orElseThrow(() -> new IllegalArgumentException("매장 없음"));
 
@@ -448,10 +448,10 @@ public class WaitingService {
     }
 
     @Transactional(readOnly = true)
-    public StoreScheduleDTO getScheduleInfo(Long storeId, int day) {
+    public WaitingStoreScheduleDTO getScheduleInfo(Long storeId, int day) {
         return scheduleRepository.findByStoreIdAndDayOfWeek(storeId, day)
                 .map(entity -> {
-                    StoreScheduleDTO dto = new StoreScheduleDTO();
+                    WaitingStoreScheduleDTO dto = new WaitingStoreScheduleDTO();
                     dto.setStoreId(entity.getStore().getId());
                     dto.setOpenTime(entity.getOpenTime());
                     dto.setCloseTime(entity.getCloseTime());
@@ -464,10 +464,10 @@ public class WaitingService {
     }
 
     @Transactional(readOnly = true)
-    public List<StoreScheduleDTO> getAllSchedules(Long storeId) {
+    public List<WaitingStoreScheduleDTO> getAllSchedules(Long storeId) {
         return scheduleRepository.findAllByStoreId(storeId).stream()
                 .map(s -> {
-                    StoreScheduleDTO dto = new StoreScheduleDTO();
+                    WaitingStoreScheduleDTO dto = new WaitingStoreScheduleDTO();
                     dto.setDayOfWeek(s.getDayOfWeek());
                     dto.setOpenTime(s.getOpenTime());
                     dto.setCloseTime(s.getCloseTime());
@@ -476,7 +476,7 @@ public class WaitingService {
                     dto.setIsOpen(s.getIsOpen());
                     return dto;
                 })
-                .sorted(Comparator.comparingInt(StoreScheduleDTO::getDayOfWeek))
+                .sorted(Comparator.comparingInt(WaitingStoreScheduleDTO::getDayOfWeek))
                 .collect(Collectors.toList());
     }
 }

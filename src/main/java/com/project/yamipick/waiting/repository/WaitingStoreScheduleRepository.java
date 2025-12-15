@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.project.yamipick.waiting.domain.StoreSchedule;
 
-public interface StoreScheduleRepository extends JpaRepository<StoreSchedule, Long> {
+public interface WaitingStoreScheduleRepository extends JpaRepository<StoreSchedule, Long> {
     
 	
     // 특정 매장의 특정 요일(0~6) 스케줄 찾기
