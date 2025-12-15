@@ -64,9 +64,23 @@ public class StoreWaitingController {
     }
 
     @GetMapping("/waiting/store-info")
-    public StoreInfoDTO storeInfo(HttpSession session, Authentication auth) {
-        Long storeId = getStoreId(session, auth);
-        return waitingService.getStoreInfo(storeId);
+    public StoreInfoDTO storeInfo(
+            @RequestParam(value = "storeId", required = false) Long storeIdParam,
+            HttpSession session, 
+            Authentication auth
+    ) {
+        Long targetId;
+
+        // 1. URL 파라미터로 storeId가 왔다면 그걸 씁니다. (손님 화면용)
+        if (storeIdParam != null) {
+            targetId = storeIdParam;
+        } 
+        // 2. 파라미터가 없다면 로그인한 점주의 가게를 찾습니다. (점주 화면용)
+        else {
+            targetId = getStoreId(session, auth);
+        }
+
+        return waitingService.getStoreInfo(targetId);
     }
 
     @PostMapping("/waiting/toggle")
@@ -100,9 +114,23 @@ public class StoreWaitingController {
     }
 
     @GetMapping("/waiting/notices")
-    public List<WaitingNoticeDTO> getNotices(HttpSession session, Authentication auth) {
-        Long storeId = getStoreId(session, auth);
-        return waitingService.getNoticeList(storeId);
+    public List<WaitingNoticeDTO> getNotices(
+            @RequestParam(value = "storeId", required = false) Long storeIdParam,
+            HttpSession session, 
+            Authentication auth
+    ) {
+        Long targetId;
+
+        // 1. 손님 화면에서 요청 시 (URL 파라미터 사용)
+        if (storeIdParam != null) {
+            targetId = storeIdParam;
+        } 
+        // 2. 점주 화면에서 요청 시 (내 가게 찾기)
+        else {
+            targetId = getStoreId(session, auth);
+        }
+
+        return waitingService.getNoticeList(targetId);
     }
 
     @PostMapping("/waiting/notice/create")
