@@ -1,8 +1,13 @@
 package com.project.yamipick.review.entity;
 
-import java.sql.Date;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.project.yamipick.review.dto.BoardReviewDTO;
+import com.project.yamipick.store.entity.Store;
 //import com.project.yamipick.store.entity.Store;
 import com.project.yamipick.user.entity.User;
 
@@ -14,16 +19,19 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "tblBoardReview")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -41,7 +49,10 @@ public class BoardReview {
 	@Column(nullable = false, length = 100)
 	private String title;
 	
-	@Column(nullable = false)
+	@ManyToOne
+	@JoinColumn(name = "seqStore")
+	private Store store;
+	
 	private Integer starRating;
 	
 	@ManyToOne
@@ -59,7 +70,7 @@ public class BoardReview {
 	private String place;
 	
 	@Column(nullable = false)
-	private Date regdate;
+	private Timestamp regdate;
 	
 	@Column(nullable = false)
 	private Integer readCount;
@@ -68,9 +79,26 @@ public class BoardReview {
 	private Integer favoriteCount;
 	
 	@Column(nullable = false, length = 20)
-	private String contentState = "일반글";
+	private String contentState;
+	
+	@Column(nullable = false, length = 20)
+	private String state;
+	
+	@OneToMany(mappedBy = "review")
+	private List<Tagging> taggings = new ArrayList<>();
+	
 	
 	public BoardReviewDTO toDTO() {
+		
+		LocalDateTime now = LocalDateTime.now();
+	    LocalDateTime reg = this.regdate.toLocalDateTime();
+
+	    String displayDate;
+	    if (reg.isAfter(now.minusHours(24))) {
+	        displayDate = reg.format(DateTimeFormatter.ofPattern("HH:mm"));
+	    } else {
+	        displayDate = reg.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+	    }
 		
 		return BoardReviewDTO.builder()
 							.seqReview(this.seqReview)
@@ -78,13 +106,15 @@ public class BoardReview {
 							.title(this.title)
 							.starRating(this.starRating)
 							.seqUser(this.user.getSeqUser())
+							.nickname(this.user.getNickname())
 							.reviewContent(this.reviewContent)
 							.attach(this.attach)
 							.place(this.place)
 							.regdate(this.regdate)
-							.readCount(this.readCount)
-							.favoriteCount(this.favoriteCount)
+							.displayDate(displayDate)
+							.readCount(readCount)
 							.contentState(this.contentState)
+							.state(this.state)
 							.build();
 	}
 
