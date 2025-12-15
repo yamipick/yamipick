@@ -34,7 +34,6 @@ public class MenuService {
                         .menuCategory(menu.getMenuCategory())
                         .flavorTags(menu.getFlavorTags())
                         .menuDescription(menu.getMenuDescription())
-                        .menuImage(menu.getMenuImage())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -50,7 +49,6 @@ public class MenuService {
                 .menuCategory(menu.getMenuCategory())
                 .flavorTags(menu.getFlavorTags())
                 .menuDescription(menu.getMenuDescription())
-                .menuImage(menu.getMenuImage())
                 .build();
     }
     
@@ -62,7 +60,6 @@ public class MenuService {
                         .menuCategory(menu.getMenuCategory())
                         .flavorTags(menu.getFlavorTags())
                         .menuDescription(menu.getMenuDescription())
-                        .menuImage(menu.getMenuImage())
                         .build()
                 )
                 .toList();
@@ -88,7 +85,6 @@ public class MenuService {
                     return MenuRecommendResponse.builder()
                             .seqMenu(menu.getSeqMenu())
                             .menuName(menu.getMenuName())
-                            .menuImage(menu.getMenuImage())
                             .matchedTags(matched)
                             .score(score)
                             .build();

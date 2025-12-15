@@ -93,7 +93,7 @@ public class AIService {
 	        addOnce(pos,"spicy");
 	
 	    if (contains(msg,
-	            "안맵", "맵지않", "맵게말고", "덜맵", "맵기싫", "매운거말고", "안매운", "좀 안맵게"))
+	            "안맵", "맵지않", "맵게말고", "덜맵", "맵기싫", "매운거말고", "안매운", "좀 안맵게", "매운건싫", "매운거싫"))
 	    {
 	        addOnce(neg,"spicy");
 	        pos.remove("spicy");
@@ -106,7 +106,7 @@ public class AIService {
 	        addOnce(pos,"sweet");
 	
 	    if (contains(msg,
-	            "안달", "달지않", "단거말고", "단건싫", "달달한건말고", "단건별로", "단맛제외"))
+	            "안달", "달지않", "단거말고", "단건싫", "단거싫", "달달한건말고", "단건별로", "단맛제외"))
 	    {
 	        addOnce(neg,"sweet");
 	        pos.remove("sweet");
@@ -119,7 +119,7 @@ public class AIService {
 	        addOnce(pos,"salty");
 	
 	    if (contains(msg,
-	            "안짜", "싱거운", "짜지않", "싱겁게", "짜지않았으면", "짜지말고"))
+	            "안짜", "싱거운", "짜지않", "싱겁게", "짜지않았으면", "짜지말고", "짠건싫", "짠거싫"))
 	    {
 	        addOnce(neg,"salty");
 	        pos.remove("salty");
@@ -159,7 +159,7 @@ public class AIService {
 	
 	    if (contains(msg,
 	            "국물없", "국물말고", "국물제외", "국물싫", "국물없는", "국물안땡겨",
-	            "국물있는거말고", "드라이", "볶음", "국물뺀"))
+	            "국물있는거말고", "국물있는건싫", "드라이", "볶음", "국물뺀"))
 	    {
 	        addOnce(neg,"soup");
 	        pos.remove("soup");
@@ -198,7 +198,7 @@ public class AIService {
 	        addOnce(pos,"healthy");
 	
 	    if (contains(msg,
-	            "샐러드싫", "건강식말고", "담백한건말고", "가벼운건싫", "라이트말고"))
+	            "샐러드싫", "건강식말고", "담백한건말고", "가벼운건싫", "가벼운거싫", "라이트말고"))
 	    {
 	        addOnce(neg,"healthy");
 	        pos.remove("healthy");

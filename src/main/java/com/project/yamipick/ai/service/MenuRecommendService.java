@@ -44,10 +44,9 @@ public class MenuRecommendService {
         			return !excludeMenuIds.contains(menu.getSeqMenu());
         		})
                 .map(menu -> {
-
                     List<String> menuTags = parseTags(menu.getFlavorTags());
                     int score = 0;
-
+                    
                     //positive + 10
                     if (selectedTags != null) {
                     	for (String tag : selectedTags) {
@@ -56,7 +55,6 @@ public class MenuRecommendService {
                     		}
                     	}
                     }
-                    
                     //negative -999
                     if (negativeTags != null) {
                     	for (String tag : negativeTags) {

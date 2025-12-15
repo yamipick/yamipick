@@ -14,7 +14,6 @@ public class MenuDTO {
     private String menuCategory;
     private String flavorTags;
     private String menuDescription;
-    private String menuImage;
     private String menuEnglish;
 
     public Menu toEntity() {
@@ -24,7 +23,6 @@ public class MenuDTO {
                 .menuCategory(this.menuCategory)
                 .flavorTags(this.flavorTags)
                 .menuDescription(this.menuDescription)
-                .menuImage(this.menuImage)
                 .menuEnglish(this.menuEnglish)
                 .build();
     }
