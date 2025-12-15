@@ -27,6 +27,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import software.amazon.awssdk.services.s3.model.Tagging;
 
 @Entity
 @Table(name = "tblBoardReview")
