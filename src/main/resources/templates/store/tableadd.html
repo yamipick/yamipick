@@ -3,51 +3,183 @@
 <head>
   <meta charset="UTF-8">
   <title>테이블 타입 추가</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
+    /* -------------------------------------------------------
+       Warm Choco & Cream Theme Variables (tableedit.html과 동일하게)
+    ------------------------------------------------------- */
     :root {
-      --color-primary: #ff3b1a;
-      --color-accent: #6D4C41;
-      --color-border: #eee;
-      --color-shadow: 0 4px 12px rgba(0,0,0,.06);
-      --border-radius: 12px;
+        --choco-dark: #3E2723; 
+        --choco-main: #6D4C41; 
+        --choco-accent: #A1887F; 
+        --cream-light: #FFFCF5; 
+        --cream-card: #fff; 
+        --cream-dark: #EFEBE9; 
+        --border-light: #D7CCC8; 
+        --shadow: 0 4px 15px rgba(109, 76, 65, 0.08); 
+        --danger-color: #B71C1C; 
+        --radius-l: 18px;
+        --radius-s: 8px;
     }
-    body { font-family: 'Malgun Gothic', 'Dotum', sans-serif; background-color: #f8f8f8; color: #333; }
-    .wrap-container { max-width: 700px; margin: 40px auto; padding: 30px; background: #fff; border-radius: 18px; box-shadow: var(--color-shadow); }
-    h2 { color: var(--color-accent); border-bottom: 3px solid var(--color-primary); padding-bottom: 10px; margin-bottom: 25px; font-weight: 900; }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; }
-    th, td { border: none; border-bottom: 1px solid var(--color-border); padding: 12px 10px; text-align: center; font-size: 14px; }
-    th { background-color: #f5f5f5; color: #555; font-weight: 700; border-bottom: 2px solid #ddd; }
-    tr:nth-child(even) { background-color: #fafafa; }
-    tr:hover { background-color: #fffaf8; }
+    /* -------------------------------------------------------
+       기본 스타일 및 레이아웃 (tableedit.html과 동일하게)
+    ------------------------------------------------------- */
+    body { 
+        font-family: 'Pretendard', 'Malgun Gothic', sans-serif; 
+        background-color: var(--cream-light); 
+        color: var(--choco-dark); 
+        padding-top: 60px; 
+    }
+    .wrap-container { 
+        max-width: 750px; 
+        margin: 40px auto; 
+        padding: 30px; 
+        background: var(--cream-card); 
+        border-radius: var(--radius-l); 
+        box-shadow: var(--shadow); 
+    }
+    
+    h2 { 
+        color: var(--choco-dark); 
+        border-bottom: 3px solid var(--choco-accent); 
+        padding-bottom: 10px; 
+        margin-bottom: 25px; 
+        font-weight: 900; 
+        font-size: 26px;
+    }
+    /* A 태그 스타일 제거: common/header의 스타일을 사용하기 위함 */
+    /* a { text-decoration: none; color: var(--choco-main); } */
+    /* a:hover { text-decoration: underline; } */
 
+    /* -------------------------------------------------------
+       Table & Input Style
+    ------------------------------------------------------- */
+    table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        margin-top: 15px; 
+        background: var(--cream-card); 
+        border-radius: var(--radius-s); 
+        overflow: hidden; 
+        border: 1px solid var(--border-light);
+    }
+    th, td { 
+        border: none; 
+        border-bottom: 1px solid var(--border-light); 
+        padding: 12px 10px; 
+        text-align: center; 
+        font-size: 14px; 
+        vertical-align: middle;
+    }
+    th { 
+        background-color: var(--choco-accent); 
+        color: var(--cream-card); 
+        font-weight: 700; 
+    }
+    tr:nth-child(even) { background-color: #fcfcf9; } 
+    tr:hover { background-color: var(--cream-dark); } 
+
+    /* Input & Select Field Styling */
     input[type="text"], input[type="number"], select {
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-      width: 120px;
-      text-align: center;
+        padding: 6px 8px; 
+        border: 1px solid var(--border-light);
+        border-radius: 4px;
+        background-color: var(--cream-card);
+        color: var(--choco-dark);
+        font-size: 14px;
+        text-align: center;
+        width: auto; 
+        display: inline-block;
+        margin: 2px;
     }
-    .custom-name { width: 140px; }
-
-    .btn, button[type="submit"], button[type="button"], a {
-      padding: 8px 15px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 700;
-      transition: all .15s ease;
-      display: inline-block;
-      text-decoration: none;
-      margin-right: 5px;
-      line-height: 1.4;
+    
+    /* Disabled 상태 입력 필드 스타일 (클릭 불가 시각화) */
+    input:disabled, select:disabled {
+        background-color: var(--cream-dark); 
+        color: #777; 
+        cursor: not-allowed; 
+        border-color: #D7CCC8;
     }
-    button[type="submit"] { background: var(--color-primary); color: #fff; border: none; }
-    button[type="submit"]:hover { background: #e63617; }
-    button[type="button"], a { background: #f0f0f0; color: #555; border: 1px solid #ddd; }
-    button[type="button"]:hover, a:hover { background: #e0e0e0; }
+    
+    select[name*="TypeName"] {
+        width: 100px;
+    }
+    .custom-name { 
+        width: 140px; 
+    }
+    input[name*="Capacity"], input[name*="Quantity"] {
+        width: 70px;
+    }
 
-    .action-group { margin-top: 20px; }
+    /* -------------------------------------------------------
+       Button & Action Group Style
+    ------------------------------------------------------- */
+    /* 이 아래 버튼 스타일은 페이지 본문 버튼에만 적용되도록 유지 */
+    .table-actions {
+        margin-top: 25px;
+        display: flex;
+        justify-content: space-between; 
+        gap: 10px;
+    }
+    .action-group { 
+        display: flex;
+        gap: 10px;
+    }
+    
+    /* 공통 버튼 스타일 */
+    .btn-primary, .btn-secondary, .btn-danger {
+        padding: 10px 20px; 
+        border-radius: var(--radius-s);
+        cursor: pointer;
+        font-weight: 700;
+        transition: all .15s ease;
+        display: inline-block;
+        text-decoration: none;
+        line-height: 1.2;
+        white-space: nowrap;
+        font-size: 16px;
+        border: none;
+        margin: 0;
+    }
+    
+    /* 주 버튼 (저장하기) */
+    button[type="submit"], .btn-primary { 
+        background: var(--choco-main);
+        color: var(--cream-light);
+    }
+    button[type="submit"]:hover, .btn-primary:hover {
+        background: var(--choco-dark);
+    }
+    
+    /* 보조 버튼/링크 (행 추가, 돌아가기) */
+    /* 헤더의 A 태그와 충돌 방지를 위해, 여기서는 A 태그 선택자를 명시적으로 사용하지 않고 btn-secondary 클래스만 사용합니다. */
+    button[type="button"], .btn-secondary { /* .btn-secondary 클래스만 선택자에 남깁니다. */
+        background: var(--cream-card);
+        color: var(--choco-main);
+        border: 1px solid var(--border-light);
+        padding: 10px 20px; 
+        font-size: 16px;
+        margin: 0;
+    }
+    button[type="button"]:hover, .btn-secondary:hover {
+        background: var(--cream-dark);
+        color: var(--choco-dark);
+    }
+    
+    /* 테이블 내부 '삭제' 버튼 */
+    td button[type="button"] {
+        background: var(--danger-color);
+        color: var(--cream-card);
+        border: none;
+        padding: 6px 12px; 
+        font-size: 13px;
+        border-radius: 6px; 
+    }
+    td button[type="button"]:hover {
+        background: #FFF; 
+    }
+
   </style>
 
   <script>
@@ -79,6 +211,8 @@
           if (!v || v === "_CUSTOM_") return;
           // 내가 선택한 건 살려두고, 남이 선택한 건 막기
           o.disabled = picked.has(v) && v !== my;
+          // 선택 불가능한 항목은 시각적으로도 다르게 표시
+          o.style.color = o.disabled ? '#aaa' : 'inherit';
         });
       });
     }
@@ -113,13 +247,15 @@
           <input type="text" class="custom-name" name="newTableCustomName" placeholder="직접 입력"
                  disabled />
         </td>
-        <td><input type="number" name="newTableCapacity" placeholder="2" value="2" min="1" required></td>
+        <td><input type="number" name="newTableCapacity" placeholder="1" value="1" min="1" required></td>
         <td><input type="number" name="newTableQuantity" placeholder="1" value="1" min="1" required></td>
-        <td><button type="button" onclick="removeRow(this)">삭제</button></td>
+        <td><button type="button" onclick="removeRow(this)"><i class="fas fa-trash-alt"></i> 삭제</button></td>
       `;
 
       tbody.appendChild(tr);
       syncDisabledOptions();
+      // 새로 추가된 행의 select에 change 이벤트가 즉시 작동하도록 수동 트리거 (disabled 초기화 목적)
+      tr.querySelector('select[name="newTableTypeName"]').dispatchEvent(new Event('change'));
     }
 
     function removeRow(btn) {
@@ -163,8 +299,9 @@
       if (firstSel) {
         firstSel.innerHTML = renderPresetOptions("");
         firstSel.addEventListener('change', function() { handlePresetChange(this); });
+        // 초기 로드 시 한 번 실행하여 disabled 상태 반영
+        handlePresetChange(firstSel);
       }
-      syncDisabledOptions();
 
       const form = document.querySelector('form');
       if (form) form.addEventListener('submit', beforeSubmit);
@@ -175,7 +312,7 @@
 <div th:replace="~{common/header :: headerFragment}"></div>
 
 <div class="wrap-container">
-  <h2>매장 테이블 추가</h2>
+  <h2><i class="fas fa-plus-square" style="margin-right: 10px; color: var(--choco-main);"></i> 매장 테이블 추가</h2>
 
   <form th:action="@{/store/table/add}" method="post">
     <table>
@@ -192,21 +329,29 @@
       <tr>
         <td>
           <select name="newTableTypeName" onchange="handlePresetChange(this)" required>
-            <!-- DOMContentLoaded에서 옵션 채움 -->
-          </select>
+            </select>
           <input type="text" class="custom-name" name="newTableCustomName" placeholder="직접 입력" disabled />
         </td>
         <td><input type="number" name="newTableCapacity" value="1" min="1" required></td>
         <td><input type="number" name="newTableQuantity" value="1" min="1" required></td>
-        <td><button type="button" onclick="removeRow(this)">삭제</button></td>
+        <td><button type="button" onclick="removeRow(this)"><i class="fas fa-trash-alt"></i> 삭제</button></td>
       </tr>
       </tbody>
     </table>
-
-    <div class="action-group">
-      <button type="button" onclick="addRow()">행 추가</button>
-      <button type="submit">추가 저장</button>
-      <a th:href="@{/store/dashboard}">대시보드로 돌아가기</a>
+    
+    <div class="table-actions">
+        <button type="button" onclick="addRow()" class="btn-secondary">
+            <i class="fas fa-plus-circle"></i> 테이블 타입 행 추가
+        </button>
+        
+        <div class="action-group">
+            <a th:href="@{/store/table/edit}" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i> 목록으로 돌아가기
+            </a>
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-save"></i> 저장하기
+            </button>
+        </div>
     </div>
   </form>
 </div>

@@ -1,184 +1,325 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>테이블 타입 수정</title>
-  <style>
-    :root {
-      --color-primary: #ff3b1a;
-      --color-accent: #6D4C41;
-      --color-border: #eee;
-      --color-shadow: 0 4px 12px rgba(0,0,0,.06);
-      --border-radius: 12px;
-    }
-    body { font-family: 'Malgun Gothic', 'Dotum', sans-serif; background-color: #f8f8f8; color: #333; }
-    .wrap-container { max-width: 700px; margin: 40px auto; padding: 30px; background: #fff; border-radius: 18px; box-shadow: var(--color-shadow); }
-    h2 { color: var(--color-accent); border-bottom: 3px solid var(--color-primary); padding-bottom: 10px; margin-bottom: 25px; font-weight: 900; }
-
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; }
-    th, td { border: none; border-bottom: 1px solid var(--color-border); padding: 12px 10px; text-align: center; font-size: 14px; }
-    th { background-color: #f5f5f5; color: #555; font-weight: 700; border-bottom: 2px solid #ddd; }
-    tr:nth-child(even) { background-color: #fafafa; }
-    tr:hover { background-color: #fffaf8; }
-
-    input[type="text"], input[type="number"], select {
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-      width: 120px;
-      text-align: center;
-    }
-    .custom-name { width: 140px; }
-
-    .btn, button[type="submit"], a {
-      padding: 10px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 700;
-      transition: all .15s ease;
-      margin-right: 10px;
-      display: inline-block;
-      text-decoration: none;
-      line-height: 1.4;
-    }
-    button[type="submit"] { background: var(--color-primary); color: #fff; border: none; }
-    button[type="submit"]:hover { background: #e63617; }
-    a { background: #fff; color: #555; border: 1px solid #ddd; }
-    a:hover { background: #f0f0f0; }
-    .action-group { margin-top: 30px; }
-  </style>
-
-  <script th:inline="javascript">
-    const PRESETS = ["홀", "룸", "바", "테라스", "창가"];
-
-    function renderPresetOptions(selectedValue) {
-      const opts = ['<option value="">-- 선택 --</option>'];
-      PRESETS.forEach(v => {
-        const sel = (v === selectedValue) ? 'selected' : '';
-        opts.push(`<option value="${v}" ${sel}>${v}</option>`);
-      });
-      opts.push(`<option value="_CUSTOM_" ${(selectedValue==="_CUSTOM_")?'selected':''}>기타(직접입력)</option>`);
-      return opts.join('');
-    }
-
-    function handlePresetChange(selectEl) {
-      const tr = selectEl.closest('tr');
-      const customInput = tr.querySelector('input[name="customName"]');
-
-      if (selectEl.value === "_CUSTOM_") {
-        customInput.disabled = false;
-        customInput.required = true;
-        customInput.focus();
-      } else {
-        customInput.value = "";
-        customInput.disabled = true;
-        customInput.required = false;
-      }
-    }
-
-    function beforeSubmit(e) {
-      const rows = document.querySelectorAll('tbody tr[data-row="1"]');
-      for (const row of rows) {
-        const sel = row.querySelector('select[name="namePreset"]');
-        const custom = row.querySelector('input[name="customName"]');
-        const realName = row.querySelector('input[name="name"]'); // 서버로 보낼 진짜 name
-
-        if (!sel || !realName) continue;
-
-        if (sel.value === "_CUSTOM_") {
-          if (!custom.value.trim()) {
-            alert("기타(직접입력)을 선택했으면 테이블명을 입력해야 합니다.");
-            e.preventDefault();
-            return;
-          }
-          realName.value = custom.value.trim();
-        } else {
-          if (!sel.value) {
-            alert("테이블 타입을 선택해 주세요.");
-            e.preventDefault();
-            return;
-          }
-          realName.value = sel.value;
-        }
-      }
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      // 각 행의 기존 name 값을 보고 preset / custom 초기 세팅
-      document.querySelectorAll('tr[data-row="1"]').forEach(tr => {
-        const currentName = tr.getAttribute('data-current-name'); // th로 박아넣을 예정
-        const sel = tr.querySelector('select[name="namePreset"]');
-        const custom = tr.querySelector('input[name="customName"]');
-
-        if (!sel) return;
-
-        if (PRESETS.includes(currentName)) {
-          sel.innerHTML = renderPresetOptions(currentName);
-          custom.disabled = true;
-          custom.required = false;
-          custom.value = "";
-        } else {
-          sel.innerHTML = renderPresetOptions("_CUSTOM_");
-          custom.disabled = false;
-          custom.required = true;
-          custom.value = currentName || "";
+	<meta charset="UTF-8">
+	<title>테이블 타입 수정</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+	<style>
+        /* -------------------------------------------------------
+           Warm Choco & Cream Theme Variables (통일)
+        ------------------------------------------------------- */
+        :root {
+            --choco-dark: #3E2723; /* 텍스트 및 최강조 (Dark Brown) */
+            --choco-main: #6D4C41; /* 메인 초코 브라운 (Primary) */
+            --choco-accent: #A1887F; /* 부드러운 강조색 (Point) */
+            --cream-light: #FFFCF5; /* 배경색 */
+            --cream-card: #fff; /* 카드 내부 배경 */
+            --cream-dark: #EFEBE9; /* 테이블 호버 배경 / 입력 필드 배경 */
+            --border-light: #D7CCC8; /* 연한 코코아색 테두리 */
+            --shadow: 0 4px 15px rgba(109, 76, 65, 0.08); /* 따뜻한 그림자 */
+            --danger-color: #B71C1C; /* 삭제 등 */
+            --radius-l: 18px;
+            --radius-s: 8px;
         }
 
-        sel.addEventListener('change', function(){ handlePresetChange(this); });
-      });
+        /* -------------------------------------------------------
+           기본 스타일 및 레이아웃
+        ------------------------------------------------------- */
+        body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; background-color: var(--cream-light); color: var(--choco-dark); padding-top: 60px; }
+        .wrap-container { 
+            max-width: 800px; /* 너비 확장 */
+            margin: 40px auto; 
+            padding: 30px; 
+            background: var(--cream-card); 
+            border-radius: var(--radius-l); 
+            box-shadow: var(--shadow); 
+        }
+        
+        h2 { /* H1로 변경 */
+            color: var(--choco-dark); 
+            border-bottom: 3px solid var(--choco-accent); 
+            padding-bottom: 10px; 
+            margin-bottom: 25px; 
+            font-weight: 900; 
+            font-size: 26px;
+        }
+        a { text-decoration: none; color: var(--choco-main); }
+        a:hover { text-decoration: underline; }
 
-      const form = document.querySelector('form');
-      if (form) form.addEventListener('submit', beforeSubmit);
-    });
-  </script>
+        /* -------------------------------------------------------
+           Table & Input Style
+        ------------------------------------------------------- */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            background: var(--cream-card); 
+            border-radius: var(--radius-s); 
+            overflow: hidden; 
+            border: 1px solid var(--border-light);
+        }
+        th, td { 
+            border: none; 
+            border-bottom: 1px solid var(--border-light); 
+            padding: 12px 10px; 
+            text-align: center; 
+            font-size: 14px; 
+            vertical-align: middle;
+        }
+        th { 
+            background-color: var(--choco-accent); 
+            color: var(--cream-card); 
+            font-weight: 700; 
+        }
+        tr:nth-child(even) { background-color: #fcfcf9; } 
+        tr:hover { background-color: var(--cream-dark); } 
+
+        /* Input Field Styling */
+        input[type="text"], input[type="number"], select {
+            padding: 6px 8px;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            background-color: var(--cream-card);
+            color: var(--choco-dark);
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        /* Disabled 상태 입력 필드 스타일 (클릭 불가 시각화) */
+        input:disabled, select:disabled {
+            background-color: var(--cream-dark); /* 회색 처리 */
+            color: #777; 
+            cursor: not-allowed; 
+            border-color: #D7CCC8;
+        }
+        
+        select {
+            width: 100px;
+        }
+        .custom-name { /* width 140px 유지 */
+            width: 140px; 
+        }
+        input[name="capacity"], input[name="quantity"] {
+            width: 70px;
+        }
+        
+        /* -------------------------------------------------------
+           Button & Action Group Style
+        ------------------------------------------------------- */
+        .action-group { /* action-buttons 클래스로 변경하여 레이아웃 조정 */
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between; 
+            gap: 10px;
+        }
+        .right-buttons { /* 버튼 그룹 추가: 저장/취소 */
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-primary, .btn-secondary, .btn-danger {
+            padding: 10px 20px; 
+            border-radius: var(--radius-s);
+            cursor: pointer;
+            font-weight: 700;
+            transition: all .15s ease;
+            display: inline-block;
+            text-decoration: none;
+            line-height: 1.2;
+            white-space: nowrap;
+            font-size: 16px;
+            margin: 0; /* 기존 margin-right 제거 */
+        }
+        
+        /* 주 버튼 (Dark Choco - 수정 저장) */
+        button[type="submit"], .btn-primary { 
+            background: var(--choco-main);
+            color: var(--cream-light);
+            border: none;
+        }
+        button[type="submit"]:hover, .btn-primary:hover {
+            background: var(--choco-dark);
+        }
+
+        /* 보조 버튼/링크 (Cream Border - 대시보드 돌아가기) */
+        .btn-secondary {
+            background: var(--cream-card);
+            color: var(--choco-main);
+            border: 1px solid var(--border-light);
+        }
+        .btn-secondary:hover {
+            background: var(--cream-dark);
+            color: var(--choco-dark);
+        }
+        
+        /* 위험 버튼 (삭제) */
+        .btn-danger {
+            background: var(--danger-color);
+            color: var(--cream-card);
+            border: none;
+            padding: 6px 12px; 
+            font-size: 13px;
+        }
+        .btn-danger:hover {
+            background: #800000;
+        }
+        /* 삭제 폼 스타일링 (버튼 감싸기) */
+        .delete-form {
+            display: inline;
+            margin: 0;
+            padding: 0;
+        }
+	</style>
+
+	<script th:inline="javascript">
+	    // JS 코드는 동일하게 유지됩니다.
+	    const PRESETS = ["홀", "룸", "바", "테라스", "창가"];
+	
+	    function renderPresetOptions(selectedValue) {
+	      const opts = ['<option value="">-- 선택 --</option>'];
+	      PRESETS.forEach(v => {
+	        const sel = (v === selectedValue) ? 'selected' : '';
+	        opts.push(`<option value="${v}" ${sel}>${v}</option>`);
+	      });
+	      opts.push(`<option value="_CUSTOM_" ${(selectedValue==="_CUSTOM_")?'selected':''}>기타(직접입력)</option>`);
+	      return opts.join('');
+	    }
+	
+	    function handlePresetChange(selectEl) {
+	      const tr = selectEl.closest('tr');
+	      const customInput = tr.querySelector('input[name="customName"]');
+	
+	      if (selectEl.value === "_CUSTOM_") {
+	        customInput.disabled = false;
+	        customInput.required = true;
+	        customInput.focus();
+	      } else {
+	        customInput.value = "";
+	        customInput.disabled = true;
+	        customInput.required = false;
+	      }
+	    }
+	
+	    function beforeSubmit(e) {
+	      const rows = document.querySelectorAll('tbody tr[data-row="1"]');
+	      for (const row of rows) {
+	        const sel = row.querySelector('select[name="namePreset"]');
+	        const custom = row.querySelector('input[name="customName"]');
+	        const realName = row.querySelector('input[name="name"]'); // 서버로 보낼 진짜 name
+	
+	        if (!sel || !realName) continue;
+	
+	        if (sel.value === "_CUSTOM_") {
+	          if (!custom.value.trim()) {
+	            alert("기타(직접입력)을 선택했으면 테이블명을 입력해야 합니다.");
+	            e.preventDefault();
+	            return;
+	          }
+	          realName.value = custom.value.trim();
+	        } else {
+	          if (!sel.value) {
+	            alert("테이블 타입을 선택해 주세요.");
+	            e.preventDefault();
+	            return;
+	          }
+	          realName.value = sel.value;
+	        }
+	      }
+	    }
+	
+	    window.addEventListener('DOMContentLoaded', () => {
+	      // 각 행의 기존 name 값을 보고 preset / custom 초기 세팅
+	      document.querySelectorAll('tr[data-row="1"]').forEach(tr => {
+	        const currentName = tr.getAttribute('data-current-name'); // th로 박아넣을 예정
+	        const sel = tr.querySelector('select[name="namePreset"]');
+	        const custom = tr.querySelector('input[name="customName"]');
+	
+	        if (!sel) return;
+	
+	        if (PRESETS.includes(currentName)) {
+	          sel.innerHTML = renderPresetOptions(currentName);
+	          custom.disabled = true;
+	          custom.required = false;
+	          custom.value = "";
+	        } else {
+	          sel.innerHTML = renderPresetOptions("_CUSTOM_");
+	          custom.disabled = false;
+	          custom.required = true;
+	          custom.value = currentName || "";
+	        }
+	
+	        sel.addEventListener('change', function(){ handlePresetChange(this); });
+	      });
+	
+	      const form = document.querySelector('form');
+	      if (form) form.addEventListener('submit', beforeSubmit);
+	    });
+	</script>
 </head>
 <body>
 <div th:replace="~{common/header :: headerFragment}"></div>
 
 <div class="wrap-container">
-  <h2>테이블 타입 수정</h2>
+    <h2><i class="fas fa-couch" style="margin-right: 10px; color: var(--choco-main);"></i> 테이블 타입 수정</h2>
 
-  <form th:action="@{/store/table/edit}" method="post">
-    <table>
-      <thead>
-      <tr>
-        <th>테이블명(타입)</th>
-        <th>정원</th>
-        <th>수량</th>
-      </tr>
-      </thead>
+    <form th:action="@{/store/table/edit}" method="post">
+        <table>
+            <thead>
+            <tr>
+                <th>테이블명(타입)</th>
+                <th>정원</th>
+                <th>수량</th>
+                <th>관리</th> 
+            </tr>
+            </thead>
 
-      <tbody>
-      <tr th:each="t : ${tableTypes}"
-          data-row="1"
-          th:attr="data-current-name=${t.name}">
-        <input type="hidden" name="seqStoreTable" th:value="${t.seqStoreTable}"/>
+            <tbody>
+            <tr th:each="t : ${tableTypes}"
+                data-row="1"
+                th:attr="data-current-name=${t.name}">
+                <input type="hidden" name="seqStoreTable" th:value="${t.seqStoreTable}"/>
 
-        <!-- 서버로 보내는 진짜 name (hidden으로) -->
-        <input type="hidden" name="name" th:value="${t.name}"/>
+                <input type="hidden" name="name" th:value="${t.name}"/>
 
-        <td>
-          <select name="namePreset"></select>
-          <input type="text" class="custom-name" name="customName" placeholder="직접 입력" disabled />
-        </td>
+                <td>
+                    <select name="namePreset"></select>
+                    <input type="text" class="custom-name" name="customName" placeholder="직접 입력" disabled />
+                </td>
 
-        <td>
-          <input type="number" name="capacity" min="1" th:value="${t.capacity}" required/>
-        </td>
+                <td>
+                    <input type="number" name="capacity" min="1" th:value="${t.capacity}" required/>
+                </td>
 
-        <td>
-          <input type="number" name="quantity" min="1" th:value="${t.quantity}" required/>
-        </td>
-      </tr>
-      </tbody>
-    </table>
+                <td>
+                    <input type="number" name="quantity" min="1" th:value="${t.quantity}" required/>
+                </td>
+                
+                <td>
+                    <form th:action="@{/store/table/delete/{seq}(seq=${t.seqStoreTable})}" method="post" class="delete-form" onsubmit="return confirm('정말로 이 테이블 타입(모든 수량)을 삭제하시겠습니까?');">
+                        <button type="submit" class="btn-danger">
+                            <i class="fas fa-trash-alt"></i> 삭제
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
 
-    <div class="action-group">
-      <button type="submit">수정 저장</button>
-      <a th:href="@{/store/dashboard}">대시보드로 돌아가기</a>
-    </div>
-  </form>
+        <div class="action-group">
+            <a th:href="@{/store/table/add}" class="btn-secondary">
+                <i class="fas fa-plus-circle"></i> 새 테이블 추가
+            </a>
+            
+            <div class="right-buttons">
+                <a th:href="@{/store/dashboard}" class="btn-secondary">
+                    <i class="fas fa-times-circle"></i> 취소 및 돌아가기
+                </a>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> 변경 사항 저장
+                </button>
+            </div>
+        </div>
+    </form>
 </div>
 </body>
 </html>

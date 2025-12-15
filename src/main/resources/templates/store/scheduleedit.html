@@ -3,152 +3,228 @@
 <head>
 <meta charset="UTF-8">
 <title>영업 시간 수정</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
-    /* YamiPick Admin 공통 스타일 */
+    /* -------------------------------------------------------
+       Warm Choco & Cream Theme Variables (통일)
+    ------------------------------------------------------- */
     :root {
-        --color-primary: #ff3b1a;
-        --color-accent: #6D4C41;
-        --color-border: #eee;
-        --color-shadow: 0 4px 12px rgba(0,0,0,.06);
-        --border-radius: 12px;
+        --choco-dark: #3E2723; /* 텍스트 및 최강조 (Dark Brown) */
+        --choco-main: #6D4C41; /* 메인 초코 브라운 (Primary) */
+        --choco-accent: #A1887F; /* 부드러운 강조색 (Point) */
+        --cream-light: #FFFCF5; /* 배경색 */
+        --cream-card: #fff; /* 카드 내부 배경 */
+        --cream-dark: #EFEBE9; /* 테이블 호버 배경 / 입력 필드 배경 */
+        --border-light: #D7CCC8; /* 연한 코코아색 테두리 */
+        --shadow: 0 4px 15px rgba(109, 76, 65, 0.08); /* 따뜻한 그림자 */
+        --radius-l: 18px;
+        --radius-s: 8px;
     }
-    body { font-family: 'Malgun Gothic', 'Dotum', sans-serif; background-color: #f8f8f8; color: #333; }
-    .wrap-container { max-width: 900px; margin: 40px auto; padding: 30px; background: #fff; border-radius: 18px; box-shadow: var(--color-shadow); }
-    h1 { color: var(--color-accent); border-bottom: 3px solid var(--color-primary); padding-bottom: 10px; margin-bottom: 25px; font-weight: 900; }
 
-    /* 테이블 스타일 */
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; }
-    th, td { border: none; border-bottom: 1px solid var(--color-border); padding: 12px 10px; text-align: center; font-size: 14px; }
-    th { background-color: #f5f5f5; color: #555; font-weight: 700; border-bottom: 2px solid #ddd; }
-    tr:nth-child(even) { background-color: #fafafa; }
-    tr:hover { background-color: #fffaf8; }
-
-    /* 입력 필드/셀렉트 박스 */
-    select {
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font-size: 14px;
-        transition: border-color .15s ease;
-    }
-    select:focus {
-        border-color: var(--color-primary);
-        outline: none;
+    /* -------------------------------------------------------
+       기본 스타일 및 레이아웃
+    ------------------------------------------------------- */
+    body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; background-color: var(--cream-light); color: var(--choco-dark); padding-top: 60px; }
+    .wrap-container { 
+        max-width: 900px; 
+        margin: 40px auto; 
+        padding: 30px; 
+        background: var(--cream-card); 
+        border-radius: var(--radius-l); 
+        box-shadow: var(--shadow); 
     }
     
-    /* 버튼 공통 */
-    .btn, button[type="submit"] {
-        padding: 10px 20px;
-        border-radius: 8px;
+    h1 { 
+        color: var(--choco-dark); 
+        border-bottom: 3px solid var(--choco-accent); 
+        padding-bottom: 10px; 
+        margin-bottom: 25px; 
+        font-weight: 900; 
+        font-size: 26px;
+    }
+    a { text-decoration: none; color: var(--choco-main); }
+    a:hover { text-decoration: underline; }
+
+    /* -------------------------------------------------------
+       Table Style
+    ------------------------------------------------------- */
+    table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        margin-top: 20px; 
+        background: var(--cream-card); 
+        border-radius: var(--radius-s); 
+        overflow: hidden; 
+        border: 1px solid var(--border-light);
+    }
+    th, td { 
+        border: none; 
+        border-bottom: 1px solid var(--border-light); 
+        padding: 12px 10px; 
+        text-align: center; 
+        font-size: 14px; 
+        vertical-align: middle;
+    }
+    th { 
+        background-color: var(--choco-accent); 
+        color: var(--cream-card); 
+        font-weight: 700; 
+    }
+    tr:nth-child(even) { background-color: #fcfcf9; } 
+    tr:hover { background-color: var(--cream-dark); } 
+
+    /* Select, Input Field Styling */
+    select {
+        padding: 6px 8px;
+        border: 1px solid var(--border-light);
+        border-radius: 4px;
+        background-color: var(--cream-card);
+        color: var(--choco-dark);
+        font-size: 14px;
+        appearance: none; /* 기본 화살표 제거 */
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"><path fill="%236D4C41" d="M7 10l5 5 5-5z"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        padding-right: 25px; /* 화살표 공간 확보 */
+        width: 100px; /* 시간 선택 폭 고정 */
+    }
+    select[name="isOpen"] {
+        width: 60px;
+    }
+    
+    /* -------------------------------------------------------
+       Button Style
+    ------------------------------------------------------- */
+    .action-buttons {
+        margin-top: 25px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    .btn-primary, .btn-secondary {
+        padding: 10px 20px; 
+        border-radius: var(--radius-s);
         cursor: pointer;
         font-weight: 700;
         transition: all .15s ease;
-        margin-right: 10px;
         display: inline-block;
         text-decoration: none;
+        line-height: 1.2;
+        white-space: nowrap;
+        font-size: 16px;
     }
     
-    /* 주 버튼 (등록/저장) */
-    .btn-primary, button[type="submit"] {
-        background: var(--color-primary);
-        color: #fff;
+    /* 주 버튼 (Dark Choco) */
+    .btn-primary {
+        background: var(--choco-main);
+        color: var(--cream-light);
         border: none;
     }
-    .btn-primary:hover, button[type="submit"]:hover {
-        background: #e63617;
+    .btn-primary:hover {
+        background: var(--choco-dark);
     }
 
-    /* 보조 버튼 (취소/돌아가기/링크) */
-    .btn-secondary, a.btn-secondary, .btn-link {
-        background: #fff;
-        color: #555;
-        border: 1px solid #ddd;
-        text-decoration: none;
-        padding: 10px 20px;
-        line-height: 1; 
+    /* 보조 버튼/링크 (Cream Border) */
+    .btn-secondary {
+        background: var(--cream-card);
+        color: var(--choco-main);
+        border: 1px solid var(--border-light);
     }
-    .btn-secondary:hover, a.btn-secondary:hover {
-        background: #f0f0f0;
+    .btn-secondary:hover {
+        background: var(--cream-dark);
+        color: var(--choco-dark);
     }
-    
-    .action-group { margin-top: 30px; }
-    
-    a:not(.btn-secondary):not(.btn-link) { color: var(--color-primary); text-decoration: none; font-weight: 600; margin-left: 10px; }
 </style>
 </head>
 <body>
+
 <div th:replace="~{common/header :: headerFragment}"></div>
 
 <div class="wrap-container">
 
-	<h1>영업 시간 수정</h1>
+    <h1><i class="fas fa-clock" style="margin-right: 10px; color: var(--choco-main);"></i> 영업 시간 수정</h1>
 
-	<form th:action="@{/store/schedule/edit}" method="post">
+    <form th:action="@{/store/schedule/edit}" method="post">
 
-		<table>
-			<thead>
-				<tr>
-					<th>요일</th>
-					<th>영업 여부</th>
-					<th>시작 시간</th>
-					<th>종료 시간</th>
-					<th>브레이크 시작</th>
-					<th>브레이크 종료</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr th:each="s : ${schedules}">
-					<input type="hidden" name="seqSchedule" th:value="${s.seqSchedule}" />
+        <table>
+            <thead>
+                <tr>
+                    <th>요일</th>
+                    <th>영업 여부</th>
+                    <th>시작 시간</th>
+                    <th>종료 시간</th>
+                    <th>브레이크 시작</th>
+                    <th>브레이크 종료</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="s : ${schedules}">
+                    <input type="hidden" name="seqSchedule" th:value="${s.seqSchedule}" />
 
-					<td th:text="${s.dayOfWeekName}">월</td>
+                    <td th:text="${s.dayOfWeekName}" style="font-weight: 600;">월</td>
 
-					<td><select name="isOpen">
-							<option value="Y" th:selected="${s.isOpen == 'Y'}">영업</option>
-							<option value="N" th:selected="${s.isOpen == 'N'}">휴무</option>
-					</select></td>
-					<td><select name="openTime">
-							<option th:each="h : ${#numbers.sequence(0,23)}"
-								th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
-								th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}"
-								th:selected="${s.openTime == ((h < 10 ? '0' + h : '' + h) + ':00')}">
-							</option>
-					</select></td>
+                    <td>
+                        <select name="isOpen">
+                            <option value="Y" th:selected="${s.isOpen == 'Y'}">영업</option>
+                            <option value="N" th:selected="${s.isOpen == 'N'}">휴무</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select name="openTime">
+                            <option th:each="h : ${#numbers.sequence(0,23)}"
+                                th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                                th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                                th:selected="${s.openTime == ((h < 10 ? '0' + h : '' + h) + ':00')}">
+                            </option>
+                        </select>
+                    </td>
 
-					<td><select name="closeTime">
-							<option th:each="h : ${#numbers.sequence(0,23)}"
-								th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
-								th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}"
-								th:selected="${s.closeTime == ((h < 10 ? '0' + h : '' + h) + ':00')}">
-							</option>
-					</select></td>
+                    <td>
+                        <select name="closeTime">
+                            <option th:each="h : ${#numbers.sequence(0,23)}"
+                                th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                                th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                                th:selected="${s.closeTime == ((h < 10 ? '0' + h : '' + h) + ':00')}">
+                            </option>
+                        </select>
+                    </td>
 
-					<td><select name="breakStart">
-                        	<option value="">— 없음 —</option>
-							<option th:each="h : ${#numbers.sequence(0,23)}"
-								th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
-								th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}"
-								th:selected="${s.breakStart == ((h < 10 ? '0' + h : '' + h) + ':00')}">
-							</option>
-					</select></td>
+                    <td>
+                        <select name="breakStart">
+                             <option value="" th:selected="${s.breakStart == null or s.breakStart == ''}">— 없음 —</option> 
+                            <option th:each="h : ${#numbers.sequence(0,23)}"
+                                th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                                th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                                th:selected="${s.breakStart == ((h < 10 ? '0' + h : '' + h) + ':00')}">
+                            </option>
+                        </select>
+                    </td>
 
-					<td><select name="breakEnd">
-                        	<option value="">— 없음 —</option>
-							<option th:each="h : ${#numbers.sequence(0,23)}"
-								th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
-								th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}"
-								th:selected="${s.breakEnd == ((h < 10 ? '0' + h : '' + h) + ':00')}">
-							</option>
-					</select></td>
-				</tr>
-			</tbody>
-		</table>
-		
-        <div class="action-group">
-		    <button type="submit" class="btn-primary">수정 저장</button>
-            <a th:href="@{/store/dashboard}" class="btn-secondary link-btn">취소하고 돌아가기</a>
+                    <td>
+                        <select name="breakEnd">
+                             <option value="" th:selected="${s.breakEnd == null or s.breakEnd == ''}">— 없음 —</option> 
+                            <option th:each="h : ${#numbers.sequence(0,23)}"
+                                th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                                th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                                th:selected="${s.breakEnd == ((h < 10 ? '0' + h : '' + h) + ':00')}">
+                            </option>
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="action-buttons">
+            <a th:href="@{/store/dashboard}" class="btn-secondary">
+                <i class="fas fa-times-circle"></i> 취소 및 돌아가기
+            </a>
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-save"></i> 변경 사항 저장
+            </button>
         </div>
-	</form>
+    </form>
 
 </div>
+
 </body>
 </html>

@@ -124,7 +124,7 @@
         }
 
         /* 취소 (Canceled) */
-        .badge-cancel, .badge-reject, .badge-expired {
+        .badge-cancel, .badge-reject, .badge-expired, .badge-etc {
             background-color: var(--cream-dark); /* Grayish */
             color: var(--choco-accent); 
             border: 1px solid var(--border-light);
@@ -133,8 +133,8 @@
         /* -------------------------------------------------------
            Button Style (대시보드와 통일)
         ------------------------------------------------------- */
-        .btn-link, .btn-primary, .btn-secondary, button[type="submit"] {
-            padding: 8px 15px; /* 테이블 내부 버튼은 조금 작게 */
+        .btn-primary, .btn-secondary {
+            padding: 8px 15px; 
             border-radius: var(--radius-s);
             cursor: pointer;
             font-weight: 700;
@@ -143,10 +143,10 @@
             text-decoration: none;
             line-height: 1.2;
             white-space: nowrap;
-            font-size: 13px; 
+            font-size: 14px; /* Date form 버튼 크기 */
         }
         
-        /* 주 버튼 (Dark Choco) - 확정 */
+        /* 주 버튼 (Dark Choco) */
         .btn-primary {
             background: var(--choco-main);
             color: var(--cream-light);
@@ -156,7 +156,7 @@
             background: var(--choco-dark);
         }
 
-        /* 보조 버튼/링크 (Cream Border) - 반려 */
+        /* 보조 버튼/링크 (Cream Border) */
         .btn-secondary {
             background: var(--cream-card);
             color: var(--choco-main);
@@ -166,16 +166,6 @@
             background: var(--cream-dark);
             color: var(--choco-dark);
         }
-
-        /* 반려 사유 입력 필드 */
-        .reject-form input[type="text"] {
-             padding: 6px;
-             border: 1px solid var(--border-light);
-             border-radius: var(--radius-s);
-             width: 100px;
-             margin-right: 5px;
-        }
-
     </style>
 </head>
 <body>
@@ -187,19 +177,21 @@
     <h1><i class="fas fa-calendar-alt" style="margin-right: 10px; color: var(--choco-main);"></i> 날짜별 예약 리스트</h1>
 
     <form th:action="@{/store/reservation/list}" method="get" class="date-selector-form">
-        <label for="selectedDate" style="color: var(--choco-dark); font-weight: 600;">날짜 선택:</label>
-        <input type="date" id="selectedDate" name="date" th:value="${#temporals.format(selectedDate, 'yyyy-MM-dd')}"/>
-        <button type="submit" class="btn-primary">
-            <i class="fas fa-search"></i> 조회
-        </button>
-        <a th:href="@{/store/dashboard}" class="btn-secondary" style="margin-left: auto;">
-            <i class="fas fa-undo"></i> 대시보드로 돌아가기
-        </a>
-    </form>
-
-    <p style="margin-bottom: 15px; font-weight: 500; font-size: 1.1em;">
-        <span style="color: var(--choco-main);" th:text="${#temporals.format(selectedDate, 'yyyy년 MM월 dd일')}"></span> 예약 목록 (총 <span th:text="${reservations.size()}" style="font-weight: 700; color: var(--danger-color);">0</span>건)
-    </p>
+	    <label for="date" style="color: var(--choco-dark); font-weight: 600;">날짜 선택:</label>
+	    <input type="date"
+	           id="date"
+	           name="date"
+	           th:value="${#temporals.format(date, 'yyyy-MM-dd')}" /> <button type="submit" class="btn-primary">
+	        <i class="fas fa-search"></i> 조회
+	    </button>
+	    <a th:href="@{/store/dashboard}" class="btn-secondary" style="margin-left: auto;">
+	        <i class="fas fa-undo"></i> 대시보드로 돌아가기
+	    </a>
+	</form>
+	
+	<p style="margin-bottom: 15px; font-weight: 500; font-size: 1.1em;">
+	    <span style="color: var(--choco-main);" th:text="${#temporals.format(date, 'yyyy년 MM월 dd일')}"></span> 예약 목록 (총 <span th:text="${reservations.size()}" style="font-weight: 700; color: var(--danger-color);">0</span>건)
+	</p>
 
     <table>
         <thead>
@@ -209,58 +201,32 @@
                 <th>손님</th>
                 <th>인원</th>
                 <th>테이블 타입</th>
-                <th>요청 사항</th>
                 <th>상태</th>
                 <th>취소/반려 사유</th>
-                <th>작업</th>
             </tr>
         </thead>
         <tbody>
+            <tr th:if="${#lists.isEmpty(reservations)}">
+                <td colspan="7">해당 날짜에 예약이 없습니다.</td>
+            </tr>
             <tr th:each="r, status : ${reservations}">
                 <td th:text="${status.count}">1</td>
                 <td th:text="${r.reserveTime}">18:00</td>
                 <td th:text="${r.nickname}">손님 닉네임</td>
                 <td th:text="${r.peopleCount}">4</td>
                 <td th:text="${r.tableTypeName}">2인석</td>
-                <td th:text="${r.request}">조용한 자리 부탁드립니다.</td>
                 <td>
                     <span 
-                        th:text="${r.status}"
+                        th:text="${r.status ?: '상태없음'}"
                         th:class="'badge ' + (${r.status} == '대기' ? 'badge-wait' :
                                   (${r.status} == '완료' ? 'badge-done' :
                                   (${r.status} == '취소' ? 'badge-cancel' : 
                                   (${r.status} == '반려' ? 'badge-reject' :
                                   (${r.status} == '만료' ? 'badge-expired' : 'badge-etc')))))">
-                        예약 상태
+                        상태
                     </span>
                 </td>
                 <td th:text="${r.cancelReason ?: '-'}">-</td>
-
-                <td>
-                    <div th:if="${r.status == '대기'}">
-                        <form th:action="@{|/store/reservation/${r.seqReservation}/confirm|}"
-                              method="post"
-                              style="display:inline;"
-                              onsubmit="return confirm('정말 이 예약을 확정하시겠습니까?');">
-                            <button type="submit" class="btn-primary">확정</button>
-                        </form>
-
-                        <form th:action="@{|/store/reservation/${r.seqReservation}/cancel|}"
-                              method="post"
-                              style="display:inline; margin-top: 5px;"
-                              class="reject-form">
-                            <input type="text" name="reason" placeholder="반려 사유" required />
-                            <button type="submit" class="btn-secondary" 
-                                    style="color: var(--danger-color); border-color: var(--danger-color);">
-                                반려
-                            </button>
-                        </form>
-                    </div>
-
-                    <div th:if="${r.status != '대기'}">
-                        -
-                    </div>
-                </td>
             </tr>
         </tbody>
     </table>
