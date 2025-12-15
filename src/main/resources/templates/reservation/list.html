@@ -3,89 +3,170 @@
 <head>
 	<meta charset="UTF-8">
 	<title>내 예약 목록</title>
-	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
 	<style>
-        body {
-            font-family: sans-serif;
-            max-width: 900px;
-            margin: 40px auto;
+        /* -------------------------------------------------------
+           Warm Choco & Cream Theme Variables (통일)
+        ------------------------------------------------------- */
+        :root {
+            --choco-dark: #3E2723;
+            --choco-main: #6D4C41;
+            --choco-accent: #A1887F;
+            --cream-light: #FFFCF5;
+            --cream-card: #fff;
+            --cream-dark: #EFEBE9;
+            --border-light: #D7CCC8;
+            --shadow: 0 4px 15px rgba(109, 76, 65, 0.08);
+            --danger-color: #B71C1C;
+            --radius-l: 18px;
+            --radius-s: 8px;
         }
+
+        /* -------------------------------------------------------
+           Global Layout & Typography
+        ------------------------------------------------------- */
+        body { 
+            font-family: 'Pretendard', 'Malgun Gothic', sans-serif; 
+            background-color: var(--cream-light); 
+            color: var(--choco-dark); 
+            padding-top: 60px;
+            margin: 0;
+        }
+        
+        .wrap-container { 
+            max-width: 900px; /* list는 넓게 */
+            margin: 40px auto; 
+            padding: 30px; 
+            background: var(--cream-card); 
+            border-radius: var(--radius-l); 
+            box-shadow: var(--shadow); 
+        }
+        
         h1 {
-            margin-bottom: 20px;
+            color: var(--choco-dark); 
+            border-bottom: 3px solid var(--choco-accent); 
+            padding-bottom: 10px; 
+            margin-bottom: 25px; 
+            font-weight: 900; 
+            font-size: 26px;
         }
+        
+        a { text-decoration: none; color: var(--choco-main); }
+        a:hover { text-decoration: underline; }
+
+        /* -------------------------------------------------------
+           Table & Action Style
+        ------------------------------------------------------- */
+        .top-actions {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 5px;
+        }
+        .top-actions span {
+            font-weight: 600;
+            color: var(--choco-main);
+        }
+        
+        /* 새 예약하기 버튼 (Primary Action) */
+        a.button {
+            padding: 8px 15px;
+            border-radius: var(--radius-s);
+            background: var(--choco-accent);
+            color: var(--cream-card);
+            font-weight: 700;
+            font-size: 14px;
+            transition: background .15s ease;
+        }
+        a.button:hover {
+            background: var(--choco-main);
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-s);
+            overflow: hidden;
         }
         th, td {
-            border-bottom: 1px solid #ddd;
-            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-light);
+            padding: 12px 10px;
             text-align: center;
+            font-size: 14px;
+            vertical-align: middle;
         }
         th {
-            background-color: #f5f5f5;
+            background-color: var(--choco-accent);
+            color: var(--cream-card);
+            font-weight: 700;
         }
-        .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 12px;
+        tr:nth-child(even) { background-color: #fcfcf9; }
+        tr:hover { background-color: var(--cream-dark); }
+        
+        /* 테이블 내부 상세보기 버튼 */
+        td a.btn-sm {
+            padding: 6px 10px;
+            border-radius: 4px;
+            background: var(--choco-main);
+            color: var(--cream-card);
+            font-weight: 600;
+            font-size: 13px;
+            transition: background .15s ease;
         }
-        .badge-wait {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        .badge-done {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .badge-cancel {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .badge-reject {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .badge-expired {
-		    background-color: #b2bec3; /* 회색 계열 예시 */
-		    color: #2d3436;
-		}
-        .badge-etc {
-            background-color: #e2e3e5;
-            color: #383d41;
+        td a.btn-sm:hover {
+            background: var(--choco-dark);
+            text-decoration: none;
         }
 
-        .top-actions {
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* -------------------------------------------------------
+           Badge Style (상태 배지)
+        ------------------------------------------------------- */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 700;
+            min-width: 60px;
         }
-        a.button {
-            padding: 6px 10px;
-            border-radius: 6px;
-            background: #007bff;
-            color: white;
-            text-decoration: none;
-            font-size: 14px;
+        /* Choco & Cream 테마에 맞게 색상 조정 */
+        .badge-wait { /* 대기 */
+            background-color: #FFF3E0; /* 오렌지빛 크림 */
+            color: #C67C47; /* 브라운 오렌지 */
         }
-        a.button:hover {
-            background: #0056b3;
+        .badge-done { /* 완료 */
+            background-color: #EFEBE9; /* 진한 크림 */
+            color: var(--choco-main); /* 초코 메인 */
+        }
+        .badge-cancel, .badge-reject { /* 취소, 반려 */
+            background-color: #FBEFEE; /* 옅은 레드 크림 */
+            color: var(--danger-color); /* 다크 레드 */
+        }
+        .badge-expired { /* 만료, 노쇼 */
+		    background-color: var(--cream-dark); /* 회색 크림 */
+		    color: var(--choco-accent); /* 부드러운 초코 */
+		}
+        .badge-etc { /* 기타 */
+            background-color: var(--border-light);
+            color: var(--choco-dark);
         }
     </style>
 </head>
 <body>
+
+	<div th:replace="~{common/header :: headerFragment}"></div>
+
+<div class="wrap-container">
 	<h1>내 예약 목록</h1>
 
 	<div class="top-actions">
 	    <div>
-	        <!-- 나중에 로그인 붙이면 사용자 이름 표시 가능 -->
-	        <span th:text="'총 ' + ${#lists.size(reservations)} + '건'">총 0건</span>
+	        <span th:text="'총 ' + ${#lists.size(reservations)} + '건의 예약 내역이 있습니다.'">총 0건</span>
 	    </div>
 	    <div>
-	        <a class="button" th:href="@{/reservation/storeSelect}">새 예약하기</a>
+	        <a class="button" th:href="@{/reservation/storeSelect}">+ 새 예약하기</a>
 	    </div>
 	</div>
 	
@@ -98,27 +179,28 @@
 		    <th>좌석 타입</th>
 		    <th>인원</th>
 		    <th>예약 상태</th>
-		    <th>상세</th> <!-- 요 줄 추가 -->
+		    <th>상세</th>
 		</tr>
 	    </thead>
 	    <tbody>
 	    <tr th:if="${#lists.isEmpty(reservations)}">
-	        <td colspan="6">예약 내역이 없습니다.</td>
+	        <td colspan="7">예약 내역이 없습니다.</td>
 	    </tr>
 	
 	    <tr th:each="r : ${reservations}">
-	        <td th:text="${r.reserveDate}">예약 날짜</td>
-	        <td th:text="${r.reserveTime}">예약 시간</td>
-	        <td th:text="${r.storeName}">예약 장소</td>
-	        <td th:text="${r.tableTypeName}">테이블 타입</td>
-	        <td th:text="${r.peopleCount}">예약 인원</td>
+	        <td th:text="${r.reserveDate}"></td>
+	        <td th:text="${r.reserveTime}"></td>
+	        <td th:text="${r.storeName}"></td>
+	        <td th:text="${r.tableTypeName}"></td>
+	        <td th:text="${r.peopleCount}"></td>
 	        <td>
 	            <span th:text="${r.status == '취소' ? '취소완료' : r.status}"
 			          th:class="'badge ' + (${r.status} == '대기' ? 'badge-wait' :
 			                                  (${r.status} == '완료' ? 'badge-done' :
 			                                  (${r.status} == '취소' ? 'badge-cancel' : 
 			                                  (${r.status} == '반려' ? 'badge-reject' :
-			                                  (${r.status} == '만료' ? 'badge-expired' : 'badge-etc')))))">
+			                                  (${r.status} == '만료' ? 'badge-expired' : 
+			                                  (${r.status} == '노쇼' ? 'badge-expired' : 'badge-etc'))))))">
 			        예약 상태
 			    </span>
 	        </td>
@@ -131,6 +213,6 @@
 	    </tr>
 	    </tbody>
 	</table>
-	
+</div>
 </body>
 </html>

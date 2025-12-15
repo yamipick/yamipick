@@ -3,68 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <title>예약하기</title>
-    <link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
     
-    <!-- 🔹 flatpickr CSS/JS 추가 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+
 <style>
+    /* -------------------------------------------------------
+       Warm Choco & Cream Theme Variables (list.html과 통일)
+    ------------------------------------------------------- */
+    :root {
+        --choco-dark: #3E2723;
+        --choco-main: #6D4C41;
+        --choco-accent: #A1887F;
+        --cream-light: #FFFCF5;
+        --cream-card: #fff;
+        --cream-dark: #EFEBE9;
+        --border-light: #D7CCC8;
+        --shadow: 0 4px 15px rgba(109, 76, 65, 0.08);
+        --danger-color: #B71C1C;
+        --radius-l: 18px;
+        --radius-s: 8px;
+    }
+
+    /* -------------------------------------------------------
+       기본 스타일 및 레이아웃 (Theme Variables를 사용하도록 정리)
+    ------------------------------------------------------- */
+    body { 
+        font-family: 'Pretendard', 'Malgun Gothic', sans-serif; 
+        background-color: var(--cream-light); 
+        color: var(--choco-dark); 
+        padding-top: 60px; 
+        margin: 0;
+    }
+    .wrap-container { 
+        max-width: 800px;
+        margin: 40px auto; 
+        padding: 30px; 
+        background: var(--cream-card); 
+        border-radius: var(--radius-l); 
+        box-shadow: var(--shadow); 
+    }
+    
+    h1 { 
+        color: var(--choco-dark); 
+        border-bottom: 3px solid var(--choco-accent); 
+        padding-bottom: 10px; 
+        margin-bottom: 25px; 
+        font-weight: 900; 
+        font-size: 26px;
+    }
+    a { 
+        text-decoration: none; 
+        color: var(--choco-main); 
+        transition: color .15s ease; 
+    }
+    a:hover { 
+        color: var(--choco-dark); 
+        text-decoration: underline; 
+    }
+
+    /* -------------------------------------------------------
+       Form & Input Style (Theme Colors 적용)
+    ------------------------------------------------------- */
+    input[type="text"], input[type="number"], select, textarea {
+        padding: 8px 10px; 
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-s);
+        background-color: var(--cream-dark); 
+        color: var(--choco-dark);
+        font-size: 14px;
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 5px;
+        margin-bottom: 10px;
+    }
+    
+    /* 인원 수와 예약 시간 필드만 배경을 하얀색(var(--cream-card))으로 오버라이드 */
+    #peopleCount, #reserveTime {
+        background-color: var(--cream-card); /* 순수한 하얀색으로 변경 */
+    }
+    
+    label {
+        font-weight: 600;
+        display: block;
+        margin-top: 15px;
+        color: var(--choco-dark);
+    }
+    
+    /* -------------------------------------------------------
+       Button Style (Theme Colors 적용)
+    ------------------------------------------------------- */
+    button[type="submit"] {
+        padding: 12px 20px; 
+        border-radius: var(--radius-s);
+        cursor: pointer;
+        font-weight: 700;
+        transition: all .15s ease;
+        display: block;
+        width: 100%;
+        line-height: 1.2;
+        font-size: 18px;
+        border: none;
+        margin-top: 30px;
+        box-sizing: border-box;
+    }
+    
+    /* 테이블 타입 선택 버튼 (Primary) */
+    button[type="submit"] { 
+        background: var(--choco-accent); 
+        color: var(--cream-card);
+    }
+    button[type="submit"]:hover {
+        background: var(--choco-main);
+    }
+    
+    /* -------------------------------------------------------
+       Flatpickr Customization (Theme Colors 적용)
+    ------------------------------------------------------- */
+    .flatpickr-calendar {
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-s);
+        max-width: 100%;
+        background-color: var(--cream-card);
+    }
+    
+    /* 날짜 선택 시 액션 색상도 테마에 맞춤 */
+    .flatpickr-day.selected, .flatpickr-day.selected:hover {
+        background: var(--choco-accent);
+        border-color: var(--choco-accent);
+    }
+
+    .flatpickr-day.today:not(.selected) {
+        border-color: var(--choco-main);
+        color: var(--choco-main);
+    }
+    
+    /* 공휴일 색상 (Theme Danger Color 사용) */
     .public-holiday-day {
-	    color: rgba(200, 70, 70, 0.65) !important; /* 옅은 빨강 + 약간 회색 */
+	    color: var(--danger-color) !important; 
 	    font-weight: 700;
 	}
+
+    /* 매장 이름 표시 박스 */
+    .store-info-box {
+        margin-bottom: 20px;
+        font-size: 16px;
+        border: 1px dashed var(--border-light);
+        padding: 15px;
+        border-radius: var(--radius-s);
+        background-color: var(--cream-dark);
+    }
+
+    .store-info-box label {
+        margin-top: 0; 
+        font-weight: 700;
+        display: inline;
+    }
+    .store-info-box span {
+        font-weight: 600;
+        color: var(--choco-main);
+        margin-left: 5px;
+    }
 </style>
 </head>
 <body>
 
+    <div th:replace="~{common/header :: headerFragment}"></div>
+
+<div class="wrap-container">
     <h1>예약하기</h1>
 
-    <!-- ★ action: formok -> tableSelect 로 변경 -->
     <form id="reservationForm" th:action="@{/reservation/tableSelect}" method="post"
           th:object="${reservation}">
 
-        <!-- 숨겨진 값들: 유저, 매장 -->
         <input type="hidden" th:field="*{seqUser}">
         <input type="hidden" th:field="*{seqStore}">
 
-        <!-- 매장 표시 -->
-        <div>
+        <div class="store-info-box">
             <label>매장:</label>
             <span th:text="${store.name}">매장 이름</span>
         </div>
 
-        <!-- 예약 날짜 -->
-		<div>
+        <div>
 		    <label>예약 날짜:</label>
 		
-		    <!-- 실제로 서버와 바인딩되는 필드 (숨김) -->
 		    <input type="hidden"
 		           id="reserveDate"
 		           th:field="*{reserveDate}"
 		           required>
 		
-		    <!-- 화면에 항상 떠 있을 캘린더 -->
 		    <div id="reserveDateCalendar"></div>
 		</div>
 
-		<!-- 인원 수 -->
-        <div>
+		<div>
             <label>인원 수:</label>
             <input type="number" id="peopleCount" th:field="*{peopleCount}" min="1">
         </div>
 
-        <!-- 예약 시간 (1시간 단위) -->
         <div>
 		    <label>예약 시간:</label> 
 		    <select th:field="*{reserveTime}" id="reserveTime" >
 		        <option value="">날짜와 인원을 선택해주세요</option>
-		        <!-- 옵션은 JS가 채움 -->
-		    </select>
+		        </select>
 		</div>
 
-        <button type="submit" id="tableSelectBtn">테이블 타입 선택</button>
+        <button type="submit" id="tableSelectBtn" class="btn-primary">테이블 타입 선택</button>
     </form>
+</div>
 
 <script th:inline="javascript">
 window.addEventListener('DOMContentLoaded', function () {
@@ -224,7 +371,7 @@ window.addEventListener('DOMContentLoaded', function () {
                 publicHolidaySet = new Set();
                 publicHolidayMap = new Map();
 
-                console.log('공휴일 응답:', list); // ✅ 이 로그 꼭 확인
+                console.log('공휴일 응답:', list); 
 
                 if (Array.isArray(list)) {
                     list.forEach(h => {
@@ -391,7 +538,6 @@ window.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
-
 
 </body>
 </html>

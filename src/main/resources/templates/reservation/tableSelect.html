@@ -3,16 +3,68 @@
 <head>
   <meta charset="UTF-8">
   <title>테이블 타입 선택</title>
-  <link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
 
 <style>
-    /* 폰트, 기본 레이아웃은 유지 */
-    .wrap { max-width: 720px; margin: 30px auto; padding: 0 12px; }
-    .card { border: 1px solid #eee; border-radius: 18px; padding: 18px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
-    h3 { margin: 0 0 16px; font-weight: 900; } 
+    /* -------------------------------------------------------
+       Warm Choco & Cream Theme Variables (list.html과 통일)
+    ------------------------------------------------------- */
+    :root {
+        --choco-dark: #3E2723;
+        --choco-main: #6D4C41;
+        --choco-accent: #A1887F;
+        --cream-light: #FFFCF5;
+        --cream-card: #fff;
+        --cream-dark: #EFEBE9;
+        --border-light: #D7CCC8;
+        --shadow: 0 4px 15px rgba(109, 76, 65, 0.08);
+        --danger-color: #B71C1C;
+        --radius-l: 18px;
+        --radius-s: 8px;
+    }
+    
+    /* -------------------------------------------------------
+       기본 스타일 및 레이아웃 (Theme Variables를 사용하도록 정리)
+    ------------------------------------------------------- */
+    body { 
+        font-family: 'Pretendard', 'Malgun Gothic', sans-serif; 
+        background-color: var(--cream-light); 
+        color: var(--choco-dark); 
+        padding-top: 60px; 
+        margin: 0;
+    }
+    .wrap-container { 
+        /* 이전 파일들(list.html, detail.html)의 wrap-container 스타일 적용 */
+        max-width: 800px;
+        margin: 40px auto; 
+        padding: 30px; 
+        background: var(--cream-card); 
+        border-radius: var(--radius-l); 
+        box-shadow: var(--shadow); 
+    }
+    
+    /* H3를 H1 스타일과 유사하게 테마 적용 */
+    h3 { 
+        color: var(--choco-dark); 
+        border-bottom: 3px solid var(--choco-accent); 
+        padding-bottom: 10px; 
+        margin: 0 0 25px; /* H1 margin과 통일 */
+        font-weight: 900; 
+        font-size: 26px; /* H1 size와 통일 */
+    } 
+    a { 
+        text-decoration: none; 
+        color: var(--choco-main); 
+        transition: color .15s ease; 
+    }
+    a:hover { 
+        color: var(--choco-dark); 
+        text-decoration: underline; 
+    }
 
-    /* 그리드 */
+    /* -------------------------------------------------------
+       Radio Card Grid
+    ------------------------------------------------------- */
     .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; } 
     @media (max-width: 520px){ .grid{ grid-template-columns: repeat(2, 1fr);} }
 
@@ -21,14 +73,15 @@
 
     /* ✅ 카드 버튼 스타일 */
     .type-item {
-      border: 1px solid #eee; 
-      border-radius: 12px; 
+      /* 테마 변수 적용 */
+      border: 1px solid var(--border-light); 
+      border-radius: var(--radius-s); /* radius-s 적용 */
       padding: 24px 12px 18px; 
       cursor: pointer;
       text-align: center;
       user-select: none;
       transition: all .15s ease;
-      background: #fff;
+      background: var(--cream-card); /* 흰색 배경 */
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -37,26 +90,23 @@
     }
     .type-item:hover { 
         transform: translateY(-2px); 
-        box-shadow: 0 4px 12px rgba(0,0,0,.04); 
+        box-shadow: 0 4px 12px rgba(109, 76, 65, 0.1); /* 테마 컬러 기반의 옅은 그림자 */
     }
 
     /* ✅ 선택됨 스타일 */
     .type-radio:checked + .type-item {
-      border-color: #ff3b1a; 
-      background: #fff; 
+      border-color: var(--choco-accent); /* 테마 Accent 색상 */
+      background: var(--cream-card); 
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(255, 59, 26, 0.1); 
+      box-shadow: 0 4px 12px rgba(161, 136, 127, 0.2); /* Accent 컬러 기반 그림자 */
     }
     .type-radio:checked + .type-item .label { 
-        color: #ff3b1a; 
+        color: var(--choco-accent); 
         font-weight: 900; 
     }
-    /* 🚨 수정: 'stroke' 대신 'color' 사용 */
     .type-radio:checked + .type-item .icon { 
-        color: #ff3b1a; 
-        /* stroke 속성 제거 */
+        color: var(--choco-accent) !important; 
     }
-
 
     /* ✅ 예약불가(만석) 카드 스타일 */
     .type-item.disabled {
@@ -64,80 +114,66 @@
       opacity: .4; 
       transform: none; 
       box-shadow: none;
-      border-color: #eee;
+      border-color: var(--border-light);
     }
-    .type-item.disabled:hover { border-color: #eee; }
+    .type-item.disabled:hover { border-color: var(--border-light); }
 
-    /* 🚨 아이콘 스타일 재정의 (color: #111 이 확실히 적용되도록) */
+    /* 아이콘 스타일 */
     .icon { 
-      /* 크기/정렬 관련 설정 유지 */
-      width: 36px; 
-      height: 36px; 
-      margin-bottom: 8px; 
-      display: flex; 
-      align-items: center;
-      justify-content: center;
-      
-      /* ✅ 핵심: 폰트 아이콘 관련 스타일 */
-      font-size: 30px; 
-      font-style: normal;
-      line-height: 1;
-      
+      width: 36px; height: 36px; margin-bottom: 8px; 
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; line-height: 1;
       /* 🔑 색상 강제 지정 (기본 검은색) */
-      color: #111 !important; /* !important를 사용하여 다른 스타일 무시 방지 */
+      color: var(--choco-dark) !important; 
       transition: color .15s ease;
-    }
-    
-    /* ✅ 선택된 상태: color만 변경 */
-    .type-radio:checked + .type-item .icon { 
-        color: #ff3b1a !important; /* !important로 선택 시 주황색 강제 적용 */
     }
     
     .label { 
         font-size: 14px; 
         font-weight: 800; 
-        color: #111; 
+        color: var(--choco-dark); 
         transition: color .15s ease;
     }
-    .sub { margin-top: 6px; font-size: 12px; color: #666; }
+    .sub { margin-top: 6px; font-size: 12px; color: var(--choco-main); } /* sub text color 통일 */
 
-    /* ✅ 액션 버튼 스타일 */
+    /* -------------------------------------------------------
+       Action Button Style
+    ------------------------------------------------------- */
     .actions { display: flex; gap: 10px; margin-top: 24px; } 
     .btn {
       flex: 1;
-      border-radius: 16px; 
-      padding: 16px 12px; 
-      border: 1px solid #ddd;
-      background: #fff;
-      font-weight: 800; 
+      border-radius: var(--radius-s); /* radius-s 적용 */
+      padding: 14px 12px; /* 패딩 조정 */
+      border: 1px solid var(--border-light);
+      background: var(--cream-card);
+      font-weight: 700; /* 폰트 굵기 통일 */
+      font-size: 16px;
       cursor: pointer;
       transition: background .15s ease, border-color .15s ease;
     }
-    .btn:hover { background: #f8f8f8; }
+    .btn:hover { background: var(--cream-dark); } /* hover 색상 통일 */
 
     .btn-primary {
       border: 0;
-      background: #ff3b1a;
-      color: #fff;
+      background: var(--choco-accent); /* 테마 Primary 색상 */
+      color: var(--cream-card);
     }
     .btn-primary:hover {
-        background: #e63617; 
+        background: var(--choco-main); /* 테마 Darker 색상 */
     }
     .btn-primary:disabled {
-      opacity: .45;
+      opacity: .6; /* Disabled opacity 조정 */
       cursor: not-allowed;
-      background: #ff3b1a; 
+      background: var(--choco-accent); 
     }
   </style>
 </head>
 <body>
 
-<div class="wrap">
-  <div class="card">
+<div class="wrap-container">
 
     <form th:action="@{/reservation/formok}" method="post" th:object="${reservation}">
 
-      <!-- 1단계에서 받아온 값들 다시 넘겨주기 -->
       <input type="hidden" th:field="*{seqUser}">
       <input type="hidden" th:field="*{seqStore}">
       <input type="hidden" th:field="*{reserveDate}">
@@ -146,11 +182,9 @@
 
       <h3>테이블 타입 선택</h3>
 
-      <!-- ✅ 기존 select 제거하고, radio 카드로 교체 -->
       <div class="grid">
 
         <div th:each="opt : ${tableOptions}">
-          <!-- opt.available == true인 것만 선택 가능 -->
           <input class="type-radio"
                  type="radio"
                  th:field="*{seqStoreTable}"
@@ -162,7 +196,6 @@
                  th:for="'tt-' + ${opt.seqStoreTable}"
                  th:classappend="${!opt.available} ? ' disabled' : ''">
 
-            <!-- 아이콘(이름에 따라 자동) -->
             <i class="icon ri-restaurant-line"
 			   th:if="${#strings.contains(opt.name, '홀') or #strings.contains(opt.name, '테이블')}"></i>
 			
@@ -189,12 +222,11 @@
       </div>
 
       <div class="actions">
-        <button type="button" class="btn" onclick="history.back()">취소</button>
+        <button type="button" class="btn" onclick="history.back()">이전 단계</button>
         <button type="submit" id="submitBtn" class="btn btn-primary" disabled>예약 확정</button>
       </div>
 
     </form>
-  </div>
 </div>
 
 <script>

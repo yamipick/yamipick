@@ -1,137 +1,276 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta charset="UTF-8">
-	<title>예약 메인</title>
-	<link rel="stylesheet" href="http://bit.ly/3WJ5ilK" />
-	<style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YamiPick 예약 관리 대시보드</title>
+    <style>
+        /* -------------------------------------------------------
+           YamiPick Theme: Warm Choco & Cream (Header Fragment에 정의된 변수를 참조합니다)
+        ------------------------------------------------------- */
+        :root {
+            /* [메인] 따뜻한 밀크 초콜릿 색상 */
+            --primary: #6D4C41; 
+            /* [서브] 부드러운 라떼 브라운 */
+            --secondary: #8D6E63;
+            /* [배경] 따뜻한 크림색 (Header Fragment의 스타일과 일치) */
+            --bg-cream: #FFFDF7;         
+            /* [강조 배경] 조금 더 진한 크림 */
+            --bg-dark-cream: #EFE5D5;
+            /* [텍스트] 진한 고동색 */
+            --text-main: #3E2723;        
+            --text-sub: #8D6E63;         
+            --white: #ffffff;
+            --border: #D7CCC8;
+            --point-red: #A1887F;        
+            
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --border-radius: 12px;
+        }
+
+        /* -------------------------------------------------------
+           기본 및 레이아웃 스타일
+        ------------------------------------------------------- */
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background-color: #f5f5f5;
+            /* body의 padding-top은 헤더 Fragment에 정의된 높이(60px)에 맞춥니다. */
+            padding-top: 60px; 
+            font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+            background-color: var(--bg-cream); /* 배경색 통일 */
+            color: var(--text-main);
+            line-height: 1.6;
             margin: 0;
+            /* 헤더 관련 스타일 (header, logo, nav-menu 등)은 모두 Fragment에 있으므로 제거합니다. */
         }
 
-        .container {
-            max-width: 720px;
-            margin: 60px auto;
-            background: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            padding: 32px 40px 40px;
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; padding: 0; margin: 0; }
+
+        /* -------------------------------------------------------
+           Dashboard Main (대시보드 스타일)
+        ------------------------------------------------------- */
+        .dashboard-wrapper {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
         }
 
-        h1 {
+        /* 헤더 및 타이틀 */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--primary); /* 메인 초콜릿 색상 사용 */
+            font-size: 2.2em;
+            margin-bottom: 5px;
+        }
+
+        .header p.description {
+            color: var(--text-sub); /* 서브 텍스트 라떼 색상 사용 */
+            font-size: 0.95em;
+        }
+
+        /* 알림 섹션 */
+        .notification-card {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-light);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 5px solid var(--point-red); /* 강조 */
+        }
+
+        .notification-card h3 {
             margin-top: 0;
-            font-size: 26px;
-            text-align: center;
+            color: var(--primary); 
+            font-size: 1.1em;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
         }
 
-        p.subtitle {
-            margin-top: 8px;
-            margin-bottom: 32px;
-            text-align: center;
-            color: #666;
-            font-size: 14px;
+        .notification-list li {
+            padding: 8px 0;
+            border-bottom: 1px dashed #f0f0f0;
+            font-size: 0.9em;
         }
 
-        .btn-group {
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
+        .notification-list li:last-child { border-bottom: none; }
 
-        .btn {
+        .status-badge {
             display: inline-block;
-            min-width: 180px;
-            padding: 14px 20px;
-            text-align: center;
-            border-radius: 999px;
-            border: none;
-            font-size: 15px;
+            padding: 4px 8px;
+            border-radius: 4px;
             font-weight: 600;
+            font-size: 0.85em;
+            margin-left: 8px;
+        }
+
+        /* 상태 배지 색상 - 테마 브라운 계열 */
+        .status-complete { background-color: #EFEBE9; color: var(--primary); } 
+        .status-rejected { background-color: #FBEFEE; color: var(--point-red); } 
+        .status-expired { background-color: #FFF3E0; color: var(--secondary); } 
+        .status-pending { background-color: var(--bg-dark-cream); color: var(--secondary); } 
+        
+        /* 메인 기능 카드 */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .feature-card {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-light);
+            padding: 30px;
+            text-align: center;
+            color: var(--text-main);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
             text-decoration: none;
-            cursor: pointer;
-            transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
         }
 
-        .btn-primary {
-            background-color: #ff6b6b;
-            color: #fff;
-            box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(109, 76, 65, 0.1);
+        }
+        
+        .feature-card-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .card-reserve .feature-card-icon { color: var(--primary); }
+        .card-list .feature-card-icon { color: var(--secondary); }
+
+        .feature-card h2 {
+            font-size: 1.5em;
+            margin: 0 0 10px 0;
         }
 
-        .btn-primary:hover {
-            background-color: #ff5252;
-            transform: translateY(-1px);
-            box-shadow: 0 8px 20px rgba(255, 82, 82, 0.5);
+        .feature-card p {
+            font-size: 0.9em;
+            color: var(--text-sub);
+            margin-bottom: 15px;
+        }
+        
+        .feature-card-action {
+            display: block;
+            margin-top: auto;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: background-color 0.2s;
         }
 
-        .btn-secondary {
-            background-color: #ffffff;
-            color: #333;
-            border: 1px solid #ddd;
+        /* 예약하기 버튼: 메인 초콜릿 색상 */
+        .card-reserve .feature-card-action {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+        
+        .card-reserve .feature-card-action:hover {
+            background-color: var(--primary-hover);
         }
 
-        .btn-secondary:hover {
-            background-color: #f0f0f0;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        /* 내역확인 버튼: 서브 라떼 색상 */
+        .card-list .feature-card-action {
+            background-color: var(--secondary);
+            color: var(--white);
+        }
+
+        .card-list .feature-card-action:hover {
+            background-color: #7D5C53;
+        }
+
+        /* 기타 링크 */
+        .footer-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .footer-link a {
+            color: var(--text-sub);
+            padding: 5px 10px;
+            transition: color 0.2s;
+        }
+        
+        .footer-link a:hover {
+            color: var(--primary);
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
 
-	<!-- 🔔 알림 영역 -->
-	<div class="notification-box" style="border: 1px solid #ddd; padding: 12px; margin-bottom: 16px;">
-	    
-	    <!-- 알림이 있을 때 -->
-	    <div th:if="${notifications != null and !#lists.isEmpty(notifications)}">
-	        <h3>알림</h3>
-	        <ul>
-	            <li th:each="n : ${notifications}">
-				    <span th:text="${#temporals.format(n.reserveDate, 'yyyy-MM-dd') + ' ' + n.reserveTime}"></span>
-				    <span>'</span>
-				    <span th:text="${n.storeName}"></span>
-				    <span>' 예약이 </span>
-				    <span th:text="${n.status == '완료' ? '확정'
-				                   : (n.status == '반려' ? '반려'
-				                      : (n.status == '만료' ? '만료'
-				                         : n.status))}"></span>
-				    <span>되었습니다.</span>
-				</li>
-	        </ul>
-	    </div>
-	
-	    <!-- 알림이 하나도 없을 때 -->
-	    <div th:if="${notifications == null or #lists.isEmpty(notifications)}">
-	        현재 표시할 알림이 없습니다.
-	    </div>
-	</div>
+    <div th:replace="~{common/header :: headerFragment}"></div>
+    
+    <div class="dashboard-wrapper">
+        
+        <div class="header">
+            <h1>👋 예약 대시보드</h1>
+            <p class="description">쉽고 빠르게 예약을 진행하고, 모든 내역을 한눈에 확인하세요.</p>
+        </div>
+        
+        <div class="notification-card">
+            <h3>최근 예약 알림</h3>
+            
+            <ul th:if="${notifications != null and !#lists.isEmpty(notifications)}"
+                class="notification-list">
+                
+                <li th:each="n : ${notifications}">
+                    <span th:text="${#temporals.format(n.reserveDate, 'MM월 dd일')}"></span>
+                    <span th:text="${n.reserveTime}"></span>
+                    <span>'</span>
+                    <span th:text="${n.storeName}"></span>
+                    <span>' 예약:</span>
+                    
+                    <span th:switch="${n.status}">
+                        <span th:case="'완료'" class="status-badge status-complete">✅ 확정</span>
+                        <span th:case="'반려'" class="status-badge status-rejected">❌ 반려</span>
+                        <span th:case="'만료'" class="status-badge status-expired">🕒 만료</span>
+                        <span th:case="'확정'" class="status-badge status-expired">✅ 확정</span>
+                        <span th:case="'취소'" class="status-badge status-expired">❌ 반려</span>
+                        <span th:case="*" class="status-badge status-pending" 
+                              th:text="${n.status + ' 중'}"></span>
+                    </span>
+                </li>
+            </ul>
+        
+            <p th:unless="${notifications != null and !#lists.isEmpty(notifications)}">
+                현재 표시할 새로운 알림이 없습니다.
+            </p>
+        </div>
 
-	<div class="container">
-	    <h1>예약 메뉴</h1>
-	    <p class="subtitle">
-	        방문 예약을 진행하거나,<br>
-	        내가 예약한 내역을 확인해 보세요.
-	    </p>
-	
-	    <div class="btn-group">
-	        <!-- 예약하기 폼 -->
-	        <a th:href="@{/reservation/storeSelect}"
-			   class="btn btn-primary">
-			    예약하기
-			</a>
-	
-	        <!-- 내 예약 목록 -->
-	        <a th:href="@{/reservation/list}"
-	           class="btn btn-secondary">
-	            내 예약목록
-	        </a>
-	    </div>
-	</div>
-	
-	<a th:href="@{/logout}">로그아웃</a>
-	
+        <div class="feature-grid">
+            
+            <a th:href="@{/reservation/storeSelect}"
+               class="feature-card card-reserve">
+                <div class="feature-card-icon">📅</div>
+                <h2>새로운 예약</h2>
+                <p>방문할 매장을 선택하고 예약을 진행합니다.</p>
+                <span class="feature-card-action">지금 예약하기 &rarr;</span>
+            </a>
+            
+            <a th:href="@{/reservation/list}"
+               class="feature-card card-list">
+                <div class="feature-card-icon">📋</div>
+                <h2>내 예약 내역</h2>
+                <p>진행 중/완료/취소된 모든 예약 목록을 확인합니다.</p>
+                <span class="feature-card-action">내역 확인하기 &rarr;</span>
+            </a>
+            
+        </div>
+        
+        <div class="footer-link">
+            <a th:href="@{/logout}">로그아웃</a>
+        </div>
+
+    </div>
+    
 </body>
 </html>
