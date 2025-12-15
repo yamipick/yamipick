@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>야미픽 - 맛집 찾기</title>
+     <link rel="stylesheet" th:href="@{/css/waiting.css}">
+              <link rel="stylesheet" th:href="@{/css/common.css}">
+     
+
+</head>
+<body>
+<div th:replace="~{common/header :: headerFragment}"></div>
+
+    <div class="container mobile-container">
+        <h1>🔍 웨이팅 맛집 찾기</h1>
+        <p style="color:#8D6E63; margin-bottom: 25px; font-size: 0.95em;">가고 싶은 매장 이름을 검색해보세요.</p>
+
+        <div class="search-box">
+            <input type="text" id="keyword" placeholder="예: 야미, 초밥" onkeypress="if(event.keyCode==13) doSearch()">
+            <button onclick="doSearch()">검색</button>
+        </div>
+
+        <ul id="result-list">
+            <li style="text-align:center; color:#BCAAA4; margin-top: 80px;">
+                <span style="font-size:3em; display:block; margin-bottom:10px;">🍽️</span>
+                검색 결과가 여기에 표시됩니다.
+            </li>
+        </ul>
+    </div>
+
+    <script>
+        function doSearch() {
+            const keyword = document.getElementById('keyword').value;
+            if(!keyword) return alert("검색어를 입력하세요");
+
+            fetch(`/waiting/search?keyword=${keyword}`)
+                .then(res => res.json())
+                .then(list => {
+                    const ul = document.getElementById('result-list');
+                    ul.innerHTML = "";
+                    
+                    if(list.length === 0) {
+                        ul.innerHTML = "<li style='text-align:center; color:#BCAAA4; margin-top:50px;'>검색 결과가 없습니다. 😥</li>";
+                        return;
+                    }
+
+                    list.forEach(store => {
+                        let btnClass = 'btn-go';
+                        let btnText = '줄서기 >';
+                        
+                        if (!store.waitingOpen) {
+                            btnClass = 'btn-go closed';
+                            btnText = '마감됨';
+                        }
+
+                        let hours = store.todayHours || '정보 없음';
+                        
+                        // ★ [수정] 줄바꿈 처리 및 서브 텍스트 스타일링 (배경 없이)
+                        if(hours.includes('(')) {
+                            // 괄호 앞을 끊어서 줄바꿈 + 들여쓰기 효과
+                            const parts = hours.split('(');
+                            // 첫 번째 파트 (시간)
+                            let mainTime = parts[0].trim();
+                            // 두 번째 파트 (브레이크 타임) - 괄호 다시 붙이고 연하게 처리
+                            let subTime = `(${parts[1]}`;
+                            
+                            // HTML 조합: 메인 시간은 굵게, 서브 시간은 작고 연하게
+                            hours = `
+                                <span style="font-weight:bold;">⏰ ${mainTime}</span><br>
+                                <span style="font-size:0.85em; color:#8D6E63; margin-left: 22px;">└ ${subTime}</span>
+                            `;
+                        } else {
+                            // 브레이크 타임 없을 때
+                            hours = `<span>⏰ ${hours}</span>`;
+                        }
+
+                        ul.innerHTML += `
+                            <div class="store-item" onclick="tryEnter(${store.id}, ${store.waitingOpen})">
+                                <div class="s-info">
+                                    <span class="s-name">${store.name}</span>
+                                    <div class="s-addr">📍 ${store.address}</div>
+                                    <div class="s-hours">${hours}</div>
+                                </div>
+                                <span class="${btnClass}">${btnText}</span>
+                            </div>
+                        `;
+                    });
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("검색 중 오류가 발생했습니다.");
+                });
+        }
+
+        function tryEnter(storeId, isOpen) {
+            if (!isOpen) {
+                alert("⛔ 현재 웨이팅 접수가 마감된 매장입니다.");
+                return;
+            }
+            location.href = `/waitinguser?storeId=${storeId}`;
+        }
+    </script>
+</body>
+</html>

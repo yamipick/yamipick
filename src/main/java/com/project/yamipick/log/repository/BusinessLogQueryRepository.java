@@ -1,22 +1,28 @@
 package com.project.yamipick.log.repository;
 
+// Q파일 임포트 (빌드 후 자동 생성됨)
+import static com.project.yamipick.log.entity.QBusinessLog.businessLog;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
 import com.project.yamipick.log.entity.BusinessLog;
 import com.querydsl.core.Tuple;
 import com.project.yamipick.log.entity.QBusinessLog;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
+
 
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringTemplate;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
-// Q파일 임포트 (빌드 후 자동 생성됨)
-import static com.project.yamipick.log.entity.QBusinessLog.businessLog;
+
 
 @Repository // 스프링 빈으로 등록
 @RequiredArgsConstructor

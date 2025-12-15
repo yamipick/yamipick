@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 웨이팅 기록</title>
+      <link rel="stylesheet" th:href="@{/css/waiting.css}">
+                    <link rel="stylesheet" th:href="@{/css/common.css}">
+      
+
+</head>
+<body>
+    <div th:replace="~{common/header :: headerFragment}"></div>
+
+    <div class="container mobile-container">
+        <h2>내 웨이팅 기록</h2>
+        <p style="color:#aaa; font-size:0.9em;">최근 방문 기록을 확인하세요.</p>
+        
+        <ul id="list-area" class="history-list">
+            <li style="text-align:center; margin-top:50px; color:#ccc;">로딩 중...</li>
+        </ul>
+
+        <button class="btn-back" onclick="goBack()">⬅️ 뒤로 가기</button>
+    </div>
+
+	<script th:inline="javascript">
+	        // ★ 수정: 세션값 사용
+	        const currentUserId = /*[[${session.waitingSession != null ? session.waitingSession.seqUser : null}]]*/ null;
+
+	        window.onload = function() {
+	            if (!currentUserId) {
+	                alert("로그인이 필요합니다.");
+	                location.href = "/login";
+	                return;
+	            }
+	            loadHistory();
+	        };
+
+        function loadHistory(userId) {
+            fetch(`/waiting/history?userId=${userId}`)
+                .then(res => res.json())
+                .then(list => {
+                    const ul = document.getElementById('list-area');
+                    ul.innerHTML = "";
+
+                    if (list.length === 0) {
+                        ul.innerHTML = "<li style='text-align:center; margin-top:50px; color:#aaa;'>방문 기록이 없습니다.</li>";
+                        return;
+                    }
+
+                    list.forEach(item => {
+                        let statusText = item.status;
+                        if(item.status === 'ENTERED') statusText = '입장완료';
+                        else if(item.status === 'CANCELED') statusText = '취소됨';
+                        else if(item.status === 'WAITING') statusText = '대기중';
+
+                        ul.innerHTML += `
+                            <li class="h-item">
+                                <div class="h-info">
+                                    <span class="h-store">🍽️ ${item.storeName || '알 수 없는 매장'}</span>
+                                    <span class="h-meta">${item.teamSize}명 • 대기번호 ${item.waitingNumber}번</span>
+                                    <span class="h-date">${item.regDate}</span>
+                                </div>
+                                <div class="h-status st-${item.status}">
+                                    ${statusText}
+                                </div>
+                            </li>
+                        `;
+                    });
+                })
+                .catch(err => {
+                    document.getElementById('list-area').innerHTML = "<li style='text-align:center; color:red;'>불러오기 실패</li>";
+                });
+        }
+
+        // ★ [수정] 스마트한 뒤로가기
+        function goBack() {
+            // 1. 이전 페이지 기록이 있고, 우리 사이트 내부에서 이동한 경우
+            if (document.referrer && document.referrer.indexOf(window.location.host) !== -1) {
+                history.back(); // 브라우저 뒤로가기 (왔던 곳으로 복귀)
+            } else {
+                // 2. 외부에서 바로 들어왔거나 기록이 없으면 메인으로 안전하게 이동
+                location.href = "/";
+            }
+        }
+    </script>
+</body>
+</html>
