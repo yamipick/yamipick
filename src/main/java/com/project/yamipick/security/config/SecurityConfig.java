@@ -35,6 +35,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> auth
             .requestMatchers("/css/**", "/js/**", "/img/**", "/upload/**").permitAll()
             .requestMatchers("/", "/login", "/join", "/joinok").permitAll()
+            .requestMatchers("/reservation/**").authenticated()
             .requestMatchers("/api/log/**").permitAll()
             .requestMatchers("/ai/recommend", "/api/ai/recommend/**").permitAll()
             .requestMatchers("/ai/chatbot", "/api/chat/send").authenticated()
