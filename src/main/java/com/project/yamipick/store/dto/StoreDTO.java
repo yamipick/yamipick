@@ -1,7 +1,5 @@
 package com.project.yamipick.store.dto;
 
-import java.time.LocalDate;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,6 +20,5 @@ public class StoreDTO {
 	private String name;
 	private String address;
 	private String phone;
-	
 
 }

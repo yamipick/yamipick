@@ -24,7 +24,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		
+		log.info(">>> loadUserByUsername 호출됨, username={}", username);
+
 		log.info("로그인 시도 아이디 {} ", username );
 		
 		// 1. DB에서 아이디로 회원 찾기

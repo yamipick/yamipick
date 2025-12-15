@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8" />
+    <title>리뷰 보기 | YamiPick</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/chatbot.css}">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet"
+	href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+
+<style>
+body {
+	font-family: "Noto Sans KR", sans-serif;
+	margin: 0;
+	padding: 0;
+	padding-top: 70px;
+	color: #4A2D1A;
+}
+
+.container {
+	max-width: 1000px;
+	margin: 50px auto 20px auto;
+	margin-bottom: 2px;
+	background-color: #fff;
+	border: 1px solid #e3d8c8;
+	border-radius: 14px;
+	padding: 30px 50px;
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+}
+
+h2 {
+	font-size: 28px;
+	margin-bottom: 12px;
+	color: #3A2315;
+}
+
+.meta {
+	font-size: 14px;
+	color: #7d6b5a;
+	margin-bottom: 28px;
+	border-bottom: 1px solid #eee;
+	padding-bottom: 12px;
+}
+
+.row {
+	margin-bottom: 40px;
+}
+
+.row.tag-row {
+	margin-bottom: 0 !important;
+}
+
+.label-title {
+	font-size: 18px;
+	font-weight: bold;
+	margin-bottom: 12px;
+	color: #3A2315;
+}
+
+.text-box {
+	font-size: 16px;
+	line-height: 1.7;
+	white-space: pre-line;
+	color: #4A2D1A;
+}
+
+/* 이미지 리스트 */
+.image-list {
+	display: flex;
+	gap: 14px;
+	flex-wrap: wrap;
+	width: 80%;
+}
+
+.image-list img {
+	width: 100%; /* 가로 전체 */
+	height: auto; /* 세로 비율 자동 */
+	border: 1px solid #ddd;
+	display: block; /* 여백/틈 제거 */
+}
+
+/* 태그 */
+.tag-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.tag {
+	background-color: #F4E9D3;
+	border: 1px solid #C8B79E;
+	padding: 5px 14px;
+	border-radius: 20px;
+	font-size: 14px;
+	color: #4A2D1A;
+	font-weight: 500;
+	cursor: pointer; /* 포인터 손가락 모양 */
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.tag:hover {
+    background-color: #e8dcc3;
+    color: #3a2615;
+}
+
+.tag-section {
+	margin-top: 40px;
+}
+
+/* 지도 */
+#map {
+	width: 100%;
+	height: 300px;
+	border-radius: 10px;
+	background: #eee;
+	border: 1px solid #d4c7b7;
+}
+
+.material-symbols-outlined {
+	font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24
+}
+
+.siren-icon {
+    color: #c9bbaa;   /* 연한 베이지/회색 계열 */
+    cursor: pointer;
+}
+
+.icon-divider {
+	text-align: right;
+	margin: 0px 550px 5px 0;
+	font-size: 32px;
+}
+
+.icon-btn {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.icon-btn:hover {
+    color: #3A2315;
+}
+
+.icon-btn svg {
+    width: 26px;          /* tooltip과 동일 크기 */
+    height: 20px;
+    display: block;       /* baseline 문제 해결 */
+}
+
+#scrapIcon svg {
+    width: 26px;   /* 원하는 크기 */
+    height: 26px;
+}
+
+#favoriteIcon svg {
+    transform: translateY(-2px); /* 원하는 만큼 -값을 주면 위로 올라감 */
+}
+
+/* 댓글 컨테이너 */
+.comment-container {
+	max-width: 1000px;
+	margin: 0px auto 20px auto;
+	padding: 20px 50px;
+	background: #fff;
+	border: 1px solid #e3d8c8;
+	border-radius: 12px;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+}
+
+/* 댓글 항목 */
+.comment-item {
+	padding: 18px 0;
+	border: none;
+}
+
+#commentList .comment-item:not(:last-child) {
+	border-bottom: 1px solid #f0e8dd;
+}
+
+#commentList .comment-item:last-child {
+	border-bottom: none;
+}
+
+.comment-item:first-child {
+	border-top: none;
+}
+
+.comment-meta {
+	display: flex;
+	justify-content: space-between;
+	font-size: 14px;
+	color: #7d6b5a;
+	margin-bottom: 6px;
+	font-weight: 500;
+}
+
+.comment-content {
+	font-size: 15px;
+	color: #4A2D1A;
+	line-height: 1.6;
+	white-space: pre-line;
+}
+
+.comment-item.last {
+	border-bottom: none !important;
+}
+
+/* 댓글 작성 폼 */
+.comment-write-box-inside {
+	margin-top: 20px;
+	padding-top: 20px;
+}
+
+.comment-input {
+	width: 100%;
+	height: 120px;
+	padding: 14px;
+	font-size: 15px;
+	border: 1px solid #cfc7bc;
+	border-radius: 8px;
+	resize: none;
+	box-sizing: border-box;
+	margin-bottom: 14px;
+	background-color: #fdfaf6;
+	color: #4A2D1A;
+	font-family: "Noto Sans KR", sans-serif;
+}
+
+.comment-input:focus {
+    border: 2px solid #4A2D1A;
+    outline: none;
+    box-shadow: 0 0 4px rgba(74, 45, 26, 0.25); /* 선택사항: 살짝 강조 효과 */
+}
+
+.comment-input::placeholder {
+	color: #b4a89c;
+}
+
+.comment-btn {
+	padding: 8.5px 11px;
+	background: #4A2D1A;
+	color: #fff;
+	border-radius: 6px;
+	border: none;
+	cursor: pointer;
+	font-size: 14px;
+	transition: background 0.2s ease;
+}
+
+.comment-btn:hover {
+	background: #3A2315;
+}
+
+.comment-btn-right {
+	width: 100%;
+	display: flex;
+	justify-content: flex-end; /* 오른쪽 정렬 */
+}
+
+.comment-btn-right {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;   /* 🔥 버튼 사이 간격 추가 */
+}
+.comment-action-right {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    font-size: 13px;
+    color: #7d6b5a;
+    margin-top: 4px;
+}
+
+.comment-action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-size: 13px;
+    color: #7d6b5a;
+}
+
+.comment-action-divider {
+    color: #c0b2a3;
+}
+
+.reply-form textarea {
+    margin-bottom: 5px; /* 🔥 버튼과 입력창 사이 간격 */
+}
+
+.reply-form .comment-btn-right {
+    margin-bottom: 5px; /* 🔥 버튼 위쪽 간격 */
+}
+
+.reply-form {
+    margin-left: 30px;
+    margin-top: 30px;
+}
+
+.reply-btn {
+    font-size: 13px;
+    color: #7d6b5a;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.reply { margin-left: 30px; }
+
+
+/* 버튼 */
+.btn-box {
+	width: 100%;
+	max-width: 1060px; /* container와 너비를 맞춤 */
+	margin: 5px auto 0 auto; /* 가운데 정렬 */
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 40px;
+}
+
+.left-btns {
+    display: flex;
+    gap: 4px;
+}
+
+.right-btns {
+    display: flex;
+    gap: 4px;           /* 수정 / 삭제 간격 */
+}
+
+.inline-form {
+    display: inline;    /* form이 줄바꿈 안 하게 */
+}
+
+.inline-form button {
+    all: unset;         /* 기본 button 스타일 제거 */
+    padding: 8.5px 15.5px;
+    background: #8f857d;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.inline-form button:hover {
+    background: #7c726b;
+}
+
+.btn {
+	padding: 8.5px 15.5px;
+	background: #4A2D1A;
+	color: #fff;
+	border: none;
+	border-radius: 8px;
+	font-size: 15px;
+	cursor: pointer;
+	text-decoration: none;
+	transition: background 0.2s ease;
+}
+
+.btn:hover {
+	background: #3A2315;
+}
+
+.btn-gray {
+	background: #8f857d;
+}
+
+.btn-gray:hover {
+	background: #7c726b;
+}
+
+.review-stats-box {
+	max-width: 1050px;
+	margin: 15px auto 5px auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.like-bookmark {
+    display: flex;
+    align-items: center;  /* 세로 일치 */
+    gap: 6px;             /* 아이콘 간격 */
+    justify-content: flex-end;
+}
+
+.like-bookmark .material-symbols-outlined {
+    font-size: 22px;     /* SVG와 동일 */
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.like-bookmark span {
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.divider-line {
+    border: none;
+    border-top: 1px solid #e6dccd;
+    margin-top: 75px;
+    margin-bottom: 10px;
+}
+
+.deleted-comment .comment-content {
+    color: #a89c8f;
+    font-style: italic;
+}
+
+</style>
+</head>
+<script th:inline="javascript">
+    const seqReview = /*[[${review.seqReview}]]*/ 0;
+</script>
+<body>
+
+	<div th:replace="common/header :: headerFragment"></div>
+	
+	<div class="container">
+
+		<!-- 제목 -->
+		<h2 th:text="${review.title}">리뷰 제목</h2>
+
+		<!-- 작성 정보 -->
+		<div class="meta">
+			작성자: <span th:text="${review.nickname}">닉네임</span>&nbsp;&nbsp;&nbsp;작성일: <span
+				th:text="${review.regdate}">2025.12.08</span>&nbsp;&nbsp;&nbsp;조회: <span
+				th:text="${review.readCount}">123</span>
+			
+			<span style="float:right; display:flex; align-items:center;">
+			
+			    <!-- tooltip + 댓글 수 (붙여놓기) -->
+			    <span style="display:flex; align-items:center; gap:4px;">
+			        <span class="material-symbols-outlined" style="font-size:18px; cursor:pointer;" onclick="scrollToComment()">tooltip</span>
+			        
+			        <span style="font-size:14px; color:#7d6b5a;">
+			            댓글 <span th:text="${commentCount}">0</span>
+			        </span>
+			    </span>
+			
+			    <!-- 신고 아이콘 (조금 떨어뜨리기) -->
+			    <span class="material-symbols-outlined siren-icon" 
+			          style="font-size:18px; cursor:pointer; margin-left:16px;">
+			        siren
+			    </span>
+			
+			</span>
+		</div>
+
+		<!-- 내용 -->
+		<div class="row">
+			<div class="text-box" th:text="${review.reviewContent}"></div>
+		</div>
+
+		<!-- 이미지 -->
+		<div class="row"
+			th:if="${review.attach != null and review.attach != ''}">
+			<div class="image-list">
+				<img th:src="${review.attach}">
+			</div>
+		</div>
+
+		<!-- 주소 + 지도 -->
+		<div class="row"
+			th:if="${review.place != null and review.place != ''}">
+			<div id="map"></div>
+		</div>
+
+		<!-- 태그 -->
+		<div class="row tag-row"
+			th:if="${review.tagList != null and #lists.size(review.tagList) > 0}">
+			<div class="tag-list">
+				<div th:each="tag : ${review.tagList}" class="tag"
+					th:text="'#' + ${tag}"></div>
+			</div>
+		</div>
+
+	</div>
+
+	<!-- 아이콘 영역 -->
+	<div class="review-stats-box">
+	    <div class="like-bookmark">
+	        <!-- ❤️ 좋아요 SVG -->
+	        <span id="favoriteIcon" class="icon-btn" onclick="toggleFavorite()">
+			    <svg id="favoriteSvg" width="26" height="26" viewBox="0 0 1024 1024">
+			        <path id="favoritePath"
+			              d="M742.4 101.12A249.6 249.6 0 0 0 512 256a249.6 249.6 0 0 0-230.72-154.88C143.68 101.12 32 238.4 32 376.32c0 301.44 416 546.56 480 546.56s480-245.12 480-546.56c0-137.92-111.68-275.2-249.6-275.2z"
+			              fill="none"
+			              stroke="#d9534f"
+			              stroke-width="60"
+			              th:attr="fill=${isFavorite} ? '#d9534f' : 'none', stroke=${isFavorite} ? '#d9534f' : '#d9534f'"/>
+			    </svg>
+			</span>
+	        <span id="favoriteCount" th:text="${review.favoriteCount}">0</span>
+	        &nbsp;
+	
+	        <!-- 💬 댓글 아이콘 그대로 -->
+	        <span class="material-symbols-outlined icon-btn" onclick="scrollToComment()">tooltip</span>
+	        <span th:text="${commentCount}">0</span>
+	        &nbsp;
+	
+	        <!-- ⭐ 스크랩 SVG -->
+	        <span id="scrapIcon" class="icon-btn" onclick="toggleScrap()">
+	            <svg id="scrapSvg" width="26" height="26" viewBox="0 0 24 24">
+	                <path id="scrapPath"
+	                      d="M12 2.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 15.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8L12 2.5z"
+	                      fill="none" stroke="#e0c05a" stroke-width="1.6"
+	                      stroke-linejoin="round"
+	                      th:attr="fill=${isScrap} ? '#e0c05a' : 'none', stroke=${isScrap} ? '#e0c05a' : '#e0c05a'"/>
+	            </svg>
+	        </span>
+	    </div>
+		
+		<div class="divider-line"></div>
+	    
+	</div>
+
+	<div class="comment-container">
+
+		<!-- 댓글 목록(append 되는 영역) -->
+		<div id="commentList">
+		    <div class="comment-item"
+			     th:each="c : ${comments}"
+			     th:attr="data-id=${c.seqComment}, data-deleted=${c.state}"
+			     th:style="|margin-left: ${c.depth * 30}px|">
+		        
+		        <div class="comment-meta">
+		            <span class="nickname" th:text="${c.nickname}"></span>
+		            
+		            <div style="display:flex; align-items:center; gap:8px;">
+			            <span class="date" th:text="${#dates.format(c.regdate,'yyyy-MM-dd HH:mm')}"></span>
+			            <span class="material-symbols-outlined siren-icon" style="font-size:18px; cursor:pointer;">siren</span>
+			        </div>
+		        </div>
+		
+		        <div class="comment-content" th:text="${c.content}"></div>
+		
+		        <!-- 대댓글이면 왼쪽 들여쓰기 -->
+		        <style>
+		            .reply { margin-left: 30px; }
+		        </style>
+		
+		        <!-- 답글쓰기, 삭제 | 수정 버튼 -->
+		        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+
+				    <!-- 댓글쓰기 버튼 -->
+				    <div class="reply-btn" th:onclick="'toggleReplyForm(' + ${c.seqComment} + ')'">댓글쓰기</div>
+				
+				    <!-- 삭제 | 수정 버튼 -->
+				    <div class="comment-action-right" th:if="${loginUserId == review.userId}">
+				    	<button class="comment-action-btn"
+				                th:onclick="'editComment(' + ${c.seqComment} + ')'">수정</button>
+				        <span class="comment-action-divider">|</span>
+				        <button class="comment-action-btn"
+				                th:onclick="'deleteComment(' + ${c.seqComment} + ')'">삭제</button>
+				    </div>
+				
+				</div>
+		
+		        <!-- 대댓글 입력창 -->
+		        <div class="reply-form"
+		             th:id="'replyForm-' + ${c.seqComment}"
+		             style="display:none">
+		             
+		            <textarea class="comment-input"
+		                      th:id="'replyContent-' + ${c.seqComment}"
+		                      placeholder="답글을 입력하세요"></textarea>
+		
+		            <div class="comment-btn-right">
+		            	<button type="button" class="comment-btn btn-gray" th:onclick="'cancelReply(' + ${c.seqComment} + ')'">취소</button>
+		                <button type="button" class="comment-btn" th:onclick="'addReply(' + ${review.seqReview} + ',' + ${c.seqComment} + ')'">작성</button>
+		            </div>
+		        </div>
+		
+		    </div>
+		</div>
+
+		<!-- 댓글 작성 -->
+		<!-- form 제거 -->
+		<div class="comment-write-box-inside">
+		    <input type="hidden" id="seqReview" th:value="${review.seqReview}">
+		    <textarea id="commentContent" class="comment-input"
+		        placeholder="댓글을 입력하세요"></textarea>
+		    <div class="comment-btn-right">
+		        <button type="button" class="comment-btn" onclick="addComment()">댓글 작성</button>
+		    </div>
+		</div>
+
+	</div>
+
+	<!-- 버튼 -->
+	<div class="btn-box">
+		<div class="left-btns">
+			<a th:href="@{/review/reviewlist}" class="btn">목록</a>
+			<a th:href="@{/review/reviewadd}" class="btn">글쓰기</a>
+		</div>
+		<div class="right-btns" th:if="${loginUserId == review.userId}">
+			<a th:href="@{/review/reviewedit(seqReview=${review.seqReview})}"
+				class="btn btn-gray">수정</a>
+			<form th:action="@{/review/reviewdeleteok}" method="post" class="inline-form" onsubmit="return confirmDelete();">
+			    <input type="hidden" name="seqReview" th:value="${review.seqReview}">
+			    <button type="submit" class="btn btn-gray">삭제</button>
+			</form>
+		</div>
+	</div>
+
+<!-- Kakao 지도 -->
+<script type="text/javascript" th:src="@{//dapi.kakao.com/v2/maps/sdk.js(appkey=${kakaoAppKey})}"></script>
+
+<script th:inline="javascript">
+
+	function formatDate(dateStr) {
+	    const d = new Date(dateStr);
+	    const pad = (n) => n.toString().padStart(2, '0');
+	
+	    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} `
+	         + `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+	}
+
+  var lat = /*[[${lat}]]*/ 0;
+  var lng = /*[[${lng}]]*/ 0;
+
+  var container = document.getElementById('map');
+  var mapOption = {
+    center: new kakao.maps.LatLng(lat, lng),
+    level: 3
+  };
+
+  var map = new kakao.maps.Map(container, mapOption);
+
+  var marker = new kakao.maps.Marker({
+    position: new kakao.maps.LatLng(lat, lng),
+    image: new kakao.maps.MarkerImage(
+      '/img/marker-brown.png',
+      new kakao.maps.Size(45, 45),
+      { offset: new kakao.maps.Point(19.4, 35) }
+    )
+  });
+
+  marker.setMap(map);
+  
+  	// 마커 클릭 시 카카오맵으로 이동
+	kakao.maps.event.addListener(marker, 'click', function() {
+	    var url = "https://map.kakao.com/link/map/" 
+	              + encodeURIComponent("가게위치") + "," + lat + "," + lng;
+	    window.open(url, "_blank");
+	});
+  
+	kakao.maps.event.addListener(map, 'click', function() {
+	    var url = "https://map.kakao.com/link/map/" 
+	              + encodeURIComponent("가게위치") + "," + lat + "," + lng;
+	    window.open(url, "_blank");
+	});
+	
+	
+	async function addComment() {
+	
+	    const contentEl = document.getElementById("commentContent");
+	    const content = contentEl.value.trim();
+	    if (!content) return;
+	
+	    const formData = new FormData();
+	    formData.append("seqReview", seqReview);
+	    formData.append("content", content);
+	
+	    const response = await fetch("/review/comment/add", {
+	        method: "POST",
+	        body: formData
+	    });
+	
+	    const result = await response.json();
+	
+	    const commentList = document.getElementById("commentList");
+	
+	    const newComment = document.createElement("div");
+	    newComment.classList.add("comment-item");
+	    newComment.setAttribute("data-id", result.seqComment);
+	
+	    newComment.innerHTML = `
+		    <div class="comment-meta">
+		        <span class="nickname">${result.nickname}</span>
+		
+		        <div style="display:flex; align-items:center; gap:8px;">
+		            <span class="date">${formatDate(result.regdate)}</span>
+		            <span class="material-symbols-outlined siren-icon" style="font-size:18px; cursor:pointer;">
+		                siren
+		            </span>
+		        </div>
+		    </div>
+		
+		    <div class="comment-content">${result.content}</div>
+		
+		    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+		        <div class="reply-btn" onclick="toggleReplyForm(${result.seqComment})">댓글쓰기</div>
+		
+		        <div class="comment-action-right">
+		            <button class="comment-action-btn" onclick="editComment(${result.seqComment})">수정</button>
+		            <span class="comment-action-divider">|</span>
+		            <button class="comment-action-btn" onclick="deleteComment(${result.seqComment})">삭제</button>
+		        </div>
+		    </div>
+		
+		    <div class="reply-form" id="replyForm-${result.seqComment}" style="display:none;">
+		        <textarea class="comment-input" id="replyContent-${result.seqComment}" placeholder="답글을 입력하세요"></textarea>
+		
+		        <div class="comment-btn-right">
+		            <button type="button" class="comment-btn btn-gray" onclick="cancelReply(${result.seqComment})">취소</button>
+		            <button type="button" class="comment-btn" onclick="addReply(${seqReview}, ${result.seqComment})">작성</button>
+		        </div>
+		    </div>
+		`;
+	
+	    commentList.appendChild(newComment);
+	
+	    contentEl.value = "";
+	}
+	
+	
+	function toggleReplyForm(id) {
+	    const box = document.getElementById("replyForm-" + id);
+	    box.style.display = box.style.display === "none" ? "block" : "none";
+	}
+	
+	async function addReply(seqReview, parentId) {
+	
+	    const textarea = document.getElementById("replyContent-" + parentId);
+	    const content = textarea.value.trim();
+	    if (!content) return;
+	
+	    const formData = new FormData();
+	    formData.append("seqReview", seqReview);
+	    formData.append("content", content);
+	    formData.append("seqParentComment", parentId);
+	
+	    const response = await fetch('/review/comment/add', {
+	        method: 'POST',
+	        body: formData
+	    });
+	
+	    const result = await response.json();
+	
+	    // 대댓글 DOM 생성
+	    const reply = document.createElement("div");
+	    reply.classList.add("comment-item");
+	    reply.style.marginLeft = "30px";
+	    
+	    reply.setAttribute("data-id", result.seqComment);
+	
+	    reply.innerHTML = `
+		    <div class="comment-meta">
+		        <span class="nickname">${result.nickname}</span>
+		
+		        <div style="display:flex; align-items:center; gap:8px;">
+		            <span class="date">${formatDate(result.regdate)}</span>
+		            <span class="material-symbols-outlined siren-icon" style="font-size:18px; cursor:pointer;">
+		                siren
+		            </span>
+		        </div>
+		    </div>
+		
+		    <div class="comment-content">${result.content}</div>
+		
+		    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+		        <div class="reply-btn" onclick="toggleReplyForm(${result.seqComment})">댓글쓰기</div>
+		
+		        <div class="comment-action-right">
+		            <button class="comment-action-btn" onclick="editComment(${result.seqComment})">수정</button>
+		            <span class="comment-action-divider">|</span>
+		            <button class="comment-action-btn" onclick="deleteComment(${result.seqComment})">삭제</button>
+		        </div>
+		    </div>
+		
+		    <div class="reply-form" id="replyForm-${result.seqComment}" style="display:none;">
+		        <textarea class="comment-input" id="replyContent-${result.seqComment}" placeholder="답글을 입력하세요"></textarea>
+		
+		        <div class="comment-btn-right">
+		            <button type="button" class="comment-btn btn-gray" onclick="cancelReply(${result.seqComment})">취소</button>
+		            <button type="button" class="comment-btn" onclick="addReply(${seqReview}, ${result.seqComment})">작성</button>
+		        </div>
+		    </div>
+		`;
+	
+	    // 부모 댓글 바로 아래에 삽입
+	    const parentEl = document.querySelector(`[data-id="${parentId}"]`);
+	    parentEl.insertAdjacentElement("afterend", reply);
+	
+	    // 입력창 초기화
+	    textarea.value = "";
+	
+	    // 🔥 여기 추가해야 함 — 대댓글 입력창 닫기
+	    document.getElementById("replyForm-" + parentId).style.display = "none";
+	}
+	
+	function cancelReply(parentId) {
+	    const form = document.getElementById("replyForm-" + parentId);
+	
+	    // 닫기
+	    form.style.display = "none";
+	
+	    // 입력 내용 삭제
+	    const textarea = document.getElementById("replyContent-" + parentId);
+	    if (textarea) textarea.value = "";
+	}
+	
+	function scrollToComment() {
+	    const commentBox = document.querySelector('.comment-write-box-inside');
+	    if (commentBox) {
+	        commentBox.scrollIntoView({ behavior: 'smooth' });
+	    }
+	}
+	
+	function toggleFavorite() {
+	
+	    fetch("/review/favorite/toggle", {
+	        method: "POST",
+	        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+	        body: "seqReview=" + seqReview
+	    })
+	    .then(res => res.json())
+	    .then(data => {
+	
+	        document.getElementById("favoriteCount").innerText = data.count;
+	
+	        const path = document.getElementById("favoritePath");
+	
+	        if (data.favorite) {
+	            // 채운 하트
+	            path.setAttribute("fill", "#d9534f");
+	            path.setAttribute("stroke", "#d9534f");
+	        } else {
+	            // 빈 하트
+	            path.setAttribute("fill", "none");
+	            path.setAttribute("stroke", "#d9534f");
+	        }
+	    });
+	}
+	
+	function toggleScrap() {
+	
+	    fetch("/review/scrap/toggle", {
+	        method: "POST",
+	        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+	        body: "seqReview=" + seqReview
+	    })
+	    .then(res => res.json())
+	    .then(data => {
+	
+	        const path = document.getElementById("scrapPath");
+	
+	        if (data.scrap) {
+	            // 채운 별
+	            path.setAttribute("fill", "#e0c05a");
+	            path.setAttribute("stroke", "#e0c05a");
+	        } else {
+	            // 빈 별
+	            path.setAttribute("fill", "none");
+	            path.setAttribute("stroke", "#e0c05a");
+	        }
+	    });
+	}
+	
+	/*
+	//댓글 수정
+	function editComment(id) {
+	    const commentEl = document.querySelector(`[data-id="${id}"]`);
+	    const contentEl = commentEl.querySelector(".comment-content");
+	    const original = contentEl.textContent.trim();
+	
+	    // 이미 수정 중이면 return
+	    if (commentEl.querySelector("textarea")) return;
+	
+	    // textarea로 변경
+	    contentEl.innerHTML = `
+	        <textarea class="comment-input" id="editContent-${id}" style="height:100px;">${original}</textarea>
+	        <div class="comment-btn-right" style="margin-top:6px;">
+	            <button class="comment-btn btn-gray" onclick="cancelEdit(${id}, '${original.replace(/'/g, "\\'")}')">취소</button>
+	            <button class="comment-btn" onclick="saveEdit(${id})">저장</button>
+	        </div>
+	    `;
+	}
+	
+	function cancelEdit(id, originalContent) {
+	    const commentEl = document.querySelector(`[data-id="${id}"]`);
+	    const contentEl = commentEl.querySelector(".comment-content");
+	    contentEl.textContent = originalContent;
+	}
+	
+	async function saveEdit(id) {
+	    const textarea = document.getElementById(`editContent-${id}`);
+	    const newContent = textarea.value.trim();
+	    if (!newContent) return;
+	
+	    const formData = new FormData();
+	    formData.append("seqComment", id);
+	    formData.append("content", newContent);
+	
+	    const res = await fetch("/review/comment/edit", {
+	        method: "POST",
+	        body: formData
+	    });
+	
+	    const result = await res.json(); // {content:"", regdate:""}
+	
+	    const commentEl = document.querySelector(`[data-id="${id}"]`);
+	    const contentEl = commentEl.querySelector(".comment-content");
+	    const dateEl = commentEl.querySelector(".date");
+	
+	    // DOM 교체
+	    contentEl.textContent = result.content;
+	    dateEl.textContent = formatDate(result.regdate);
+	}
+	*/
+	
+	//댓글 삭제
+	async function deleteComment(id) {
+	    if (!confirm("댓글을 삭제할까요?")) return;
+	
+	    const formData = new FormData();
+	    formData.append("seqComment", id);
+	
+	    const res = await fetch("/review/comment/delete", {
+	        method: "POST",
+	        body: formData
+	    });
+	
+	    const result = await res.json(); // {success:true}
+	
+	    if (result.success) {
+		    const el = document.querySelector(`[data-id="${id}"]`);
+		
+		    el.dataset.deleted = "DELETED";
+		    el.classList.add("deleted-comment");
+		
+		    const meta = el.querySelector(".comment-meta");
+		    if (meta) meta.style.display = "none";
+		
+		    const actions = el.querySelector(".comment-action-right");
+		    if (actions) actions.style.display = "none";
+		
+		    const replyBtn = el.querySelector(".reply-btn");
+		    if (replyBtn) replyBtn.style.display = "none";
+		
+		    const replyForm = el.querySelector(".reply-form");
+		    if (replyForm) replyForm.style.display = "none";
+		
+		    const content = el.querySelector(".comment-content");
+		    if (content) {
+		        content.textContent = "삭제된 댓글입니다.";
+		    }
+		}
+	}
+	
+	document.addEventListener("DOMContentLoaded", () => {
+	    document.querySelectorAll(".comment-item").forEach(item => {
+	        if (item.dataset.deleted === "DELETED") {
+	        
+	        	item.classList.add("deleted-comment");
+	        	
+	            // 메타 숨기기
+	            const meta = item.querySelector(".comment-meta");
+	            if (meta) meta.style.display = "none";
+	
+	            // 버튼 영역 숨기기
+	            const actions = item.querySelector(".comment-action-right");
+	            if (actions) actions.style.display = "none";
+	
+	            const replyBtn = item.querySelector(".reply-btn");
+	            if (replyBtn) replyBtn.style.display = "none";
+	
+	            const replyForm = item.querySelector(".reply-form");
+	            if (replyForm) replyForm.style.display = "none";
+	
+	            // 내용 교체
+	            const content = item.querySelector(".comment-content");
+	            if (content) {
+	                content.textContent = "삭제된 댓글입니다.";
+	            }
+	        }
+	    });
+	});
+	
+	function confirmDelete() {
+	    return confirm("정말 삭제하시겠습니까?");
+	}
+  
+</script>
+
+</body>
+</html>

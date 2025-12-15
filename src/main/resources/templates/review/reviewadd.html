@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>리뷰 쓰기 | YamiPick</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/chatbot.css}">
+    
+    <style>
+        body {
+            font-family: "Noto Sans KR", sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-top: 70px;
+        }
+
+        .container {
+            width: 1000px;
+            margin: 50px auto 20px auto;
+            background: #fff;
+            border-radius: 14px;
+            padding: 40px 50px;
+            border: 1px solid #e3d8c8;
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 24px;
+            color: #4A2D1A;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4A2D1A;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+        
+        input[type="text"]:focus,
+		textarea:focus,
+		select:focus {
+		    outline: none;
+		    border: 2px solid #4A2D1A;
+		    box-shadow: 0 0 5px rgba(200, 183, 158, 0.5);
+		}
+        
+        input[type="text"],
+		textarea,
+		.tag-box {
+		    box-sizing: border-box;
+		    width: 100%;
+		}
+
+        textarea {
+            height: 200px;
+            resize: none;
+            line-height: 1.4;
+            font-family: "Noto Sans KR", sans-serif;  /* 동일한 폰트 */
+		    font-size: 15px;                          /* 제목 input과 동일 */
+		    font-weight: 400;                         /* 기본 가중치 통일 */
+		    letter-spacing: 0;
+        }
+        
+        input::placeholder,
+		textarea::placeholder {
+		    font-family: "Noto Sans KR", sans-serif;
+		    font-size: 15px;
+		    color: #999;  /* 원하는 색 */
+		}
+		
+		.req {
+		    color: red;
+		    font-weight: bold;
+		    margin-left: 4px;
+		}
+
+        .row {
+            margin-bottom: 5px;
+        }
+
+        .filebox {
+            margin-bottom: 20px;
+        }
+
+        /* 파일 업로드 커스텀 */
+		.filebox label.upload-btn {
+		    display: inline-block;
+		    padding: 8px 14px;
+		    background: #4A2D1A;
+		    color: #fff;
+		    border-radius: 6px;
+		    font-size: 14px;
+		    cursor: pointer;
+		    margin-bottom: 10px;
+		}
+		
+		.filebox label.upload-btn:hover {
+		    background: #3A2315;
+		}
+		
+		/* 실제 input은 숨김 */
+		.filebox input[type="file"] {
+		    display: none;
+		}
+		
+		/* 선택한 파일명 표시용 */
+		#fileName {
+		    margin-top: 5px;
+		    font-size: 14px;
+		    color: #4A2D1A;
+		}
+		
+		/* 이미지 미리보기 영역 */
+		.preview-area {
+		    display: flex;
+		    gap: 10px;
+		    flex-wrap: wrap;
+		    margin-top: 10px;
+		}
+		
+		/* 미리보기 1칸 + 삭제 버튼 */
+		.preview-item {
+		    position: relative;
+		    display: inline-block;
+		}
+		
+		.preview-item img {
+		    width: 120px;
+		    height: 120px;
+		    object-fit: cover;
+		    border-radius: 8px;
+		    border: 1px solid #ddd;
+		}
+		
+		/* X 버튼 */
+		.preview-item .delete-btn {
+		    position: absolute;
+		    top: 4px;
+		    right: 4px;
+		    width: 20px;
+		    height: 20px;
+		    border-radius: 50%;
+		    border: none;
+		    background: rgba(0,0,0,0.6);
+		    color: #fff;
+		    font-size: 12px;
+		    cursor: pointer;
+		    line-height: 20px;
+		    text-align: center;
+		    padding: 0;
+		}
+			
+        /* 태그 입력 박스 */
+		.tag-box {
+		    display: flex;
+		    flex-wrap: wrap;
+		    align-items: center;
+		    gap: 6px;
+		    width: 100%;
+		    min-height: 45px;
+		    padding: 0px 10px;
+		    border: 1px solid #ccc;
+		    border-radius: 6px;
+		    transition: border 0.2s, box-shadow 0.2s;
+		}
+		
+		/* ☆ input이 포커스되면 바깥 박스가 강조됨 */
+		.tag-box:focus-within {
+		    border: 2px solid #4A2D1A;
+		    box-shadow: 0 0 5px rgba(200, 183, 158, 0.5);
+		}
+		
+		/* 태그 input */
+		.tag-box input {
+		    border: none;
+		    outline: none;
+		    background: transparent;
+		    flex: 1;
+		    min-width: 80px;
+		    font-size: 14px;
+		    margin-bottom: 0;
+		    padding: 6px 0; /* 높이 자연스럽게 맞추기 */
+		}
+		
+		.tag-box input:focus {
+		    border: none !important;
+		    box-shadow: none !important;
+		}
+		
+		.tag-list {
+		    display: flex;
+		    flex-wrap: wrap;
+		    gap: 6px;
+		}
+				
+				
+		
+		/* 태그 리스트 */
+		.tag-list .tag {
+		    background: #F4E9D3;
+		    border: 1px solid #C8B79E;
+		    padding: 6px 10px;
+		    border-radius: 20px;
+		    font-size: 13px;
+		    color: #4A2D1A;
+		    display: flex;
+		    align-items: center;
+		    gap: 6px;
+		}
+		
+		.tag .remove {
+		    cursor: pointer;
+		    font-weight: bold;
+		}
+
+
+        /* 비밀글 */
+        .secret-box {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .write-btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: #4A2D1A;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 17px;
+            cursor: pointer;
+            margin-top: 30px;
+        }
+        
+        .secret-box label {
+		    line-height: 2;      /* 기본값(1.2~1.4)보다 낮게 */
+		    margin-top: 5px;     /* 필요하면 1~2px 조절 */
+		}
+
+        .write-btn:hover {
+            background: #3A2315;
+        }
+
+        /* 지도 영역 */
+        #map {
+            width: 100%;
+            height: 400px;
+            background: #eee;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .map-notice {
+            font-size: 13px;
+            color: #7a6a58;
+            margin-bottom: 10px;
+        }
+        
+        .btn {
+		    padding: 8px 18px;
+		    height: 40px;
+		    background: #4A2D1A;
+		    color: white;
+		    border: none;
+		    border-radius: 6px;
+		    font-size: 14px;
+		    cursor: pointer;
+		    white-space: nowrap;
+		}
+		
+		.btn:hover {
+		    background: #3A2315;
+		}
+		
+		.tag-prefix {
+		    font-size: 15px;
+		    color: #4A2D1A;
+		    margin-right: 3px;
+		    font-weight: 600;
+		    position: relative;
+		    top: -1px;
+		}
+		
+    </style>
+</head>
+<body>
+
+	<div th:replace="common/header :: headerFragment"></div>
+
+	<div class="container">
+	    <h2>리뷰 작성</h2>
+	
+	    <form th:action="@{/review/reviewaddok}" method="post" enctype="multipart/form-data">
+	
+	        <!-- 제목 -->
+	        <div class="row">
+	            <label>제목 <span class="req">*</span></label>
+	            <input type="text" name="title" placeholder="리뷰 제목을 입력하세요" required>
+	        </div>
+	        
+	        <!-- 내용 -->
+	        <div class="row">
+	            <label>내용 <span class="req">*</span></label>
+	            <textarea name="reviewContent" placeholder="리뷰 내용을 입력하세요" required></textarea>
+	        </div>
+	
+	        <!-- 첨부파일 -->
+	        <div class="filebox">
+			    <label>이미지 첨부</label>
+			
+			    <!-- 커스텀 업로드 버튼 -->
+			    <label for="fileInput" class="upload-btn">사진 선택</label>
+			
+			    <!-- 실제 파일 input -->
+			    <input type="file" id="fileInput" name="file" accept="image/*" multiple onchange="showFileName()">
+			
+			    <!-- 선택된 파일명 표시 -->
+			    <input type="hidden" id="fileNameHidden" name="fileNameHidden">
+			    <!-- 이미지 미리보기 -->
+				<div class="preview-area" id="previewArea"></div>
+			</div>
+	        
+	        <!-- 주소 검색 -->
+	        <div class="row">
+			    <label>주소 직접 입력</label>
+			    <div style="display:flex; gap:10px;">
+			        <input type="text" id="addressInput" placeholder="주소를 입력하거나 붙여넣으세요">
+			        <button type="button" class="btn" onclick="searchPlace()">검색</button>
+			    </div>
+			</div>
+	
+	        <!-- 카카오 지도 -->
+	        <div class="row">
+	            <label>위치 선택</label>
+	            <div class="map-notice">지도를 클릭하면 위치가 자동으로 저장됩니다.</div>
+				<div id="map"></div>
+				<input type="hidden" name="place" id="place">
+	        </div>
+	
+	        <!-- 태그 -->
+	        <div class="row">
+	            <label>태그</label>
+	            <div class="tag-box">
+				    <div id="tagList" class="tag-list"></div>
+				    <span class="tag-prefix">#</span>
+				    <input type="text" id="tagText" placeholder="태그 입력">
+				</div>
+				<input type="hidden" name="tags" id="tagsHidden">
+	        </div>
+	
+	        <!-- 비밀글 -->
+	        <div class="secret-box">
+	            <input type="checkbox" name="contentState" value="비밀글">
+	            <label>비밀글</label>
+	        </div>
+	
+	        <!-- 제출 버튼 -->
+	        <button type="submit" class="write-btn">등록하기</button>
+	    </form>
+	</div>
+
+
+<script type="text/javascript"
+        th:src="@{//dapi.kakao.com/v2/maps/sdk.js(appkey=${kakaoAppKey}, libraries='services')}">
+</script>
+<script>
+
+	function showFileName() {
+	    let input = document.getElementById("fileInput");
+	    let hidden = document.getElementById("fileNameHidden");
+	
+	    if (input.files.length === 0) {
+	        hidden.value = "";
+	    } else if (input.files.length === 1) {
+	        hidden.value = input.files[0].name;
+	    } else {
+	        hidden.value = input.files.length + "개의 파일";
+	    }
+	
+	    previewImages(); // 미리보기 실행
+	}
+
+	
+	function previewImages() {
+	    let input = document.getElementById("fileInput");
+	    let preview = document.getElementById("previewArea");
+	
+	    preview.innerHTML = ""; // 기존 미리보기 초기화
+	
+	    if (input.files.length === 0) return;
+	
+	    Array.from(input.files).forEach((file, idx) => {
+	        if (!file.type.startsWith("image/")) return;
+	
+	        let reader = new FileReader();
+	        reader.onload = function(e) {
+	            // 감싸는 div
+	            let wrapper = document.createElement("div");
+	            wrapper.classList.add("preview-item");
+	
+	            // 이미지
+	            let img = document.createElement("img");
+	            img.src = e.target.result;
+	
+	            // 삭제 버튼
+	            let btn = document.createElement("button");
+	            btn.type = "button";
+	            btn.classList.add("delete-btn");
+	            btn.textContent = "✕";
+	            btn.onclick = function() {
+	                removeImage(idx);
+	            };
+	
+	            wrapper.appendChild(img);
+	            wrapper.appendChild(btn);
+	            preview.appendChild(wrapper);
+	        };
+	        reader.readAsDataURL(file);
+	    });
+	}
+	
+	function removeImage(index) {
+    const input = document.getElementById("fileInput");
+    const dt = new DataTransfer();
+
+    Array.from(input.files).forEach((file, idx) => {
+        if (idx !== index) {
+            dt.items.add(file); // 지울 것만 빼고 다시 넣기
+        }
+    });
+
+    input.files = dt.files;
+
+    // 파일 정보/미리보기 다시 갱신
+    showFileName();
+}
+	
+
+
+    // 기본 지도
+    var mapContainer = document.getElementById('map');
+    var mapOption = {
+        center: new kakao.maps.LatLng(37.566826, 126.9786567),
+        level: 3
+    };
+
+    var map = new kakao.maps.Map(mapContainer, mapOption);
+    var geocoder = new kakao.maps.services.Geocoder();
+    var marker = new kakao.maps.Marker({
+	    image: new kakao.maps.MarkerImage(
+	        '/img/marker-brown.png',       // 직접 만든 마커 이미지 경로
+	        new kakao.maps.Size(45, 45),   // 마커 크기
+	        {
+	            offset: new kakao.maps.Point(19.4, 35) // 중심 좌표 보정
+	        }
+	    )
+	});
+
+	kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
+	
+	    // ★ 1) 장소(POI) 클릭인지 일반 지도 클릭인지 체크
+	    var place = mouseEvent.place;  // POI 클릭 시에만 값이 존재
+	
+	    if (place) {
+
+		    let lat = place.y;
+		    let lng = place.x;
+		    let name = place.place_name;
+		    let id = place.id;   // ★★ 장소 고유 ID ★★
+		
+		    marker.setMap(map);
+		    marker.setPosition(new kakao.maps.LatLng(lat, lng));
+		    map.setCenter(new kakao.maps.LatLng(lat, lng));
+		
+		    // ★★ 장소 정보 전부 저장 (id 포함)
+		    document.getElementById("place").value =
+		        name + "|" + lat + "|" + lng + "|" + id;
+		
+		    document.getElementById("addressInput").value =
+		        place.address_name || place.road_address_name || name;
+		
+		    return;
+		}
+
+	
+	    // ★ 2) 일반 지도 클릭이면 기존 로직 수행
+	    var latlng = mouseEvent.latLng;
+	
+	    marker.setMap(map);
+	    marker.setPosition(latlng);
+	
+	    document.getElementById("place").value =
+	        latlng.getLat() + "," + latlng.getLng();
+	
+	    // 주소 역검색
+	    geocoder.coord2Address(latlng.getLat(), latlng.getLng(), function(result, status) {
+	        if (status === kakao.maps.services.Status.OK) {
+	            var addr = result[0].address.address_name;
+	            document.getElementById("addressInput").value = addr;
+	        }
+	    });
+	});
+
+
+	function searchPlace() {
+	    let keyword = document.getElementById("addressInput").value.trim();
+	    if (keyword === "") return;
+	
+	    var ps = new kakao.maps.services.Places();
+	
+	    ps.keywordSearch(keyword, function(data, status) {
+	
+	        if (status !== kakao.maps.services.Status.OK) {
+	            alert("장소를 찾을 수 없습니다.");
+	            return;
+	        }
+	
+	        let place = data[0]; // 검색 결과 중 첫 번째
+	
+	        let lat = place.y;
+	        let lng = place.x;
+	        let name = place.place_name;
+	        let id  = place.id; // ★ placeId
+	
+	        // 지도 이동 + 마커 표시
+	        marker.setMap(map);
+	        marker.setPosition(new kakao.maps.LatLng(lat, lng));
+	        map.setCenter(new kakao.maps.LatLng(lat, lng));
+	
+	        /** 
+	         * ⭐ 장소 기반 저장 (placeId 존재)
+	         * "이름|lat|lng|placeId"
+	         */
+	        document.getElementById("place").value =
+	            name + "|" + lat + "|" + lng + "|" + id;
+	    });
+	}
+
+
+    // 태그 스크립트
+    let tagArr = [];
+	
+	document.getElementById("tagText").addEventListener("keydown", function(e) {
+	    if (e.key === "Enter" || e.key === " ") {   // 스페이스 or 엔터
+	        e.preventDefault();
+	        addTag(); 
+	    }
+	});
+	
+	function addTag() {
+	    const input = document.getElementById("tagText");
+	    let tag = input.value.trim();
+	
+	    if (tag === "") return;
+	    if (tagArr.includes(tag)) {  // 중복 방지
+	        input.value = "";
+	        return;
+	    }
+	
+	    tagArr.push(tag);
+	    input.value = "";
+	
+	    renderTags();
+	}
+	
+	function renderTags() {
+	    const tagArea = document.getElementById("tagList");
+	    tagArea.innerHTML = "";
+	
+	    tagArr.forEach((t, idx) => {
+	        let tagEl = document.createElement("div");
+	        tagEl.classList.add("tag");
+	        tagEl.innerHTML = `#${t} <span class="remove" onclick="removeTag(${idx})">✕</span>`;
+	        tagArea.appendChild(tagEl);
+	    });
+	
+	    document.getElementById("tagsHidden").value = tagArr.join(",");
+	}
+
+	
+	function removeTag(index) {
+	    tagArr.splice(index, 1);
+	    renderTags();
+	}
+
+</script>
+
+</body>
+</html>

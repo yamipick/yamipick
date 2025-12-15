@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>테이블 타입 선택</title>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/common.css}">
+<style>
+    /* -------------------------------------------------------
+       Warm Choco & Cream Theme Variables (list.html과 통일)
+    ------------------------------------------------------- */
+    :root {
+        --choco-dark: #3E2723;
+        --choco-main: #6D4C41;
+        --choco-accent: #A1887F;
+        --cream-light: #FFFCF5;
+        --cream-card: #fff;
+        --cream-dark: #EFEBE9;
+        --border-light: #D7CCC8;
+        --shadow: 0 4px 15px rgba(109, 76, 65, 0.08);
+        --danger-color: #B71C1C;
+        --radius-l: 18px;
+        --radius-s: 8px;
+    }
+    
+    /* -------------------------------------------------------
+       기본 스타일 및 레이아웃 (Theme Variables를 사용하도록 정리)
+    ------------------------------------------------------- */
+    body { 
+        font-family: 'Pretendard', 'Malgun Gothic', sans-serif; 
+        background-color: var(--cream-light); 
+        color: var(--choco-dark); 
+        padding-top: 60px; 
+        margin: 0;
+    }
+    .wrap-container { 
+        /* 이전 파일들(list.html, detail.html)의 wrap-container 스타일 적용 */
+        max-width: 800px;
+        margin: 40px auto; 
+        padding: 30px; 
+        background: var(--cream-card); 
+        border-radius: var(--radius-l); 
+        box-shadow: var(--shadow); 
+    }
+    
+    /* H3를 H1 스타일과 유사하게 테마 적용 */
+    h3 { 
+        color: var(--choco-dark); 
+        border-bottom: 3px solid var(--choco-accent); 
+        padding-bottom: 10px; 
+        margin: 0 0 25px; /* H1 margin과 통일 */
+        font-weight: 900; 
+        font-size: 26px; /* H1 size와 통일 */
+    } 
+    a { 
+        text-decoration: none; 
+        color: var(--choco-main); 
+        transition: color .15s ease; 
+    }
+    a:hover { 
+        color: var(--choco-dark); 
+        text-decoration: underline; 
+    }
+
+    /* -------------------------------------------------------
+       Radio Card Grid
+    ------------------------------------------------------- */
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; } 
+    @media (max-width: 520px){ .grid{ grid-template-columns: repeat(2, 1fr);} }
+
+    /* radio 숨기기 */
+    .type-radio { position: absolute; opacity: 0; pointer-events: none; }
+
+    /* ✅ 카드 버튼 스타일 */
+    .type-item {
+      /* 테마 변수 적용 */
+      border: 1px solid var(--border-light); 
+      border-radius: var(--radius-s); /* radius-s 적용 */
+      padding: 24px 12px 18px; 
+      cursor: pointer;
+      text-align: center;
+      user-select: none;
+      transition: all .15s ease;
+      background: var(--cream-card); /* 흰색 배경 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100px;
+    }
+    .type-item:hover { 
+        transform: translateY(-2px); 
+        box-shadow: 0 4px 12px rgba(109, 76, 65, 0.1); /* 테마 컬러 기반의 옅은 그림자 */
+    }
+
+    /* ✅ 선택됨 스타일 */
+    .type-radio:checked + .type-item {
+      border-color: var(--choco-accent); /* 테마 Accent 색상 */
+      background: var(--cream-card); 
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(161, 136, 127, 0.2); /* Accent 컬러 기반 그림자 */
+    }
+    .type-radio:checked + .type-item .label { 
+        color: var(--choco-accent); 
+        font-weight: 900; 
+    }
+    .type-radio:checked + .type-item .icon { 
+        color: var(--choco-accent) !important; 
+    }
+
+    /* ✅ 예약불가(만석) 카드 스타일 */
+    .type-item.disabled {
+      cursor: not-allowed;
+      opacity: .4; 
+      transform: none; 
+      box-shadow: none;
+      border-color: var(--border-light);
+    }
+    .type-item.disabled:hover { border-color: var(--border-light); }
+
+    /* 아이콘 스타일 */
+    .icon { 
+      width: 36px; height: 36px; margin-bottom: 8px; 
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; line-height: 1;
+      /* 🔑 색상 강제 지정 (기본 검은색) */
+      color: var(--choco-dark) !important; 
+      transition: color .15s ease;
+    }
+    
+    .label { 
+        font-size: 14px; 
+        font-weight: 800; 
+        color: var(--choco-dark); 
+        transition: color .15s ease;
+    }
+    .sub { margin-top: 6px; font-size: 12px; color: var(--choco-main); } /* sub text color 통일 */
+
+    /* -------------------------------------------------------
+       Action Button Style
+    ------------------------------------------------------- */
+    .actions { display: flex; gap: 10px; margin-top: 24px; } 
+    .btn {
+      flex: 1;
+      border-radius: var(--radius-s); /* radius-s 적용 */
+      padding: 14px 12px; /* 패딩 조정 */
+      border: 1px solid var(--border-light);
+      background: var(--cream-card);
+      font-weight: 700; /* 폰트 굵기 통일 */
+      font-size: 16px;
+      cursor: pointer;
+      transition: background .15s ease, border-color .15s ease;
+    }
+    .btn:hover { background: var(--cream-dark); } /* hover 색상 통일 */
+
+    .btn-primary {
+      border: 0;
+      background: var(--choco-accent); /* 테마 Primary 색상 */
+      color: var(--cream-card);
+    }
+    .btn-primary:hover {
+        background: var(--choco-main); /* 테마 Darker 색상 */
+    }
+    .btn-primary:disabled {
+      opacity: .6; /* Disabled opacity 조정 */
+      cursor: not-allowed;
+      background: var(--choco-accent); 
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrap-container">
+
+    <form th:action="@{/reservation/formok}" method="post" th:object="${reservation}">
+
+      <input type="hidden" th:field="*{seqUser}">
+      <input type="hidden" th:field="*{seqStore}">
+      <input type="hidden" th:field="*{reserveDate}">
+      <input type="hidden" th:field="*{reserveTime}">
+      <input type="hidden" th:field="*{peopleCount}">
+
+      <h3>테이블 타입 선택</h3>
+
+      <div class="grid">
+
+        <div th:each="opt : ${tableOptions}">
+          <input class="type-radio"
+                 type="radio"
+                 th:field="*{seqStoreTable}"
+                 th:id="'tt-' + ${opt.seqStoreTable}"
+                 th:value="${opt.seqStoreTable}"
+                 th:disabled="${!opt.available}" />
+
+          <label class="type-item"
+                 th:for="'tt-' + ${opt.seqStoreTable}"
+                 th:classappend="${!opt.available} ? ' disabled' : ''">
+
+            <i class="icon ri-restaurant-line"
+			   th:if="${#strings.contains(opt.name, '홀') or #strings.contains(opt.name, '테이블')}"></i>
+			
+			<i class="icon ri-door-open-fill"
+			   th:if="${#strings.contains(opt.name, '룸')}"></i>
+			
+			<i class="icon ri-goblet-fill"
+			   th:if="${#strings.contains(opt.name, '바')}"></i>
+			
+			<i class="icon ri-microsoft-fill"
+			   th:if="${#strings.contains(opt.name, '창가')}"></i>
+			
+			<i class="icon ri-table-line"
+			   th:if="${!(#strings.contains(opt.name, '홀') or #strings.contains(opt.name, '테이블') or #strings.contains(opt.name,'룸') or #strings.contains(opt.name,'바') or #strings.contains(opt.name,'창가'))}"></i>
+			   
+			<i class="icon ri-cup-line"
+			   th:if="${#strings.contains(opt.name, '테라스')}"></i>
+
+            <div class="label"
+                 th:text="${opt.available} ? ${opt.name} : ${opt.name + ' (만석)'}">홀</div>
+
+          </label>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn" onclick="history.back()">이전 단계</button>
+        <button type="submit" id="submitBtn" class="btn btn-primary" disabled>예약 확정</button>
+      </div>
+
+    </form>
+</div>
+
+<script>
+  // ✅ 선택 전엔 "예약 확정" 비활성화
+  const submitBtn = document.getElementById('submitBtn');
+
+  function updateSubmitEnabled() {
+    const checked = document.querySelector('input[type="radio"][name$="seqStoreTable"]:checked');
+    submitBtn.disabled = !checked;
+  }
+
+  document.addEventListener('change', (e) => {
+    if (e.target && e.target.matches('input[type="radio"][name$="seqStoreTable"]')) {
+      updateSubmitEnabled();
+    }
+  });
+
+  // 페이지 로드시에도 한번 체크(뒤로가기 등)
+  updateSubmitEnabled();
+</script>
+
+</body>
+</html>
