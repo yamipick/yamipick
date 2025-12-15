@@ -2,77 +2,83 @@ server:
   port: 8080
 
 spring:
-  # ★ [추가됨] application-secret.yml 파일을 여기서 불러옵니다!
-  profiles:
-    include: secret
-
   application:
     name: yamipick
-
-#  # [추가됨] Redis 설정
-#  data:
-#    redis:
-#      host: localhost
-#      port: 6379
-
-  # 1. JDBC(+HikariCP) 설정 //아직 오라클 클라우드 설정을 안 해놧음 설정후 변경 예정
-
+  
+  # 1. JDBC 설정 (경로 수정 필수!)
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver
-    url: jdbc:oracle:thin:@llgabbhp32n2794c_medium?TNS_ADMIN=C:/dev/Wallet_Yamipick 
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    # ▼ [수정됨] C:/dev/... 지우고 /app/wallet으로 변경!
+    url: jdbc:oracle:thin:@llgabbhp32n2794c_medium?TNS_ADMIN=/app/wallet
+    username: ${DB_USERNAME}  # .env에서 가져옴
+    password: ${DB_PASSWORD}  # .env에서 가져옴
     
-    # 오라클클라우드 세션 관리
     hikari:
-      maximum-pool-size: 3      # 가장 중요! (팀원들이 각자 3개씩만 쓰도록 제한)
-      connection-timeout: 6000 # 6초 대기
+      maximum-pool-size: 3
+      connection-timeout: 6000
       idle-timeout: 600000 
 
-  # 2. JPA 설정 (가져오신 고급 설정 적용)
+  # 2. JPA 설정
   jpa:
     database: oracle
     hibernate:
-      ddl-auto: none # [중요] 테이블을 자동으로 안 만듭니다. DB에 직접 create table 해야 함!
+      ddl-auto: none
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-    show-sql: true # 콘솔 로그에 SQL 출력
+    show-sql: true
     properties:
       hibernate:
-        format_sql: true # SQL 포맷 이쁘게 줄바꿈
-        highlight_sql: true # SQL 색깔 추가
+        format_sql: true
+        highlight_sql: true
 
+  # 3. AWS S3 설정 (변수 처리)
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY} # .env에서 가져옴
+        secret-key: ${AWS_SECRET_KEY} # .env에서 가져옴
+      s3:
+        bucket: yamipick-bucket
+      region:
+        static: ap-northeast-2
+      stack:
+        auto: false
 
-  # 3. Thymeleaf 설정
-  thymeleaf:
-    cache: false
-    
-  # 카카오맵 api
-  config:
-    import: optional:kakao-map-api.properties
-  # 파일 크기 지정
+  # 4. 파일 업로드
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
 
-# 4. MyBatis 설정
+# 5. 커스텀 API 키 설정 (전부 변수로 변경)
+yamipick:
+  api:
+    naver:
+      client-id: ${NAVER_CLIENT_ID}
+      client-secret: ${NAVER_CLIENT_SECRET}
+    kakao:
+      key: ${KAKAO_REST_API_KEY}
+      js-key: ${KAKAO_JS_KEY}
+    weather:
+      key: ${WEATHER_API_KEY}
+
+gemini:
+  api-key: ${GEMINI_API_KEY}
+  model: "gemini-flash-latest"
+
+pexels:
+  api-key: ${PEXELS_API_KEY}
+
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
   configuration:  
     map-underscore-to-camel-case: true
 
-# 5. 로깅 설정
 logging:
   level:
     root: info
-    com.test: debug # 본인 패키지명
-    org.hibernate.SQL: debug # 하이버네이트 쿼리 로그
-    org.hibernate.type.descriptor.sql.BasicBinder: trace # 바인딩 변수(값) 확인용
-        
-gemini:
-  api-key: ${GEMINI_API_KEY}
-  model: "gemini-2.5-flash"
-
-pexels:
-  api-key: ${PEXELS_API_KEY}
+    com.project.yamipick: debug
+    
+holiday:
+  api:
+    service-key: ${HOLIDAY_API_KEY}

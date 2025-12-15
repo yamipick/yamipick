@@ -19,6 +19,14 @@ public class QAIChatSession extends EntityPathBase<AIChatSession> {
 
     public static final QAIChatSession aIChatSession = new QAIChatSession("aIChatSession");
 
+    public final StringPath lastEmotion = createString("lastEmotion");
+
+    public final StringPath lastNegativeTags = createString("lastNegativeTags");
+
+    public final StringPath lastPositiveTags = createString("lastPositiveTags");
+
+    public final NumberPath<Long> lastRecommendMenuId = createNumber("lastRecommendMenuId", Long.class);
+
     public final NumberPath<Long> seqSession = createNumber("seqSession", Long.class);
 
     public final NumberPath<Long> seqUser = createNumber("seqUser", Long.class);

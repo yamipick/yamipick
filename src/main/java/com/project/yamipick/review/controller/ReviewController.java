@@ -319,7 +319,7 @@ public class ReviewController {
 		response.addCookie(cookie);
 	}
 
-	@Value("${kakao.api.key}")
+	@Value("${yamipick.api.kakao.js-key}")
 	private String kakaoAppKey;
 
 	@GetMapping("/review/reviewadd")
