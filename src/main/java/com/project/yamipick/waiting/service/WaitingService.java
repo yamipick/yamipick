@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.project.yamipick.user.entity.User;  //  
 import com.project.yamipick.user.repository.UserRepository;  //  
-import com.project.yamipick.waiting.domain.StoreSchedule;
+import com.project.yamipick.waiting.domain.WaitingStoreSchedule;
 import com.project.yamipick.waiting.domain.Waiting;
 import com.project.yamipick.waiting.domain.WaitingLog;
 import com.project.yamipick.waiting.domain.WaitingNotice;
@@ -166,7 +166,7 @@ public class WaitingService {
                 .orElse(false);
 
         String hoursText = "영업 정보 없음";
-        StoreSchedule schedule = scheduleRepository.findByStoreIdAndDayOfWeek(storeId, dayOfWeek).orElse(null);
+        WaitingStoreSchedule schedule = scheduleRepository.findByStoreIdAndDayOfWeek(storeId, dayOfWeek).orElse(null);
         
         if (schedule != null) {
             if ("N".equals(schedule.getIsOpen())) {
@@ -396,7 +396,7 @@ public class WaitingService {
                         op -> op.getStore().getId(),
                         op -> op));
 
-        Map<Long, StoreSchedule> schMap = scheduleRepository
+        Map<Long, WaitingStoreSchedule> schMap = scheduleRepository
                 .findAllByStoreIdInAndDayOfWeek(storeIds, dbDay).stream()
                 .collect(Collectors.toMap(
                         sch -> sch.getStore().getId(),
@@ -407,7 +407,7 @@ public class WaitingService {
             WaitingOperation op = opMap.get(storeId);
             boolean isOpenNow = op != null && "OPEN".equals(op.getStatus());
 
-            StoreSchedule schedule = schMap.get(storeId);
+            WaitingStoreSchedule schedule = schMap.get(storeId);
             String hoursText = "정보 없음";
             if (schedule != null) {
                 if ("N".equals(schedule.getIsOpen())) {
@@ -432,8 +432,8 @@ public class WaitingService {
                 .orElseThrow(() -> new IllegalArgumentException("매장 없음"));
 
         for (Integer day : dto.getDays()) {
-            StoreSchedule schedule = scheduleRepository.findByStoreIdAndDayOfWeek(dto.getStoreId(), day)
-                    .orElseGet(() -> StoreSchedule.builder()
+            WaitingStoreSchedule schedule = scheduleRepository.findByStoreIdAndDayOfWeek(dto.getStoreId(), day)
+                    .orElseGet(() -> WaitingStoreSchedule.builder()
                             .store(store)
                             .dayOfWeek(day)
                             .build());

@@ -22,7 +22,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "tblStoreSchedule")
-public class StoreSchedule {
+public class WaitingStoreSchedule {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_sch_gen")
