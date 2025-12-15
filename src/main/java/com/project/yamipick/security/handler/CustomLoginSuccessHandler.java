@@ -17,7 +17,7 @@ import com.project.yamipick.log.repository.BusinessLogRepository;
 import com.project.yamipick.user.entity.User;  // ✅ 추가
 import com.project.yamipick.user.repository.UserRepository;  // ✅ 추가
 import com.project.yamipick.waiting.domain.WaitingStore;  // ✅ 추가
-import com.project.yamipick.waiting.dto.SessionUserDTO;
+import com.project.yamipick.waiting.dto.WaitingSessionUserDTO;
 import com.project.yamipick.waiting.repository.WaitingStoreRepository;  // ✅ 추가
 
 import jakarta.servlet.ServletException;
@@ -76,7 +76,7 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
                 }
 
                 // DTO 생성 (여기에 유저정보 + 가게정보 다 들어감)
-                SessionUserDTO sessionDto = new SessionUserDTO(user, store);
+                WaitingSessionUserDTO sessionDto = new WaitingSessionUserDTO(user, store);
                 
                 // 세션 가져오기
                 HttpSession session = request.getSession();

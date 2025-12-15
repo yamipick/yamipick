@@ -12,7 +12,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @NoArgsConstructor
-public class SessionUserDTO {
+public class WaitingSessionUserDTO {
 
     // [User 정보]
     private Long seqUser;       // DB PK
@@ -30,7 +30,7 @@ public class SessionUserDTO {
     private boolean hasStore;   // 매장 보유 여부
 
     // ✅ User 기반 생성자
-    public SessionUserDTO(User user, WaitingStore store) {
+    public WaitingSessionUserDTO(User user, WaitingStore store) {
         this.seqUser = user.getSeqUser();
         this.userId = user.getUserId();
         this.name = user.getName();

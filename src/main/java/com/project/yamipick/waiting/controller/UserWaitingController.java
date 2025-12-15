@@ -15,7 +15,7 @@ import com.project.yamipick.waiting.dto.StoreInfoDTO;
 import com.project.yamipick.waiting.dto.WaitingDTO;
 import com.project.yamipick.waiting.service.WaitingService;
 // ✅ 우리가 만든 DTO와 세션 관련 Import 필수!
-import com.project.yamipick.waiting.dto.SessionUserDTO;
+import com.project.yamipick.waiting.dto.WaitingSessionUserDTO;
 import jakarta.servlet.http.HttpSession;
 
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ public class UserWaitingController {
         
         // 1. 세션에서 통합 DTO 꺼내기 (우리가 저장한 "waitingSession")
         if (session != null) {
-            SessionUserDTO dto = (SessionUserDTO) session.getAttribute("waitingSession");
+            WaitingSessionUserDTO dto = (WaitingSessionUserDTO) session.getAttribute("waitingSession");
             if (dto != null) {
                 return dto.getSeqUser(); // DTO에 있는 유저 번호 리턴
             }

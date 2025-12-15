@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.project.yamipick.user.repository.UserRepository;
 import com.project.yamipick.waiting.domain.WaitingLog;
-import com.project.yamipick.waiting.dto.SessionUserDTO;
+import com.project.yamipick.waiting.dto.WaitingSessionUserDTO;
 import com.project.yamipick.waiting.dto.StoreInfoDTO;
 import com.project.yamipick.waiting.dto.StoreScheduleDTO;
 import com.project.yamipick.waiting.dto.WaitingDTO;
@@ -36,7 +36,7 @@ public class StoreWaitingController {
 private Long getStoreId(HttpSession session, Authentication auth) {
         
         // 1. 세션에서 우리가 넣어둔 통합 DTO를 꺼냅니다.
-        SessionUserDTO dto = (SessionUserDTO) session.getAttribute("waitingSession");
+        WaitingSessionUserDTO dto = (WaitingSessionUserDTO) session.getAttribute("waitingSession");
         
         // 2. DTO가 있고 + 가게가 있는 사장님이라면? -> 바로 ID 반환 (DB 조회 X)
         if (dto != null && dto.isHasStore()) {
