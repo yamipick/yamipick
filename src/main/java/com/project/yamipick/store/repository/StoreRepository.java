@@ -1,9 +1,7 @@
 package com.project.yamipick.store.repository;
 
-<<<<<<< HEAD
+
 import java.util.List;
-=======
->>>>>>> d78f139d2ff0a8dd6bdd0c2732c8e20d7eac2cde
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
