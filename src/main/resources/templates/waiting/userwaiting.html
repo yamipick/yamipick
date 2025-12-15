@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>웨이팅</title>
+    <style>
+        @keyframes slideIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+         <link rel="stylesheet" th:href="@{/css/waiting.css}">
+         <link rel="stylesheet" th:href="@{/css/common.css}">
+         
+    
+</head>
+<body>
+<div th:replace="~{common/header :: headerFragment}"></div>
+
+    <!-- ★ 수정: 로그인 입력 박스(login-box) 전체 삭제됨 -->
+
+    <!-- ★ 수정: main-app 컨테이너 (기본적으로 보이게 설정) -->
+    <div id="main-app" class="container box mobile-container">
+
+        <div id="alert-area"></div>
+
+        <div class="notice-board">
+            <div id="latest-notice-area" class="latest-notice-box" style="display:none;">
+                <div class="latest-title">
+                    <span id="l-badge">📢</span> <span id="l-title">제목</span>
+                </div>
+                <div id="l-content" class="latest-content">내용</div>
+                <div id="l-date" style="text-align: right; font-size: 0.8em; color: #aaa; margin-top: 10px;">날짜</div>
+            </div>
+
+            <div id="notice-toggle-btn" class="notice-header" onclick="toggleNotice()" style="display:none;">
+                <span>➕ 지난 공지사항 더보기</span>
+                <span id="notice-arrow">🔽</span>
+            </div>
+
+            <ul id="notice-list" class="notice-list"></ul>
+
+            <div id="no-notice-msg" style="display:none; padding:20px; text-align:center; color:#aaa;">
+                등록된 공지사항이 없습니다.
+            </div>
+        </div>
+
+        <div id="reg-box">
+            <h2 style="margin-top:10px;">🍽️ 대기 접수</h2>
+            <p id="store-status-text" style="color: #A1887F;">매장 상태 확인 중...</p>
+            <p id="store-hours-text" style="color: #5D4037; font-size: 0.95em; margin-top: -10px; margin-bottom: 25px; font-weight: bold;">
+                ⏳ 시간 정보 불러오는 중...
+            </p>
+
+            <div style="margin: 40px 0;">
+                <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+                    <input type="number" id="size" value="2" placeholder="2">
+                    <span style="font-size:1.5em; font-weight:bold; color:var(--primary);">명</span>
+                </div>
+            </div>
+            <button id="btn-reg" class="btn-primary" onclick="register()">줄서기</button>
+        </div>
+
+        <div id="status-box">
+            <div class="waiting-display">
+                <div class="waiting-label">나의 대기 번호</div>
+                <div class="waiting-number" id="my-number">-</div>
+                <p style="margin:0; color:#5D4037;">내 앞 <span id="cnt" class="count-text">0</span>팀 대기 중</p>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-defer" onclick="postpone()">↩️ 순서 미루기</button>
+                <button class="btn-cancel" onclick="cancel()">웨이팅 취소</button>
+            </div>
+
+            <div style="font-size: 0.8em; color: #BCAAA4; margin-top: 20px;">
+                실시간 연결 상태: <span id="socket-status">⚪</span>
+            </div>
+        </div>
+
+        <div class="bottom-link">
+            <a href="/waitinguser/history">
+                📜 지난 방문 기록 보기 <span>›</span>
+            </a>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // -----------------------------------------------------------
+        // 1. ★ 수정: 전역 변수 설정 (세션에서 userId 바로 가져옴)
+        // -----------------------------------------------------------
+		const currentUserId = /*[[${session.waitingSession != null ? session.waitingSession.seqUser : null}]]*/ null;        let myId = null;
+        let socket = null;
+        let pollingInterval = null;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        // storeId 없으면 1번으로 기본값 (테스트 편의용)
+        const storeId = urlParams.get('storeId') || 1; 
+
+        // -----------------------------------------------------------
+        // 2. ★ 수정: 페이지 시작 로직 (로그인 입력 과정 생략)
+        // -----------------------------------------------------------
+        window.onload = function() {
+            if (!currentUserId) {
+                // 로그인 안 되어 있으면 로그인 페이지로
+                alert("로그인이 필요한 서비스입니다.");
+                location.href = "/login";
+                return;
+            }
+            
+            console.log("로그인됨 (User ID: " + currentUserId + ")");
+            // 바로 앱 기능 초기화
+            init();
+        };
+
+        function init() {
+            checkStoreStatus();
+            restoreSession();
+            loadNotices();
+        }
+
+        // ========================================================
+        // 아래부터는 원본 로직 그대로 (userId 변수명만 currentUserId로 매칭)
+        // ========================================================
+
+        function loadNotices() {
+            const timestamp = new Date().getTime();
+            fetch(`/waiting/notices?storeId=${storeId}&t=${timestamp}`)
+                .then(r => r.json())
+                .then(list => {
+                    const latestArea = document.getElementById('latest-notice-area');
+                    const toggleBtn = document.getElementById('notice-toggle-btn');
+                    const ul = document.getElementById('notice-list');
+                    const noMsg = document.getElementById('no-notice-msg');
+                    
+                    latestArea.style.display = 'none'; 
+                    toggleBtn.style.display = 'none'; 
+                    ul.style.display = 'none'; 
+                    noMsg.style.display = 'none'; 
+                    ul.innerHTML = "";
+
+                    if (list.length === 0) { 
+                        noMsg.style.display = 'block'; 
+                        return; 
+                    }
+
+                    const latest = list[0];
+                    latestArea.style.display = 'block';
+                    document.getElementById('l-badge').innerText = latest.pinned ? '🚨' : '📢 알림';
+                    document.getElementById('l-title').innerText = latest.title;
+                    document.getElementById('l-content').innerText = latest.content;
+                    document.getElementById('l-date').innerText = latest.regDate ? latest.regDate.replace('T', ' ').substring(0, 16) : '';
+
+                    if (list.length > 1) {
+                        toggleBtn.style.display = 'flex';
+                        for (let i = 1; i < list.length; i++) {
+                            const item = list[i];
+                            const pinnedClass = item.pinned ? 'pinned' : '';
+                            const badge = item.pinned ? '<span class="n-badge">🚨</span>' : '';
+                            const date = item.regDate ? item.regDate.substring(0,10) : '';
+                            
+                            ul.innerHTML += `
+                                <li class="notice-item ${pinnedClass}">
+                                    <span class="n-title">${badge}${item.title}</span>
+                                    <div class="n-content">${item.content}</div>
+                                    <div class="n-date">${date}</div>
+                                </li>`;
+                        }
+                    }
+                });
+        }
+        function toggleNotice() { const ul = document.getElementById('notice-list'); const arrow = document.getElementById('notice-arrow'); const btnText = document.querySelector('#notice-toggle-btn span:first-child'); if(ul.style.display === 'block') { ul.style.display = 'none'; arrow.innerText = '🔽'; btnText.innerText = '➕ 지난 공지사항 더보기'; } else { ul.style.display = 'block'; arrow.innerText = '🔼'; btnText.innerText = '➖ 접기'; } }
+
+        function checkStoreStatus() {
+            fetch(`/waiting/store-info?storeId=${storeId}`).then(r => r.json()).then(store => {
+                const txt = document.getElementById('store-status-text');
+                const btn = document.getElementById('btn-reg');
+                const hoursBox = document.getElementById('store-hours-text');
+                hoursBox.innerText = store.todayHours ? "⏰ " + store.todayHours : "⏰ 운영 시간 정보 없음";
+                if (store.waitingOpen) {
+                    txt.innerHTML = "🟢 <b style='color:#3E2723'>현재 대기 접수 중</b>"; 
+                    btn.disabled = false; btn.innerText = "줄서기"; 
+                } else {
+                    txt.innerHTML = "🔴 <b style='color:#D32F2F'>현재 접수 마감</b>"; 
+                    btn.disabled = true; btn.innerText = "마감됨";
+                }
+            });
+        }
+
+        function restoreSession() {
+            // ★ 수정: userId -> currentUserId 사용
+            fetch(`/waiting/my-active?userId=${currentUserId}`)
+                .then(res => res.status === 200 ? res.json() : null)
+                .then(data => {
+                    if (data) successRegister(data);
+                    else {
+                        document.getElementById('reg-box').style.display = 'block';
+                        document.getElementById('status-box').style.display = 'none';
+                    }
+                });
+        }
+
+        function register() {
+            const btn = document.getElementById('btn-reg');
+            const size = document.getElementById('size').value;
+            btn.disabled = true; btn.innerText = "처리 중...";
+
+            // ★ 수정: userId -> currentUserId 사용
+            fetch(`/waiting/register?userId=${currentUserId}&storeId=${storeId}&size=${size}`, { 
+                method: 'POST'
+            })
+            .then(async res => { if(!res.ok) throw new Error(await res.text()); return res.json(); })
+            .then(data => successRegister(data))
+            .catch(e => { alert("⛔ " + e.message); btn.disabled = false; btn.innerText = "줄서기"; });
+        }
+
+        function successRegister(data) {
+            myId = data.id;
+            document.getElementById('my-number').innerText = data.waitingNumber + "번";
+            document.getElementById('reg-box').style.display = 'none';
+            document.getElementById('status-box').style.display = 'block';
+
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ waitingId: myId }));
+            } else {
+                connectWs();
+            }
+            startPolling();
+            updateCnt();
+        }
+
+        function connectWs() {
+            if (!myId || (socket && socket.readyState === WebSocket.OPEN)) return;
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            // ★ 수정: 웹소켓 경로는 /ws/waiting 그대로 유지
+            socket = new WebSocket(`${protocol}//${location.host}/ws/waiting`);
+            
+            socket.onopen = () => { document.getElementById('socket-status').innerText = "🟢 연결됨"; socket.send(JSON.stringify({ waitingId: myId })); };
+            socket.onmessage = (msg) => showAlert(msg.data);
+            socket.onclose = () => { document.getElementById('socket-status').innerText = "🔴 재연결 중..."; setTimeout(connectWs, 3000); };
+        }
+
+        function showAlert(text) {
+            const cleanText = text.trim();
+            const area = document.getElementById('alert-area');
+            
+            if (cleanText === "NOTICE:REFRESH_NOTICE") {
+                setTimeout(() => { loadNotices(); }, 1000); 
+                return;
+            }
+
+            area.style.display = 'block';
+            let html = "";
+
+            if (cleanText.startsWith("CALL:") || cleanText.startsWith("CANCEL:")) {
+                const isCall = cleanText.startsWith("CALL:");
+                const msg = cleanText.split(":")[1];
+                const alertType = isCall ? 'alert-urgent' : 'alert-urgent'; 
+                html = `<div class="alert-box ${alertType}">
+                            <div style="font-size:1.2em;">${isCall ? '🔔 호출 알림' : '🚫 취소 알림'}</div>
+                            <div style="margin-top:5px;">${msg}</div>
+                        </div>`;
+                area.innerHTML = html;
+
+                if(isCall) {
+                    alert("🔔 입장해주세요!"); 
+                } else { 
+                    alert("🚫 취소되었습니다."); 
+                    resetToMain();
+                }
+            } 
+            else if (cleanText.startsWith("ENTER:")) {
+                alert("✅ 입장 확인되었습니다.");
+                resetToMain();
+            } 
+            else if (cleanText.startsWith("NOTICE:")) {
+                const msg = cleanText.split(":")[1];
+                html = `<div class="alert-box alert-info"><div>📢 실시간 안내</div><div style="margin-top:5px;">${msg}</div></div>`;
+                area.innerHTML = html;
+            }
+
+            if(myId) updateCnt();
+        }
+
+        function resetToMain() {
+            myId = null;
+            if (pollingInterval) clearInterval(pollingInterval);
+            document.getElementById('status-box').style.display = 'none';
+            document.getElementById('reg-box').style.display = 'block';
+            document.getElementById('alert-area').style.display = 'none';
+            const btn = document.getElementById('btn-reg');
+            btn.disabled = false;
+            btn.innerText = "줄서기";
+            checkStoreStatus();
+        }
+
+        function startPolling() { if (pollingInterval) clearInterval(pollingInterval); pollingInterval = setInterval(updateCnt, 3000); }
+        function updateCnt() { if(myId) fetch(`/waiting/check/${myId}`).then(r=>r.text()).then(c => document.getElementById('cnt').innerText = c); }
+
+        function cancel() { 
+            if(confirm("취소하시겠습니까?")) 
+                fetch(`/waiting/cancel/${myId}`, { method:'POST' }).then(() => location.reload()); 
+        }
+
+        function postpone() { 
+            if(confirm("순서를 맨 뒤로 미루시겠습니까?")) 
+                fetch(`/waiting/postpone/${myId}`, { method:'POST' }).then(async r => { 
+                    if(r.ok) { alert("순서가 변경되었습니다."); location.reload(); } 
+                    else alert(await r.text()); 
+                }); 
+        }
+    </script>
+</body>
+</html>

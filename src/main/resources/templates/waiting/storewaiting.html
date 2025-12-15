@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>웨이팅 관리</title>
+     <link rel="stylesheet" th:href="@{/css/waiting.css}">
+                   <link rel="stylesheet" th:href="@{/css/common.css}">
+     
+  
+</head>
+<body>
+    <div th:replace="~{common/header :: headerFragment}"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ 웨이팅 관리</h1>
+            <button id="btn-status" class="btn-toggle on" onclick="toggleStatus()">접수 중</button>
+        </div>
+
+        <div class="section-box" style="background: #FFF8E1; border-color: #FFE082;">
+            <h3 class="section-title" style="color:#F57F17; margin-bottom: 10px;">🔔 알림 전송</h3>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="ws-content" placeholder="전체 공지 메시지 입력" style="flex: 1; border: 1px solid #FFE082;">
+                <button class="btn-action" style="width: auto; padding: 0 20px; background:#FBC02D; color:#3E2723;" onclick="sendWsNotice()">전송</button>
+            </div>
+        </div>
+
+        <div class="section-box">
+            <div style="display:flex; justify-content:space-between; align-items:center;" onclick="toggleNoticeBoard()">
+                <h3 class="section-title">📝 매장 공지사항</h3>
+                <span id="n-arrow">▼</span>
+            </div>
+
+            <div id="notice-body" style="display:none; margin-top: 15px;">
+                <input type="hidden" id="n-id" value="">
+
+                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                    <input type="text" id="n-title" placeholder="제목" style="flex: 2;">
+                    <label style="display: flex; align-items: center; gap: 3px; font-size: 0.9em; font-weight: bold; white-space: nowrap;">
+                        <input type="checkbox" id="n-pinned"> 📌필독
+                    </label>
+                </div>
+
+                <textarea id="n-content" placeholder="내용" style="height: 80px; margin-bottom: 10px; resize: none;"></textarea>
+
+                <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                    <button id="btn-save-notice" class="btn-action" onclick="saveNotice()">등록</button>
+                    <button id="btn-cancel-edit" class="btn-action" style="background-color: #BCAAA4; display: none;" onclick="cancelEditMode()">취소</button>
+                </div>
+
+                <ul id="manager-notice-list"></ul>
+            </div>
+        </div>
+
+        <div class="section-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; cursor: pointer;" onclick="toggleSchedule()">
+                <h3 class="section-title">⏰ 영업 시간 설정</h3>
+                <span id="s-arrow">▼</span>
+            </div>
+
+            <div id="schedule-body" style="display:none; margin-top: 15px;">
+                <div style="background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #EFEBE9;">
+                    <div style="background: #EFEBE9; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                        <span style="font-size: 0.9em; color: #5D4037; font-weight: bold;">📅 오늘(</span><span id="display-day-name"></span><span>)의 설정: </span>
+                        <span id="display-sch-text" style="color: var(--primary); font-weight: bold; margin-left: 5px;">불러오는 중...</span>
+                    </div>
+
+                    <div style="text-align: center; margin-bottom: 10px; font-weight: bold; color: var(--secondary); font-size: 0.9em;">
+                        변경할 요일 선택 (다중 선택 가능)
+                    </div>
+
+                    <div class="day-selector">
+                        <label><input type="checkbox" name="days" value="1" class="day-check-input" checked><span class="day-label">월</span></label>
+                        <label><input type="checkbox" name="days" value="2" class="day-check-input" checked><span class="day-label">화</span></label>
+                        <label><input type="checkbox" name="days" value="3" class="day-check-input" checked><span class="day-label">수</span></label>
+                        <label><input type="checkbox" name="days" value="4" class="day-check-input" checked><span class="day-label">목</span></label>
+                        <label><input type="checkbox" name="days" value="5" class="day-check-input" checked><span class="day-label">금</span></label>
+                        <label><input type="checkbox" name="days" value="6" class="day-check-input"><span class="day-label">토</span></label>
+                        <label><input type="checkbox" name="days" value="0" class="day-check-input"><span class="day-label">일</span></label>
+                    </div>
+
+                    <div class="time-grid">
+                        <div class="time-item"><span class="time-label">오픈 시간</span><input type="time" id="sch-open" value="10:00"></div>
+                        <div class="time-item"><span class="time-label">마감 시간</span><input type="time" id="sch-close" value="22:00"></div>
+                        <div class="time-item"><span class="time-label">브레이크 시작</span><input type="time" id="sch-bs" value="15:00"></div>
+                        <div class="time-item"><span class="time-label">브레이크 끝</span><input type="time" id="sch-be" value="17:00"></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px dashed #EFEBE9;">
+                        <label style="cursor: pointer; font-weight: bold; color: var(--danger); font-size: 0.9em;">
+                            <input type="checkbox" id="sch-holiday"> ⛔ 휴무로 설정
+                        </label>
+                        <button class="btn-action" style="width: auto; padding: 10px 25px; font-size: 0.9em;" onclick="saveSchedule()">설정 저장</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 25px; border-top: 1px dashed #EFEBE9; padding-top: 15px;">
+                    <div style="font-size: 0.9em; font-weight: bold; color: #5D4037; margin-bottom: 10px;">📅 주간 설정 현황</div>
+                    <table style="width: 100%; font-size: 0.85em; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #F5F5F5; color: #666;">
+                                <th style="padding: 6px; border: 1px solid #eee;">요일</th>
+                                <th style="padding: 6px; border: 1px solid #eee;">상태</th>
+                                <th style="padding: 6px; border: 1px solid #eee;">영업 시간</th>
+                            </tr>
+                        </thead>
+                        <tbody id="weekly-schedule-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-box">
+            <div style="display:flex; justify-content:space-between; align-items:center;" onclick="toggleLogs()">
+                <h3 class="section-title">🕒 최근 활동 로그</h3>
+                <span id="l-arrow">▼</span>
+            </div>
+
+            <div id="log-body" style="display:none; margin-top: 15px;">
+                <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+                    <a href="/waitingstore/history" style="text-decoration:none; color:white; background:var(--secondary); padding:6px 15px; border-radius:20px; font-size:0.85em; font-weight:bold;">📊 전체 통계 보기</a>
+                </div>
+
+                <div id="log-container" style="background: #191919; color: #EFEBE9; padding: 15px; border-radius: 10px; height: 150px; overflow-y: auto; font-size: 0.85em;">
+                    <ul id="log-list" style="list-style: none; padding: 0;">
+                        <li>로딩 중...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <span style="font-size: 1.2em; font-weight: bold; color: var(--primary);">현재 대기 팀</span>
+                <button class="btn-refresh" onclick="loadList()">🔄 목록 새로고침</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th width="15%">No</th>
+                        <th width="20%">인원</th>
+                        <th width="20%">상태</th>
+                        <th width="45%">관리</th>
+                    </tr>
+                </thead>
+                <tbody id="list-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+
+	<script th:inline="javascript">
+	    // ★ [핵심] 컨트롤러에서 넘겨준 storeId 받기 (없으면 null)
+	        /* -----------------------------------------------------------
+         * 1. CSRF 토큰 & 전역 변수 (주석 처리됨)
+         * ----------------------------------------------------------- */
+        // const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+        // const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+ 		const storeId = /*[[${storeId}]]*/ null;   
+         let loadedNotices = [];
+        const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+        /* -----------------------------------------------------------
+         * 2. 페이지 로드 시
+         * ----------------------------------------------------------- */
+		 window.onload = function() {
+		        if (!storeId) {
+		            // Store ID가 없다는 건 로그인 안 했거나 가게가 없는 계정
+		            alert("가게 정보가 없습니다. 점주 계정으로 로그인해주세요.");
+		            location.href = "/login";
+		            return;
+		        }
+		        console.log("Store ID Loaded:", storeId);
+		        initStoreApp();
+		    };
+
+        /* -----------------------------------------------------------
+         * 3. 앱 초기화
+         * ----------------------------------------------------------- */
+        function initStoreApp() {
+            checkStatus();
+            loadList();
+            loadNotices();
+            loadCurrentSchedule();
+            loadWeeklySchedule();
+
+            // 3초마다 목록 자동 갱신
+            setInterval(loadList, 3000);
+
+            console.log('✅ 매장 앱 시작! storeId:', storeId);
+        }
+
+        function loadList() {
+            fetch('/waiting/list?storeId=' + storeId)
+                .then(r => r.json())
+                .then(list => {
+                    const tbody = document.getElementById('list-body');
+                    tbody.innerHTML = '';
+
+                    if (list.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="padding:40px; color:#aaa;">대기 중인 팀이 없습니다.</td></tr>';
+                        return;
+                    }
+
+                    list.forEach(item => {
+                        let btns = '';
+                        if (item.status === 'WAITING') {
+                            btns = `<button class="btn-call" onclick="action('call',${item.id})">호출</button><button class="btn-reject" onclick="action('reject',${item.id})">거절</button>`;
+                        } else if (item.status === 'CALLED') {
+                            btns = `<button class="btn-enter" onclick="action('enter',${item.id})">입장</button><button class="btn-reject" onclick="action('reject',${item.id})">거절</button>`;
+                        }
+
+                        const row = `<tr>
+                            <td><b>${item.waitingNumber}</b></td>
+                            <td>${item.teamSize}명<br><span style="font-size:0.75em; color:#aaa;">${item.memberPhone ? item.memberPhone.substr(-4) : 'guest'}</span></td>
+                            <td><span class="status-badge status-${item.status}">${item.status}</span></td>
+                            <td>${btns}</td>
+                        </tr>`;
+                        tbody.innerHTML += row;
+                    });
+                });
+        }
+
+        function loadNotices() {
+            fetch('/waiting/notices?storeId=' + storeId)
+                .then(res => res.json())
+                .then(list => {
+                    loadedNotices = list;
+                    const ul = document.getElementById('manager-notice-list');
+                    ul.innerHTML = '';
+
+                    if (list.length === 0) {
+                        ul.innerHTML = '<li style="justify-content:center; color:#aaa; font-size:0.9em; padding:20px;">등록된 공지사항이 없습니다.</li>';
+                        return;
+                    }
+
+                    list.forEach(item => {
+                        const pinIcon = item.pinned ? '<span style="color:var(--danger); margin-right:3px;">📌</span>' : '';
+                        const dateStr = item.regDate ? item.regDate.substring(5, 10) : '';
+
+                        ul.innerHTML += `<li>
+                            <div class="notice-content-area">
+                                <div style="font-size:0.95em; font-weight:bold; margin-bottom:3px; color:var(--text-main);">${pinIcon}${item.title}</div>
+                                <div style="font-size:0.8em; color:#aaa;">${dateStr}</div>
+                                <div style="font-size:0.9em; color:#5D4037; margin-top:2px; white-space:pre-wrap;">${item.content}</div>
+                            </div>
+                            <div class="notice-btn-group">
+                                <button class="btn-edit" onclick="editMode(${item.id})">수정</button>
+                                <button class="btn-del" onclick="deleteNotice(${item.id})">삭제</button>
+                            </div>
+                        </li>`;
+                    });
+                });
+        }
+
+        function loadCurrentSchedule() {
+            const today = new Date().getDay();
+            document.getElementById('display-day-name').innerText = dayNames[today];
+
+            document.querySelectorAll('input[name="days"]').forEach(cb => {
+                cb.checked = (parseInt(cb.value) === today);
+            });
+
+            fetch(`/waiting/schedule/info?storeId=${storeId}&day=${today}`)
+                .then(r => r.status === 200 ? r.json() : null)
+                .then(data => {
+                    const txtSpan = document.getElementById('display-sch-text');
+
+                    if (!data) {
+                        txtSpan.innerText = '설정 없음';
+                        setInputs('10:00', '22:00', '', '', false);
+                    } else if (data.isOpen === 'N') {
+                        txtSpan.innerText = '⛔ 휴무';
+                        setInputs('', '', '', '', true);
+                    } else {
+                        let info = `${data.openTime} ~ ${data.closeTime}`;
+                        if (data.breakStart && data.breakEnd) {
+                            info += ` (브레이크타임 ${data.breakStart}~${data.breakEnd})`;
+                        }
+                        txtSpan.innerText = info;
+                        setInputs(data.openTime, data.closeTime, data.breakStart, data.breakEnd, false);
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('display-sch-text').innerText = '불러오기 실패';
+                });
+        }
+
+        function loadWeeklySchedule() {
+            fetch('/waiting/schedule/all?storeId=' + storeId)
+                .then(r => r.json())
+                .then(list => {
+                    const tbody = document.getElementById('weekly-schedule-list');
+                    tbody.innerHTML = '';
+
+                    if (list.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="3" style="padding:10px; color:#aaa; text-align:center;">설정된 스케줄이 없습니다.</td></tr>';
+                        return;
+                    }
+
+                    const scheduleMap = {};
+                    list.forEach(item => {
+                        scheduleMap[item.dayOfWeek] = item;
+                    });
+
+                    const today = new Date().getDay();
+                    const order = [1, 2, 3, 4, 5, 6, 0];
+
+                    order.forEach(dayIdx => {
+                        const item = scheduleMap[dayIdx];
+                        const dayName = dayNames[dayIdx];
+                        const trStyle = dayIdx === today ? 'background: #E0F2F1; font-weight:bold;' : '';
+                        const dayStyle = dayIdx === 0 ? 'color: red;' : dayIdx === 6 ? 'color: blue;' : '';
+
+                        let statusHtml = '<span style="color:#ccc;">-</span>';
+                        let timeHtml = '-';
+
+                        if (item) {
+                            if (item.isOpen === 'N') {
+                                statusHtml = '<span style="color:#E57373;">⛔ 휴무</span>';
+                            } else {
+                                statusHtml = '<span style="color:#4CAF50;">✅ 영업</span>';
+                                timeHtml = `${item.openTime} ~ ${item.closeTime}`;
+                                if (item.breakStart && item.breakEnd) {
+                                    timeHtml += `<br><span style="font-size:0.85em; color:#888;">(브레이크타임 ${item.breakStart}~${item.breakEnd})</span>`;
+                                }
+                            }
+                        }
+
+                        tbody.innerHTML += `<tr style="${trStyle}">
+                            <td style="${dayStyle}">${dayName}</td>
+                            <td>${statusHtml}</td>
+                            <td>${timeHtml}</td>
+                        </tr>`;
+                    });
+                });
+        }
+
+        function setInputs(open, close, bs, be, isHoliday) {
+            document.getElementById('sch-open').value = open || '10:00';
+            document.getElementById('sch-close').value = close || '22:00';
+            document.getElementById('sch-bs').value = bs || '';
+            document.getElementById('sch-be').value = be || '';
+            document.getElementById('sch-holiday').checked = isHoliday;
+        }
+
+        function toggleNoticeBoard() {
+            const b = document.getElementById('notice-body');
+            const a = document.getElementById('n-arrow');
+            if (b.style.display === 'none') {
+                b.style.display = 'block';
+                a.innerText = '▲';
+            } else {
+                b.style.display = 'none';
+                a.innerText = '▼';
+            }
+        }
+
+        function toggleSchedule() {
+            const b = document.getElementById('schedule-body');
+            const a = document.getElementById('s-arrow');
+            if (b.style.display === 'none') {
+                b.style.display = 'block';
+                a.innerText = '▲';
+                loadCurrentSchedule();
+                loadWeeklySchedule();
+            } else {
+                b.style.display = 'none';
+                a.innerText = '▼';
+            }
+        }
+
+        function toggleLogs() {
+            const b = document.getElementById('log-body');
+            const a = document.getElementById('l-arrow');
+            if (b.style.display === 'none') {
+                b.style.display = 'block';
+                a.innerText = '▲';
+                loadLogs();
+            } else {
+                b.style.display = 'none';
+                a.innerText = '▼';
+            }
+        }
+
+        function loadLogs() {
+            fetch('/waiting/logs?storeId=' + storeId)
+                .then(r => r.json())
+                .then(l => {
+                    const u = document.getElementById('log-list');
+                    u.innerHTML = '';
+
+                    if (l.length === 0) {
+                        u.innerHTML = '<li>활동 기록이 없습니다.</li>';
+                        return;
+                    }
+
+                    l.forEach(i => {
+                        const time = i.regDate ? i.regDate.substring(11, 19) : '-';
+                        let typeColor = '#fff';
+                        if (i.actionType === 'ENTER') typeColor = '#A5D6A7';
+                        else if (i.actionType === 'CALL') typeColor = '#FFB74D';
+                        else if (i.actionType === 'CANCEL') typeColor = '#EF9A9A';
+
+                        u.innerHTML += `<li style="margin-bottom:5px; border-bottom:1px dashed #6D4C41; padding-bottom:5px;">
+                            <span style="color:#BCAAA4; font-size:0.9em;">${time}</span>
+                            <span style="color:${typeColor}; font-weight:bold;"> [${i.actionType}]</span> ${i.logMessage}
+                        </li>`;
+                    });
+                });
+        }
+
+        /* ★ CSRF 헤더 추가 (주석 처리됨) */
+        function saveNotice() {
+            const id = document.getElementById('n-id').value;
+            const title = document.getElementById('n-title').value;
+            const content = document.getElementById('n-content').value;
+            const isPinned = document.getElementById('n-pinned').checked;
+
+            if (!title || !content) return alert('제목과 내용을 입력하세요.');
+
+            const url = id ? '/waiting/notice/update' : '/waiting/notice/create';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ id, storeId, title, content, isPinned })
+            })
+            .then(r => {
+                if (r.ok) {
+                    alert(id ? '수정 완료' : '등록 완료');
+                    cancelEditMode();
+                    loadNotices();
+                } else {
+                    alert('실패');
+                }
+            });
+        }
+
+        /* ★ CSRF 헤더 추가 (주석 처리됨) */
+        function deleteNotice(id) {
+            if (confirm('공지사항을 삭제하시겠습니까?')) {
+                fetch('/waiting/notice/delete/' + id, {
+                    method: 'POST',
+                    headers: {
+                        // [csrfHeader]: csrfToken
+                    }
+                }).then(r => {
+                    if (r.ok) loadNotices();
+                });
+            }
+        }
+
+        function editMode(id) {
+            const item = loadedNotices.find(n => n.id === id);
+            if (!item) return;
+
+            const body = document.getElementById('notice-body');
+            if (body.style.display === 'none') toggleNoticeBoard();
+
+            document.getElementById('n-id').value = item.id;
+            document.getElementById('n-title').value = item.title;
+            document.getElementById('n-content').value = item.content;
+            document.getElementById('n-pinned').checked = item.pinned;
+
+            document.getElementById('btn-save-notice').innerText = '수정';
+            document.getElementById('btn-cancel-edit').style.display = 'inline-block';
+        }
+
+        function cancelEditMode() {
+            document.getElementById('n-id').value = '';
+            document.getElementById('n-title').value = '';
+            document.getElementById('n-content').value = '';
+            document.getElementById('n-pinned').checked = false;
+
+            document.getElementById('btn-save-notice').innerText = '등록';
+            document.getElementById('btn-cancel-edit').style.display = 'none';
+        }
+
+        function checkStatus() {
+            fetch('/waiting/store-info?storeId=' + storeId)
+                .then(r => r.json())
+                .then(s => updateStatusUI(s.waitingOpen));
+        }
+
+        /* ★ CSRF 헤더 추가 (주석 처리됨) */
+        function toggleStatus() {
+            fetch('/waiting/toggle?storeId=' + storeId, {
+                method: 'POST',
+                headers: {
+                    // [csrfHeader]: csrfToken
+                }
+            })
+            .then(r => r.json())
+            .then(o => {
+                updateStatusUI(o);
+                alert(o ? '접수 시작됨' : '접수 마감됨');
+            });
+        }
+
+        function updateStatusUI(o) {
+            const b = document.getElementById('btn-status');
+            if (o) {
+                b.innerText = '접수 중';
+                b.className = 'btn-toggle on';
+            } else {
+                b.innerText = '접수 마감';
+                b.className = 'btn-toggle off';
+            }
+        }
+
+        /* ★ CSRF 헤더 추가 (주석 처리됨) */
+        function sendWsNotice() {
+            const c = document.getElementById('ws-content').value;
+            if (!c) return alert('메시지를 입력하세요');
+
+            fetch('/waiting/notice', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    // [csrfHeader]: csrfToken
+                },
+                body: 'content=' + c
+            }).then(() => {
+                alert('알림 발송 완료');
+                document.getElementById('ws-content').value = '';
+            });
+        }
+
+        /* ★ CSRF 헤더 추가 (주석 처리됨) */
+        function saveSchedule() {
+            const checkboxes = document.querySelectorAll('input[name="days"]:checked');
+            if (checkboxes.length === 0) return alert('요일을 선택하세요');
+
+            const days = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            const openTime = document.getElementById('sch-open').value;
+            const closeTime = document.getElementById('sch-close').value;
+            const breakStart = document.getElementById('sch-bs').value;
+            const breakEnd = document.getElementById('sch-be').value;
+            const isHoliday = document.getElementById('sch-holiday').checked;
+
+            if (!isHoliday && (!openTime || !closeTime)) return alert('영업 시간을 입력하세요');
+
+            const payload = {
+                storeId,
+                days,
+                openTime,
+                closeTime,
+                breakStart,
+                breakEnd,
+                isOpen: isHoliday ? 'N' : 'Y'
+            };
+
+            fetch('/waiting/schedule/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(r => {
+                if (r.ok) {
+                    alert('저장 완료');
+                    loadCurrentSchedule();
+                    loadWeeklySchedule();
+                }
+            });
+        }
+
+        /* ★ CSRF 헤더 추가 (주석 처리됨) */
+        function action(t, i) {
+            let msg = '처리하시겠습니까?';
+            if (t === 'call') msg = '호출하시겠습니까?';
+            else if (t === 'enter') msg = '입장 처리하시겠습니까?';
+            else if (t === 'reject') msg = '거절하시겠습니까?';
+
+            if (confirm(msg)) {
+                fetch('/waiting/' + t + '/' + i, {
+                    method: 'POST',
+                    headers: {
+                        // [csrfHeader]: csrfToken
+                    }
+                }).then(loadList);
+            }
+        }
+    </script>
+</body>
+</html>

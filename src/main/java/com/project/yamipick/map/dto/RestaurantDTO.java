@@ -33,4 +33,6 @@ public class RestaurantDTO {
     private boolean corkageFree;  // 콜키지 프리 여부
     private String priceRange;    // 가격대 (예: "1만원대", "3~5만원")
 
+    
+    private boolean isBookmarked;
 }
