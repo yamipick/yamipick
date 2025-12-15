@@ -8,7 +8,7 @@ import lombok.ToString;
 
 @Getter @Setter
 @ToString
-public class StoreScheduleDTO {
+public class WaitingStoreScheduleDTO {
     private Long storeId;
     private List<Integer> days; // 선택한 요일들 (0:일 ~ 6:토)
     private int dayOfWeek;

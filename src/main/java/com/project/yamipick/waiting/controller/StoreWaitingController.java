@@ -16,7 +16,7 @@ import com.project.yamipick.user.repository.UserRepository;
 import com.project.yamipick.waiting.domain.WaitingLog;
 import com.project.yamipick.waiting.dto.WaitingSessionUserDTO;
 import com.project.yamipick.waiting.dto.StoreInfoDTO;
-import com.project.yamipick.waiting.dto.StoreScheduleDTO;
+import com.project.yamipick.waiting.dto.WaitingStoreScheduleDTO;
 import com.project.yamipick.waiting.dto.WaitingDTO;
 import com.project.yamipick.waiting.dto.WaitingNoticeDTO;
 import com.project.yamipick.waiting.repository.WaitingStoreRepository;
@@ -172,7 +172,7 @@ private Long getStoreId(HttpSession session, Authentication auth) {
     }
 
     @PostMapping("/waiting/schedule/update")
-    public String updateSchedule(@RequestBody StoreScheduleDTO dto,
+    public String updateSchedule(@RequestBody WaitingStoreScheduleDTO dto,
                                   HttpSession session, Authentication auth) {
         Long storeId = getStoreId(session, auth);
         dto.setStoreId(storeId);
@@ -181,7 +181,7 @@ private Long getStoreId(HttpSession session, Authentication auth) {
     }
 
     @GetMapping("/waiting/schedule/all")
-    public List<StoreScheduleDTO> getAllSchedules(
+    public List<WaitingStoreScheduleDTO> getAllSchedules(
             @RequestParam(value = "storeId", required = false) Long storeIdParam,
             HttpSession session, Authentication auth
     ) {
@@ -190,7 +190,7 @@ private Long getStoreId(HttpSession session, Authentication auth) {
     }
 
     @GetMapping("/waiting/schedule/info")
-    public ResponseEntity<StoreScheduleDTO> getScheduleInfo(
+    public ResponseEntity<WaitingStoreScheduleDTO> getScheduleInfo(
             @RequestParam(value = "storeId", required = false) Long storeIdParam,
             @RequestParam("day") int day,
             HttpSession session, Authentication auth
