@@ -4,70 +4,170 @@
 	<meta charset="UTF-8">
 	<title>당일 예약 리스트</title>
 	<link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 	<style>
-        /* YamiPick Admin 공통 스타일 */
+        /* -------------------------------------------------------
+           Warm Choco & Cream Theme Variables (대시보드와 통일)
+        ------------------------------------------------------- */
         :root {
-            --color-primary: #ff3b1a;
-            --color-accent: #6D4C41;
-            --color-border: #eee;
-            --color-shadow: 0 4px 12px rgba(0,0,0,.06);
-            --border-radius: 12px;
+            --choco-dark: #3E2723; /* 텍스트 및 최강조 (Dark Brown) */
+            --choco-main: #6D4C41; /* 메인 초코 브라운 (Primary) */
+            --choco-accent: #A1887F; /* 부드러운 강조색 (Point) */
+            --cream-light: #FFFCF5; /* 배경색 */
+            --cream-card: #fff; /* 카드 내부 배경 */
+            --cream-dark: #EFEBE9; /* 테이블 호버 배경 / 입력 필드 배경 */
+            --border-light: #D7CCC8; /* 연한 코코아색 테두리 */
+            --shadow: 0 4px 15px rgba(109, 76, 65, 0.08); /* 따뜻한 그림자 */
+            --danger-color: #B71C1C; /* 삭제/로그아웃 등 */
+            --success-color: #4CAF50; /* 완료 (시인성 위해 일반적인 성공색 사용) */
+            --radius-l: 18px;
+            --radius-s: 8px;
         }
-        body { font-family: 'Malgun Gothic', 'Dotum', sans-serif; background-color: #f8f8f8; color: #333; }
-        .wrap-container { max-width: 960px; margin: 40px auto; padding: 30px; background: #fff; border-radius: 18px; box-shadow: var(--color-shadow); }
-        h1 { color: var(--color-accent); border-bottom: 3px solid var(--color-primary); padding-bottom: 10px; margin-bottom: 25px; font-weight: 900; }
-        p { margin-bottom: 20px; font-size: 16px; font-weight: 600; color: #777; }
         
-        /* 링크 스타일 */
-        a:not(.btn):not(.link-btn) { color: var(--color-primary); text-decoration: none; font-weight: 600; }
-        a:hover:not(.btn):not(.link-btn) { text-decoration: underline; }
+        /* -------------------------------------------------------
+           기본 스타일 및 레이아웃
+        ------------------------------------------------------- */
+        body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; background-color: var(--cream-light); color: var(--choco-dark); padding-top: 60px; }
+        .wrap-container { 
+            max-width: 1100px; 
+            margin: 40px auto; 
+            padding: 30px; 
+            background: var(--cream-card); 
+            border-radius: var(--radius-l); 
+            box-shadow: var(--shadow); 
+        }
+        
+        h1 { 
+            color: var(--choco-dark); 
+            border-bottom: 3px solid var(--choco-accent); 
+            padding-bottom: 10px; 
+            margin-bottom: 25px; 
+            font-weight: 900; 
+            font-size: 26px;
+        }
+        a { text-decoration: none; color: var(--choco-main); }
+        a:hover { text-decoration: underline; }
 
-        /* 테이블 스타일 */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; }
-        th, td { border: none; border-bottom: 1px solid var(--color-border); padding: 12px 10px; text-align: center; font-size: 14px; }
-        th { background-color: #f5f5f5; color: #555; font-weight: 700; border-bottom: 2px solid #ddd; }
-        tr:nth-child(even) { background-color: #fafafa; }
-        tr:hover { background-color: #fffaf8; }
+        /* -------------------------------------------------------
+           Table Style (reservationList와 통일)
+        ------------------------------------------------------- */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            background: var(--cream-card); 
+            border-radius: var(--radius-s); 
+            overflow: hidden; 
+            border: 1px solid var(--border-light);
+        }
+        th, td { 
+            border: none; 
+            border-bottom: 1px solid var(--border-light); 
+            padding: 12px 10px; 
+            text-align: center; 
+            font-size: 14px; 
+        }
+        th { 
+            background-color: var(--choco-accent); 
+            color: var(--cream-card); 
+            font-weight: 700; 
+        }
+        tr:nth-child(even) { background-color: #fcfcf9; } 
+        tr:hover { background-color: var(--cream-dark); } 
         
-        /* 버튼/폼 스타일 */
-        button[type="submit"] {
-            padding: 6px 10px;
-            border-radius: 6px;
+        /* -------------------------------------------------------
+           Badge Style (상태 표시 - reservationList와 통일)
+        ------------------------------------------------------- */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        /* 대기 (Waiting) */
+        .badge-wait {
+            background-color: #FFF8E1; /* Light Yellow */
+            color: var(--choco-main);
+            border: 1px solid #FFECB3;
+        }
+
+        /* 완료 (Confirmed/Done) */
+        .badge-done {
+            background-color: #E8F5E9; /* Light Green */
+            color: var(--success-color);
+            border: 1px solid #C8E6C9;
+        }
+
+        /* 취소/반려/만료 (Canceled/Rejected/Expired) */
+        .badge-cancel, .badge-reject, .badge-expired, .badge-etc {
+            background-color: var(--cream-dark); /* Grayish */
+            color: var(--choco-accent); 
+            border: 1px solid var(--border-light);
+        }
+        
+        /* -------------------------------------------------------
+           Button & Form Style (reservationList 스타일 기반)
+        ------------------------------------------------------- */
+        /* 공통 버튼 스타일 */
+        .btn {
+            padding: 8px 15px; 
+            border-radius: var(--radius-s);
             cursor: pointer;
             font-weight: 700;
             transition: all .15s ease;
             display: inline-block;
             text-decoration: none;
-            margin-right: 5px;
-            line-height: 1.4;
+            line-height: 1.2;
+            white-space: nowrap;
+            font-size: 14px;
         }
         
-        /* 확정 버튼 */
-        form:first-child button[type="submit"] {
-            background: var(--color-primary);
-            color: #fff;
+        /* 주 버튼 (확정 - Dark Choco) */
+        .btn-primary {
+            background: var(--choco-main);
+            color: var(--cream-light);
             border: none;
         }
-        form:first-child button[type="submit"]:hover {
-            background: #e63617;
+        .btn-primary:hover {
+            background: var(--choco-dark);
         }
         
-        /* 취소/반려 버튼 */
-        form + form button[type="submit"] {
-            background: #f0f0f0;
-            color: #555;
-            border: 1px solid #ddd;
+        /* 반려 버튼 (Secondary 스타일 기반) */
+        .btn-secondary {
+            background: var(--cream-card);
+            color: var(--choco-main);
+            border: 1px solid var(--border-light);
         }
-        form + form button[type="submit"]:hover {
-            background: #e0e0e0;
+        .btn-secondary:hover {
+            background: var(--cream-dark);
+            color: var(--choco-dark);
         }
-        
+
+        /* 입력 필드 스타일 */
         input[type="text"][name="reason"] {
             width: 100px;
             padding: 6px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--border-light);
             border-radius: 4px;
             font-size: 13px;
+            background-color: var(--cream-dark);
+            color: var(--choco-dark);
+            outline: none;
+        }
+        input[type="text"][name="reason"]:focus {
+             border-color: var(--choco-accent);
+        }
+
+        /* 작업 셀 내부 정렬 */
+        .action-cell {
+            white-space: nowrap;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px; /* 버튼 사이 간격 추가 */
         }
         
     </style>
@@ -77,8 +177,10 @@
 
 <div class="wrap-container">
 
-<h1 th:text="${store.name} + ' - 오늘 예약 현황'">당일 예약 리스트</h1>
-<p>조회 날짜: <span th:text="${#temporals.format(date, 'yyyy년 MM월 dd일')}">2025년 12월 11일</span></p>
+<h1 th:text="${store.name} + ' - 오늘 예약 현황'"><i class="fas fa-utensils" style="margin-right: 10px; color: var(--choco-main);"></i> 당일 예약 리스트</h1>
+<p style="margin-bottom: 15px; font-weight: 500; font-size: 1.1em;">
+    조회 날짜: <span th:text="${#temporals.format(date, 'yyyy년 MM월 dd일')}" style="color: var(--choco-main);">2025년 12월 11일</span> (총 <span th:text="${reservations.size()}" style="font-weight: 700; color: var(--danger-color);">0</span>건)
+</p>
 
 <table>
     <thead>
@@ -88,37 +190,53 @@
         <th>인원</th>
         <th>테이블 타입</th>
         <th>상태</th>
-        <th>취소사유</th>
+        <th>취소/반려 사유</th>
         <th>작업</th>
     </tr>
     </thead>
     <tbody>
+    <tr th:if="${#lists.isEmpty(reservations)}">
+        <td colspan="7">해당 날짜에 예약이 없습니다.</td>
+    </tr>
     <tr th:each="r : ${reservations}">
         <td th:text="${r.reserveTime}">18:00</td>
-        <td th:text="${r.nickname}">닉네임</td> <td th:text="${r.peopleCount}">4</td>
+        <td th:text="${r.nickname}">닉네임</td> 
+        <td th:text="${r.peopleCount}">4</td>
         <td th:text="${r.tableTypeName}">룸</td>
-        <td th:text="${r.status}">대기</td>
-        <td th:text="${r.cancelReason}">사유</td>
-        <td style="white-space: nowrap;">
-            <div th:if="${r.status == '대기'}">
+        <td>
+            <span 
+                th:text="${r.status ?: '상태없음'}"
+                th:class="'badge ' + (${r.status} == '대기' ? 'badge-wait' :
+                                  (${r.status} == '완료' ? 'badge-done' :
+                                  (${r.status} == '취소' ? 'badge-cancel' : 
+                                  (${r.status} == '반려' ? 'badge-reject' :
+                                  (${r.status} == '만료' ? 'badge-expired' : 'badge-etc')))))">
+                상태
+            </span>
+        </td>
+        <td th:text="${r.cancelReason ?: '-'}">사유</td>
+        <td class="action-cell">
+            <div th:if="${r.status == '대기'}" style="display:flex; gap: 5px;">
                 <form th:action="@{|/store/reservation/${r.seqReservation}/confirm|}" method="post" style="display:inline;">
-                    <button type="submit">확정</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> 확정</button>
                 </form>
-                <form th:action="@{|/store/reservation/${r.seqReservation}/cancel|}" method="post" style="display:inline; margin-left: 5px;" onsubmit="return confirm('정말 이 예약을 반려하시겠습니까?');">
+                <form th:action="@{|/store/reservation/${r.seqReservation}/cancel|}" method="post" style="display:inline;" onsubmit="return confirm('정말 이 예약을 반려하시겠습니까?');">
                     <input type="text" name="reason" placeholder="반려 사유" required>
-                    <button type="submit">반려</button>
+                    <button type="submit" class="btn btn-secondary"><i class="fas fa-times"></i> 반려</button>
                 </form>
             </div>
             <div th:if="${r.status != '대기'}">
-                처리 완료
+                <span th:text="${r.status}">처리 완료</span>
             </div>
         </td>
     </tr>
     </tbody>
 </table>
 
-<div style="margin-top: 20px;">
-    <a href="/store/dashboard">대시보드로 돌아가기</a>
+<div style="margin-top: 20px; text-align: center;">
+    <a href="/store/dashboard" class="btn btn-secondary">
+        <i class="fas fa-undo"></i> 대시보드로 돌아가기
+    </a>
 </div>
 
 </div>
