@@ -156,7 +156,12 @@ header {
         <ul class="nav-menu" id="navMenu">
             <li class="nav-item"><a href="/map">맛집검색</a></li>
             <li class="nav-item"><a href="/reservation/main">예약</a></li>
-            <li class="nav-item"><a href="/waitingsearch">웨이팅</a></li>
+            <li class="nav-item" sec:authorize="hasRole('USER')">
+            <a href="/waitingsearch">웨이팅</a>
+            </li>
+            <li class="nav-item" sec:authorize="hasRole('STORE')">
+            <a href="/waitingstore">웨이팅 관리</a>
+            </li>
 			<li class="nav-item dropdown">
 			    <a href="/ai/recommend" class="dropdown-toggle">메뉴 추천</a>
 			    <ul class="dropdown-menu">
@@ -166,10 +171,15 @@ header {
 			</li>
             <li class="nav-item"><a href="/review/reviewmain">리뷰게시판</a></li>
             <li class="nav-item"><a href="/notice/list">공지사항</a></li>
-            <li class="nav-item"><a href="/login" style="color:#4E342E;">로그인</a></li>
+            <li class="nav-item" sec:authorize="isAnonymous()">
+            <a href="/login" style="color:#4E342E;">로그인</a>
+            </li>
+             <li class="nav-item" sec:authorize="isAuthenticated()">
+            <a href="/logout" style="color:#4E342E;">로그아웃</a>
+            </li>
+        </ul>
         </ul>
     </header>
-
     <script>
         function toggleMenu() {
             var menu = document.getElementById('navMenu');
