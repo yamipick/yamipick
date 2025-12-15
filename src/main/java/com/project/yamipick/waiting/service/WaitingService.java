@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.project.yamipick.user.entity.User;  //  
 import com.project.yamipick.user.repository.UserRepository;  //  
-import com.project.yamipick.waiting.domain.WaitingStoreSchedule;
 import com.project.yamipick.waiting.domain.Waiting;
 import com.project.yamipick.waiting.domain.WaitingLog;
 import com.project.yamipick.waiting.domain.WaitingNotice;
@@ -20,18 +19,19 @@ import com.project.yamipick.waiting.domain.WaitingOperation;
 import com.project.yamipick.waiting.domain.WaitingStatus;
 import com.project.yamipick.waiting.domain.WaitingStatusType;
 import com.project.yamipick.waiting.domain.WaitingStore;
+import com.project.yamipick.waiting.domain.WaitingStoreSchedule;
 import com.project.yamipick.waiting.dto.StoreInfoDTO;
-import com.project.yamipick.waiting.dto.WaitingStoreScheduleDTO;
 import com.project.yamipick.waiting.dto.WaitingDTO;
 import com.project.yamipick.waiting.dto.WaitingNoticeDTO;
+import com.project.yamipick.waiting.dto.WaitingStoreScheduleDTO;
 import com.project.yamipick.waiting.handler.WaitingWebSocketHandler;
-import com.project.yamipick.waiting.repository.WaitingStoreScheduleRepository;
 import com.project.yamipick.waiting.repository.WaitingLogRepository;
 import com.project.yamipick.waiting.repository.WaitingNoticeRepository;
 import com.project.yamipick.waiting.repository.WaitingOperationRepository;
 import com.project.yamipick.waiting.repository.WaitingRepository;
 import com.project.yamipick.waiting.repository.WaitingStatusRepository;
 import com.project.yamipick.waiting.repository.WaitingStoreRepository;
+import com.project.yamipick.waiting.repository.WaitingStoreScheduleRepository;
 
 import lombok.RequiredArgsConstructor;
 

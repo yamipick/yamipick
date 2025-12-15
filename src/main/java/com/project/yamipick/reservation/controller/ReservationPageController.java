@@ -3,19 +3,14 @@ package com.project.yamipick.reservation.controller;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.security.core.annotation.AuthenticationPrincipal; // ★ 추가
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails; // ✅ 추가
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
+
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.project.yamipick.reservation.auth.CustomUserDetails; // ★ 네가 만든 클래스 import
 import com.project.yamipick.reservation.dto.HolidayDTO;
 import com.project.yamipick.reservation.dto.ReservationDTO;
 import com.project.yamipick.reservation.repository.StoreTableTypeRepository;
@@ -24,210 +19,200 @@ import com.project.yamipick.reservation.service.ReservationService;
 import com.project.yamipick.store.repository.StoreRepository;
 import com.project.yamipick.store.service.StoreService;
 import com.project.yamipick.user.entity.User;
+import com.project.yamipick.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/reservation") // ★ 이거 달면 URL이 "/reservation/..." 로 통일됨
+@RequestMapping("/reservation")
 public class ReservationPageController {
 
-	private final ReservationService reservationService;
-	private final StoreRepository storeRepository;
-	private final StoreTableTypeRepository storeTableTypeRepository;
-	private final StoreService storeService;
-	private final HolidayService holidayService;
+    private final UserRepository userRepository;
+    private final ReservationService reservationService;
+    private final StoreRepository storeRepository;
+    private final StoreTableTypeRepository storeTableTypeRepository;
+    private final StoreService storeService;
+    private final HolidayService holidayService;
 
-	// 예약 메인화면
-	@GetMapping("/main")
-	public String reservationMain(@AuthenticationPrincipal CustomUserDetails principal,
-            Model model) {
-		
-		// 로그인 유저
-        User loginUser = principal.getUser();
+    // ✅ 공통: 로그인 유저 조회 (Security 못 건드리므로 username 기반)
+    private User getLoginUser(UserDetails principal) {
+        if (principal == null) return null;
+        String loginId = principal.getUsername();
+        return userRepository.findByUserId(loginId).orElse(null);
+    }
+
+    // 예약 메인화면
+    @GetMapping("/main")
+    public String reservationMain(@AuthenticationPrincipal UserDetails principal, Model model) {
+
+        User loginUser = getLoginUser(principal);
+        if (loginUser == null) return "redirect:/login";
+
         Long seqUser = loginUser.getSeqUser();
 
-        // ✅ 알림용 예약 리스트 (대기 아닌 것들)
-        List<ReservationDTO> notifications =
-                reservationService.getUserNotificationReservations(seqUser);
-
+        var notifications = reservationService.getUserNotificationReservations(seqUser);
         model.addAttribute("notifications", notifications);
-		
-		return "reservation/reservationMain"; // reservationMain.html
-	}
 
-	// 매장 선택화면
-	@GetMapping("/storeSelect")
-	public String storeSelect(@AuthenticationPrincipal CustomUserDetails loginUser,
-			@org.springframework.web.bind.annotation.RequestParam(value = "keyword", required = false) String keyword,
-			Model model) {
+        return "reservation/reservationMain";
+    }
 
-		if (loginUser == null) {
-			return "redirect:/login";
-		}
+    // 매장 선택화면
+    @GetMapping("/storeSelect")
+    public String storeSelect(@AuthenticationPrincipal UserDetails principal,
+                              @RequestParam(value = "keyword", required = false) String keyword,
+                              Model model) {
 
-		// 키워드 없으면 전체, 있으면 검색
-		var stores = (keyword == null || keyword.isBlank()) ? storeService.getAllStores()
-				: storeService.searchStores(keyword);
+        User loginUser = getLoginUser(principal);
+        if (loginUser == null) return "redirect:/login";
 
-		model.addAttribute("stores", stores);
-		model.addAttribute("keyword", keyword);
+        var stores = (keyword == null || keyword.isBlank())
+                ? storeService.getAllStores()
+                : storeService.searchStores(keyword);
 
-		return "reservation/storeSelect"; // 새로 만들 템플릿
-	}
+        model.addAttribute("stores", stores);
+        model.addAttribute("keyword", keyword);
 
-	// 예약 폼 화면
-	@GetMapping("/form")
-	public String form(@AuthenticationPrincipal CustomUserDetails loginUser, @RequestParam("seqStore") Long seqStore,
-			Model model) {
+        return "reservation/storeSelect";
+    }
 
-		if (loginUser == null) {
-			return "redirect:/login"; // 로그인 안 되어 있으면 로그인 페이지로
-		}
+    // 예약 폼 화면
+    @GetMapping("/form")
+    public String form(@AuthenticationPrincipal UserDetails principal,
+                       @RequestParam("seqStore") Long seqStore,
+                       Model model) {
 
-		// 선택한 매장 정보도 같이 보여주고 싶으면
-		var store = storeService.findById(seqStore)
-				.orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다. seqStore=" + seqStore));
+        User loginUser = getLoginUser(principal);
+        if (loginUser == null) return "redirect:/login";
 
-		ReservationDTO dto = new ReservationDTO();
-		dto.setSeqUser(loginUser.getUser().getSeqUser());
-		dto.setSeqStore(seqStore); // ★ 하드코딩 제거, 선택한 매장으로
-		// dto.setSeqStoreTable는 나중에 폼에서 선택하게 할 거면 여기선 안 채워도 됨
+        var store = storeService.findById(seqStore)
+                .orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다. seqStore=" + seqStore));
 
-		dto.setReserveDate(LocalDate.now());
+        ReservationDTO dto = new ReservationDTO();
+        dto.setSeqUser(loginUser.getSeqUser());   // ✅ 변경
+        dto.setSeqStore(seqStore);
+        dto.setReserveDate(LocalDate.now());
 
-		model.addAttribute("reservation", dto);
-		model.addAttribute("store", store);
+        model.addAttribute("reservation", dto);
+        model.addAttribute("store", store);
 
-		return "reservation/form";
-	}
+        return "reservation/form";
+    }
 
-	@PostMapping("/formok")
-	public String formOk(@AuthenticationPrincipal CustomUserDetails loginUser, ReservationDTO dto) {
+    @PostMapping("/formok")
+    public String formOk(@AuthenticationPrincipal UserDetails principal, ReservationDTO dto) {
 
-		dto.setSeqUser(loginUser.getUser().getSeqUser());
-		reservationService.createReservation(dto);
+        User loginUser = getLoginUser(principal);
+        if (loginUser == null) return "redirect:/login";
 
-		return "redirect:/reservation/complete";
-	}
+        dto.setSeqUser(loginUser.getSeqUser()); // ✅ 변경
+        reservationService.createReservation(dto);
 
-	@GetMapping("/complete")
-	public String complete() {
-		return "reservation/complete";
-	}
+        return "redirect:/reservation/complete";
+    }
 
-	// 내 예약 목록 화면
-	@GetMapping("/list")
-	public String myReservationList(@AuthenticationPrincipal CustomUserDetails loginUser, Model model) {
+    @GetMapping("/complete")
+    public String complete() {
+        return "reservation/complete";
+    }
 
-		if (loginUser == null) {
-			return "redirect:/login"; // 로그인 안 한 상태라면 로그인으로 보냄
-		}
+    // 내 예약 목록 화면
+    @GetMapping("/list")
+    public String myReservationList(@AuthenticationPrincipal UserDetails principal, Model model) {
 
-		Long seqUser = loginUser.getUser().getSeqUser(); // ★ 여기서 진짜 로그인 유저 PK 뽑기
+        User loginUser = getLoginUser(principal);
+        if (loginUser == null) return "redirect:/login";
 
-		var reservations = reservationService.getUserReservations(seqUser);
-		model.addAttribute("reservations", reservations);
+        Long seqUser = loginUser.getSeqUser(); // ✅ 변경
 
-		return "reservation/list"; // templates/reservation/list.html
-	}
+        var reservations = reservationService.getUserReservations(seqUser);
+        model.addAttribute("reservations", reservations);
 
-	// 예약 상세보기
-	@GetMapping("/detail/{seqReservation}")
-	public String detail(@PathVariable("seqReservation") Long seqReservation, Model model) {
+        return "reservation/list";
+    }
 
-		ReservationDTO reservation = reservationService.getReservationDetail(seqReservation);
-		model.addAttribute("reservation", reservation);
+    // 예약 상세보기 (로그인 필요 여부는 니 정책에 따라)
+    @GetMapping("/detail/{seqReservation}")
+    public String detail(@PathVariable("seqReservation") Long seqReservation, Model model) {
 
-		return "reservation/detail";
-	}
+        ReservationDTO reservation = reservationService.getReservationDetail(seqReservation);
+        model.addAttribute("reservation", reservation);
 
-	// 예약 취소
-	@PostMapping("/cancel/{seqReservation}")
-	public String cancel(@PathVariable("seqReservation") Long seqReservation, 
-			@RequestParam("reason") String reason,
-			RedirectAttributes rttr) {
+        return "reservation/detail";
+    }
 
-		reservationService.cancelReservation(seqReservation, reason);
-		rttr.addFlashAttribute("msg", "예약이 취소되었습니다.");
+    // 예약 취소
+    @PostMapping("/cancel/{seqReservation}")
+    public String cancel(@PathVariable("seqReservation") Long seqReservation,
+                         @RequestParam("reason") String reason,
+                         RedirectAttributes rttr) {
 
-		return "redirect:/reservation/list"; // "/reservation/list" 로 가게 됨 (위 @RequestMapping 덕분)
-	}
+        reservationService.cancelReservation(seqReservation, reason);
+        rttr.addFlashAttribute("msg", "예약이 취소되었습니다.");
 
-	/**
-	 * 1단계(form.html)에서 날짜/시간/인원 입력 후 → 2단계(테이블 타입 선택) 화면으로 이동
-	 */
-	@PostMapping("/tableSelect")
-	public String tableSelect(@AuthenticationPrincipal CustomUserDetails loginUser,
-			@RequestParam("seqStore") Long seqStore, @RequestParam("reserveDate") String reserveDateStr,
-			@RequestParam("reserveTime") String reserveTime, @RequestParam("peopleCount") Integer peopleCount,
-			Model model) {
+        return "redirect:/reservation/list";
+    }
 
-		if (loginUser == null) {
-			return "redirect:/login";
-		}
+    @PostMapping("/tableSelect")
+    public String tableSelect(@AuthenticationPrincipal UserDetails principal,
+                              @RequestParam("seqStore") Long seqStore,
+                              @RequestParam("reserveDate") String reserveDateStr,
+                              @RequestParam("reserveTime") String reserveTime,
+                              @RequestParam("peopleCount") Integer peopleCount,
+                              Model model) {
 
-		// 1) 예약 DTO 구성 (2단계 화면에서 그대로 다시 제출할 값들)
-		ReservationDTO dto = new ReservationDTO();
-		dto.setSeqUser(loginUser.getUser().getSeqUser());
-		dto.setSeqStore(seqStore);
-		dto.setReserveDate(LocalDate.parse(reserveDateStr)); // yyyy-MM-dd 형식
-		dto.setReserveTime(reserveTime);
-		dto.setPeopleCount(peopleCount);
+        User loginUser = getLoginUser(principal);
+        if (loginUser == null) return "redirect:/login";
 
-		// 2) 테이블 타입 목록 조회 (지금은 전부 available=true)
-		var tableOptions = reservationService.getAvailableTableTypes(seqStore, dto.getReserveDate(),
-				dto.getReserveTime(), dto.getPeopleCount());
+        ReservationDTO dto = new ReservationDTO();
+        dto.setSeqUser(loginUser.getSeqUser()); // ✅ 변경
+        dto.setSeqStore(seqStore);
+        dto.setReserveDate(LocalDate.parse(reserveDateStr));
+        dto.setReserveTime(reserveTime);
+        dto.setPeopleCount(peopleCount);
 
-		// 3) (선택) 매장 이름 보여주고 싶으면 필요
-		// store 선택 페이지에서 이미 모델에 실어줬으면 그대로 쓰고,
-		// 여기서는 일단 생략해도 로직에는 문제 없음
+        var tableOptions = reservationService.getAvailableTableTypes(
+                seqStore, dto.getReserveDate(), dto.getReserveTime(), dto.getPeopleCount()
+        );
 
-		model.addAttribute("reservation", dto);
-		model.addAttribute("tableOptions", tableOptions);
+        model.addAttribute("reservation", dto);
+        model.addAttribute("tableOptions", tableOptions);
 
-		return "reservation/tableSelect"; // 새로 만들 화면
-	}
+        return "reservation/tableSelect";
+    }
 
-	// 2단계 : 테이블 타입까지 선택 후 실제 예약 생성
-	@PostMapping("/tableSelect/confirm")
-	public String tableSelectConfirm(@ModelAttribute("reservation") ReservationDTO dto) {
+    @PostMapping("/tableSelect/confirm")
+    public String tableSelectConfirm(@ModelAttribute("reservation") ReservationDTO dto) {
+        reservationService.createReservation(dto);
+        return "redirect:/reservation/complete";
+    }
 
-		// 여기서 seqStoreTable 까지 채워진 상태여야 함
-		reservationService.createReservation(dto);
+    @GetMapping("/available-times")
+    @ResponseBody
+    public List<ReservationService.TimeSlotDTO> getAvailableTimes(
+            @RequestParam("seqStore") Long seqStore,
+            @RequestParam("reserveDate") String reserveDate,
+            @RequestParam("peopleCount") Integer peopleCount) {
 
-		return "redirect:/reservation/complete";
-	}
-	
-	@GetMapping("/available-times")
-	@ResponseBody
-	public List<ReservationService.TimeSlotDTO> getAvailableTimes(
-	        @RequestParam("seqStore") Long seqStore,
-	        @RequestParam("reserveDate") String reserveDate,
-	        @RequestParam("peopleCount") Integer peopleCount) {
-		
-	    return reservationService.getAvailableTimeSlots(seqStore, reserveDate, peopleCount);
-	}
-	
-	//휴무일 비활성화
-	@GetMapping("/holiday-dates")
-	@ResponseBody
-	public List<String> getHolidayDates(
-			@RequestParam("seqStore") Long seqStore,
-	        @RequestParam("year") int year,
-	        @RequestParam("month") int month) {
+        return reservationService.getAvailableTimeSlots(seqStore, reserveDate, peopleCount);
+    }
 
-		return reservationService.getHolidayDatesForMonth(seqStore, year, month);
-	}
-	
-	//공휴일API
-	@GetMapping("/public-holidays")
-	@ResponseBody
-	public List<HolidayDTO> publicHolidays(
-	        @RequestParam("year") int year,
-	        @RequestParam("month") int month) {
+    @GetMapping("/holiday-dates")
+    @ResponseBody
+    public List<String> getHolidayDates(
+            @RequestParam("seqStore") Long seqStore,
+            @RequestParam("year") int year,
+            @RequestParam("month") int month) {
 
-	    return holidayService.getHolidays(year, month);
-	}
+        return reservationService.getHolidayDatesForMonth(seqStore, year, month);
+    }
 
+    @GetMapping("/public-holidays")
+    @ResponseBody
+    public List<HolidayDTO> publicHolidays(
+            @RequestParam("year") int year,
+            @RequestParam("month") int month) {
+
+        return holidayService.getHolidays(year, month);
+    }
 }
