@@ -1,0 +1,463 @@
+@charset "UTF-8";
+/* ==========================================================================
+   0. RESET (박스 크기 계산 통일 - 쏠림 방지 핵심)
+   ========================================================================== */
+* {
+    box-sizing: border-box; /* 패딩이 너비를 넓히지 않도록 설정 */
+}
+/* ==========================================================================
+   1. ROOT VARIABLES & THEME (공통 테마)
+   ========================================================================== */
+:root {
+    /* Color Palette: Warm Choco & Cream */
+    --primary: #6D4C41;       /* 진한 갈색 (메인) */
+    --primary-hover: #5D4037;
+    --secondary: #8D6E63;     /* 라떼색 (보조) */
+    --bg-body: #F5F5F5;       /* 배경색 */
+    --text-main: #3E2723;     /* 메인 텍스트 */
+    --text-sub: #8D6E63;      /* 서브 텍스트 */
+    --danger: #E57373;        /* 경고/삭제/취소 */
+    --warning: #FFB74D;       /* 알림/호출 */
+    --border: #D7CCC8;        /* 테두리 */
+    
+    /* Shadows & Effects */
+    --card-shadow: 0 4px 15px rgba(109, 76, 65, 0.08);
+    --btn-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+/* ==========================================================================
+   2. GLOBAL RESET & BASE STYLES
+   ========================================================================== */
+body {
+    font-family: 'Pretendard', sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    margin: 0;
+    padding: 20px;
+    padding-top: 60px; /* 헤더 공간 확보 */
+}
+
+h1, h2, h3 {
+    color: var(--text-main);
+    margin-top: 0;
+    letter-spacing: -0.5px;
+}
+
+h1 { color: var(--primary); font-size: 1.6em; font-weight: 800; margin-bottom: 25px; }
+h2 { margin-bottom: 10px; font-weight: 800; color: var(--primary); }
+
+ul { list-style: none; padding: 0; margin: 0; }
+a { text-decoration: none; color: inherit; }
+
+/* ==========================================================================
+   3. LAYOUT CONTAINERS (수정됨)
+   ========================================================================== */
+.container {
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+    margin: 0 auto;
+    margin-top: 20px;
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* ★ [수정됨] 유저용 모바일 뷰 컨테이너 (너비 520px로 확대) */
+.mobile-container {
+    max-width: 520px;     /* 420px -> 520px 변경 */
+    width: 95%;           /* 화면이 작을 땐 꽉 차게 */
+    margin: 30px auto;    /* 화면 중앙 정렬 */
+    text-align: center;   /* 내부 텍스트 중앙 정렬 */
+    display: block;
+    
+    /* ▼ 이 줄을 추가해서 위아래 길이를 확보하세요 */
+    min-height: 600px;
+}
+
+/* 모바일 컨테이너 안에서도 리스트나 입력창은 왼쪽 정렬 유지 */
+.mobile-container .store-item, 
+.mobile-container .history-list,
+.mobile-container .notice-board,
+.mobile-container .alert-box,
+.mobile-container .search-box input {
+    text-align: left;
+}
+
+/* 매장 관리용 넓은 컨테이너 */
+.container.store-container {
+    width: 95%;
+    max-width: 900px;
+    text-align: left;
+}
+
+/* 단순 카드 박스 */
+.card, .box {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+/* 섹션 박스 (매장 설정 등) */
+.section-box {
+    background: #FAFAFA;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #EFEBE9;
+}
+
+.section-title {
+    margin: 0;
+    font-size: 1.1em;
+    color: var(--text-main);
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   4. COMPONENTS: BUTTONS & INPUTS
+   ========================================================================== */
+button {
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: 0.2s;
+    box-shadow: var(--btn-shadow);
+}
+button:active { transform: scale(0.98); }
+button:hover { transform: translateY(-1px); }
+
+/* Primary Button */
+.btn-primary, .btn-action {
+    background-color: var(--primary);
+    color: white;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 1.1em;
+    font-weight: bold;
+    width: 100%;
+    display: block;
+}
+.btn-primary:disabled { background: #D7CCC8; cursor: not-allowed; box-shadow: none; }
+
+/* Secondary & Danger Buttons */
+.btn-back { display: block; width: 100%; padding: 15px; background: #636e72; color: white; border-radius: 10px; font-weight: bold; font-size: 1.1em; margin-top: 20px; }
+.btn-cancel { background: var(--danger); color: white; padding: 14px; border-radius: 12px; font-weight: bold; flex: 1; } 
+.btn-defer { background: var(--secondary); color: white; padding: 14px; border-radius: 12px; font-weight: bold; flex: 1; }
+.btn-refresh { background: var(--secondary); color: white; padding: 6px 12px; border-radius: 15px; font-size: 0.8em; font-weight: bold; }
+
+/* Grouping */
+.btn-group { display: flex; gap: 10px; margin-top: 20px; }
+
+/* Inputs */
+input[type="text"], 
+input[type="number"], 
+input[type="date"], 
+input[type="time"], 
+textarea {
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    background: #fff;
+    outline: none;
+    box-sizing: border-box;
+    transition: 0.2s;
+    
+    /* ★ [핵심 수정] 너비를 100%로 꽉 채우기 */
+    width: 100%; 
+    margin-bottom: 10px; /* 입력창 간격 확보 */
+}
+
+/* 텍스트 영역 전용 스타일 (높이 확보) */
+textarea {
+    min-height: 100px;  /* 기본 높이를 넉넉하게 */
+    resize: vertical;   /* 세로로만 크기 조절 가능하게 */
+}
+
+input:focus, textarea:focus { 
+    border-color: var(--primary); 
+    box-shadow: 0 0 0 2px rgba(109, 76, 65, 0.1); 
+}
+/* ==========================================================================
+   5. TABLES & BADGES
+   ========================================================================== */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 15px;
+    font-size: 0.9em;
+    border: 1px solid #EFEBE9;
+    border-radius: 10px;
+    overflow: hidden;
+    table-layout: fixed;
+}
+th { background: var(--primary); color: white; padding: 12px 5px; font-weight: normal; }
+td { border-bottom: 1px solid #EFEBE9; padding: 12px 5px; text-align: center; color: #4E342E; word-break: break-all; }
+
+/* Status Badges */
+.badge, .status-badge { padding: 3px 6px; border-radius: 4px; font-size: 0.8em; color: white; display: inline-block; }
+.status-WAITING { background: #EFEBE9; color: var(--primary); border: 1px solid #D7CCC8; }
+.status-CALLED { background: #FFCCBC; color: #D84315; }
+.bg-blue { background-color: #0984e3; }
+.bg-green { background-color: #00b894; }
+.bg-red { background-color: #d63031; }
+
+/* ==========================================================================
+   6. PAGE SPECIFIC: USER WAITING & SEARCH
+   ========================================================================== */
+/* 웨이팅 번호 표시 */
+.waiting-display { margin: 25px 0; padding: 30px 20px; background: #EFEBE9; border-radius: 20px; border: 1px dashed #D7CCC8; }
+.waiting-number { font-size: 4em; font-weight: 900; color: var(--primary); margin: 10px 0; line-height: 1; text-shadow: 2px 2px 0 rgba(0,0,0,0.05); }
+.waiting-label { color: #8D6E63; font-size: 1em; font-weight: bold; }
+.count-text { color: #D84315; font-weight: 800; font-size: 1.3em; }
+
+/* 검색창 */
+.search-box { display: flex; gap: 8px; margin-bottom: 30px; }
+.search-box input { flex: 1; border: 2px solid #EFEBE9; border-radius: 12px; padding: 14px; }
+.search-box button { background: var(--primary); color: white; padding: 14px 20px; border-radius: 12px; font-weight: bold; }
+
+/* 검색 결과 리스트 아이템 */
+.store-item { 
+    background: #fff; border: 1px solid #EFEBE9; padding: 20px; border-radius: 15px; 
+    margin-bottom: 15px; cursor: pointer; transition: all 0.2s ease; 
+    display: flex; justify-content: space-between; align-items: center; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02); text-align: left;
+}
+.store-item:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(109, 76, 65, 0.1); border-color: var(--border); }
+.s-info { display: flex; flex-direction: column; flex: 1; padding-right: 15px; }
+.s-name { font-weight: bold; font-size: 1.15em; color: var(--text-main); margin-bottom: 5px; }
+.s-addr { font-size: 0.9em; color: #8D6E63; margin-bottom: 8px; }
+.s-hours { font-size: 0.9em; color: #5D4037; line-height: 1.6; word-break: keep-all; display: block; margin-top: 5px; }
+.btn-go { background: var(--primary); color: white; padding: 12px 16px; border-radius: 10px; font-size: 0.9em; font-weight: bold; white-space: nowrap; }
+.btn-go.closed { background: #D7CCC8; cursor: not-allowed; box-shadow: none; }
+
+/* ★ [수정됨] 하단 링크 (깨짐 방지 및 정렬) */
+.bottom-link { 
+    margin-top: 30px; 
+    text-align: center; 
+    border-top: 2px dashed #EFEBE9; 
+    padding-top: 20px; 
+    padding-bottom: 10px; /* 여백 확보 */
+}
+.bottom-link a { 
+    text-decoration: none; 
+    color: #8D6E63; 
+    font-weight: bold; 
+    font-size: 0.95em; 
+    /* 플렉스로 아이콘과 글자 높이 정렬 */
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center;
+    gap: 5px; 
+    transition: 0.2s; 
+}
+.bottom-link a:hover { 
+    color: var(--primary); 
+    transform: translateX(3px); 
+}
+
+/* ==========================================================================
+   7. PAGE SPECIFIC: HISTORY & LOGS
+   ========================================================================== */
+.history-list { list-style: none; padding: 0; margin-top: 20px; text-align: left; }
+.h-item { background: #fff; border: 1px solid #eee; padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+.h-info { display: flex; flex-direction: column; gap: 4px; }
+.h-store { font-weight: bold; font-size: 1.1em; color: #2d3436; }
+.h-date { font-size: 0.85em; color: #b2bec3; }
+.h-meta { font-size: 0.9em; color: #636e72; }
+.h-status { font-weight: bold; padding: 6px 10px; border-radius: 8px; font-size: 0.85em; }
+.st-ENTERED { background: #dff9fb; color: #00b894; }
+.st-CANCELED { background: #ffeaa7; color: #d63031; }
+.st-WAITING { background: #74b9ff; color: white; }
+
+/* 매장 통계 박스 */
+.stat-box { display: flex; gap: 10px; margin-bottom: 20px; }
+.stat-item { flex: 1; padding: 15px; border-radius: 8px; text-align: center; color: white; font-weight: bold; }
+.stat-num { font-size: 1.5em; display: block; margin-top: 5px; }
+
+/* ==========================================================================
+   8. PAGE SPECIFIC: STORE MANAGEMENT UI
+   ========================================================================== */
+/* Header Toggle */
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #EFEBE9; }
+.btn-toggle { padding: 8px 16px; font-weight: bold; border-radius: 20px; font-size: 0.9em; }
+.btn-toggle.on { background-color: var(--primary); color: white; }
+.btn-toggle.off { background-color: #BCAAA4; color: white; }
+
+/* Day Selector */
+.day-selector { display: flex; justify-content: center; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+.day-check-input { display: none; }
+.day-label { width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #fff; border: 1px solid var(--border); color: #8D6E63; font-weight: bold; font-size: 0.95em; cursor: pointer; transition: all 0.2s ease; flex-shrink: 0; }
+.day-check-input:checked + .day-label { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(109, 76, 65, 0.3); transform: translateY(-2px); }
+
+/* Time Grid */
+.time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+.time-item { display: flex; flex-direction: column; }
+.time-label { font-size: 0.85em; color: var(--secondary); margin-bottom: 5px; font-weight: bold; }
+
+/* Notice List (Admin) */
+#manager-notice-list li { padding: 15px; border-bottom: 1px solid #EFEBE9; display: flex; justify-content: space-between; align-items: center; gap: 15px; }
+#manager-notice-list li:last-child { border-bottom: none; }
+.notice-content-area { flex: 1; min-width: 0; text-align: left; }
+.notice-btn-group button { padding: 6px 12px; border-radius: 6px; border: none; color: white; font-size: 0.85em; font-weight: bold; margin-left: 2px; }
+.btn-edit { background: var(--secondary); }
+.btn-del { background: var(--danger); }
+
+/* Row Actions */
+.btn-call, .btn-enter, .btn-reject { padding: 6px 10px; border-radius: 6px; border: none; color: white; font-size: 0.85em; font-weight: bold; margin: 2px; cursor: pointer; }
+.btn-call { background: var(--warning); color: #3E2723; }
+.btn-enter { background: var(--primary); }
+.btn-reject { background: #BCAAA4; }
+
+/* ==========================================================================
+   9. ALERTS & ANIMATIONS
+   ========================================================================== */
+#alert-area { display: none; margin-bottom: 20px; }
+.alert-box { padding: 15px; border-radius: 12px; text-align: left; margin-bottom: 10px; animation: slideIn 0.3s; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.alert-urgent { background: #FFEBEE; color: #C62828; border-left: 5px solid #E57373; font-weight: bold; } 
+.alert-info { background: #E0F2F1; color: #00695C; border-left: 5px solid #4DB6AC; } 
+
+@keyframes slideIn { 
+    from { transform: translateY(-10px); opacity: 0; } 
+    to { transform: translateY(0); opacity: 1; } 
+}
+
+/* ==========================================================================
+   10. NOTICE BOARD (USER)
+   ========================================================================== */
+.notice-board { margin: 25px 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
+.latest-notice-box { background-color: #FFF3E0; padding: 20px; border-bottom: 1px dashed #D7CCC8; text-align: left; }
+.latest-title { font-size: 1.1em; font-weight: bold; color: #D84315; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+.notice-header { background: #FAFAFA; color: #8D6E63; padding: 12px 15px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s; gap: 5px; font-size: 0.9em; }
+.notice-list { display: none; list-style: none; text-align: left; }
+.notice-item { padding: 15px; border-bottom: 1px solid #EFEBE9; }
+.notice-item.pinned { background-color: #FFFDE7; }
+.n-badge { color: #D84315; font-size: 0.85em; margin-right: 4px; font-weight: 800; }
+
+/* ==========================================================================
+   ★ [최종 수정] 유저 웨이팅 페이지 - 인원수 입력 디자인 개선
+   ========================================================================== */
+
+/* 1. '총 방문 인원' 라벨을 위쪽 중앙으로 이동 */
+#reg-box label {
+    display: block;             /* 한 줄을 차지하게 설정 */
+    text-align: center;         /* 텍스트 가운데 정렬 */
+    font-size: 1.1em;           /* 글자 크기 적당히 */
+    font-weight: bold;
+    color: var(--text-main);    /* 메인 텍스트 색상 */
+    margin-bottom: 15px;        /* 입력창과의 간격 */
+}
+
+/* 2. 인원수 입력창 (숫자 2 들어가는 곳) */
+#reg-box #size {
+    width: 100px !important;    /* 너비 100px 고정 */
+    text-align: center;         /* 숫자 가운데 정렬 */
+    font-size: 1.8em;           /* 글자 크기 시원하게 */
+    font-weight: 800;
+    color: var(--primary);      /* 진한 갈색 */
+    border: 2px solid var(--border); /* 기본은 연한 테두리 */
+    border-radius: 12px;
+    background: #fff;
+    padding: 10px;
+    margin: 0;                  /* 불필요한 여백 제거 */
+    outline: none;
+    transition: 0.2s;
+}
+
+/* 입력창 선택했을 때 강조 효과 */
+#reg-box #size:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(109, 76, 65, 0.1);
+    transform: translateY(-2px);
+}
+
+/* 3. 입력창과 '명' 글자를 감싸는 박스 정렬 */
+#reg-box div {
+    display: flex;              /* 가로 배치 */
+    justify-content: center;    /* 중앙 정렬 */
+    align-items: center;        /* 수직 중앙 정렬 */
+    gap: 8px;                   /* 입력창과 '명' 사이 간격 */
+}
+
+/* '명' 글자 스타일 */
+#reg-box div span {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+
+/* ==========================================================================
+   ★ [최종_진짜_수정] 헤더 햄버거 버튼 강제 중앙 정렬 + 시각적 보정
+   ========================================================================== */
+   .hamburger {
+       /* 1. 강제 위치 지정(absolute) 해제 -> 헤더의 흐름에 따름 */
+       position: relative !important;
+       top: auto !important;
+       right: auto !important;
+       transform: none !important;
+       
+       /* 2. 그림자 및 붕 뜨는 효과 제거 */
+       box-shadow: none !important; 
+       background: transparent !important;
+       border: none !important;
+       
+       /* 3. 크기 및 정렬 */
+       width: 48px !important;
+       height: 48px !important;
+       padding: 0 !important;
+       margin: 0 !important;
+       
+       /* 아이콘을 버튼 정중앙에 배치 */
+       display: flex !important;
+       align-items: center;
+       justify-content: center; /* 아이콘이 박스 한가운데로 옴 */
+       
+       /* 텍스트 폰트 특성상 위로 쏠리는 것을 보정 */
+       padding-top: 4px !important; 
+       line-height: 1 !important;
+       font-size: 26px !important;
+       z-index: 9999;
+   }
+
+   /* 마우스 올렸을 때 흔들림 방지 */
+   .hamburger:hover {
+       transform: none !important;
+   }
+
+   /* PC에서는 숨김 */
+   @media screen and (min-width: 769px) {
+       .hamburger {
+           display: none !important;
+       }
+   }
+   
+   
+   .n-title { 
+    font-weight: bold; 
+    display: block; 
+    margin-bottom: 5px; 
+    color: var(--text-main); 
+}
+
+.n-content { 
+    font-size: 0.95em; 
+    color: #5D4037; 
+    white-space: pre-wrap; /* 줄바꿈 유지 */
+    line-height: 1.5; 
+}
+
+.n-date { 
+    font-size: 0.8em; 
+    color: #A1887F; 
+    margin-top: 8px; 
+    text-align: right; 
+}

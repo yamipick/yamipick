@@ -1,0 +1,175 @@
+<link rel="stylesheet" th:href="@{/css/common.css}">
+<style>
+    /* -------------------------------------------------------
+       Warm Choco & Cream Theme Variables (list.html과 통일)
+    ------------------------------------------------------- */
+    :root {
+        --choco-dark: #3E2723;
+        --choco-main: #6D4C41;
+        --choco-accent: #A1887F;
+        --cream-light: #FFFCF5;
+        --cream-card: #fff;
+        --cream-dark: #EFEBE9;
+        --border-light: #D7CCC8;
+        --shadow: 0 4px 15px rgba(109, 76, 65, 0.08);
+        --danger-color: #B71C1C;
+        --radius-l: 18px;
+        --radius-s: 8px;
+    }
+
+    /* -------------------------------------------------------
+       기본 스타일 및 레이아웃 (Theme Variables를 사용하도록 정리)
+    ------------------------------------------------------- */
+    body { 
+        font-family: 'Pretendard', 'Malgun Gothic', sans-serif; 
+        background-color: var(--cream-light); 
+        color: var(--choco-dark); 
+        padding-top: 60px; 
+        margin: 0;
+    }
+    .wrap-container { 
+        max-width: 800px;
+        margin: 40px auto; 
+        padding: 30px; 
+        background: var(--cream-card); 
+        border-radius: var(--radius-l); 
+        box-shadow: var(--shadow); 
+    }
+    
+    h1 { 
+        color: var(--choco-dark); 
+        border-bottom: 3px solid var(--choco-accent); 
+        padding-bottom: 10px; 
+        margin-bottom: 25px; 
+        font-weight: 900; 
+        font-size: 26px;
+    }
+    a { 
+        text-decoration: none; 
+        color: var(--choco-main); 
+        transition: color .15s ease; 
+    }
+    a:hover { 
+        color: var(--choco-dark); 
+        text-decoration: underline; 
+    }
+
+    /* -------------------------------------------------------
+       Form & Table Style (Theme Colors 적용)
+    ------------------------------------------------------- */
+    form { display: flex; gap: 10px; margin-bottom: 20px; }
+    input[type="text"] {
+        padding: 8px 10px; 
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-s); /* radius-s 사용 */
+        background-color: var(--cream-dark);
+        color: var(--choco-dark);
+        font-size: 14px;
+        flex-grow: 1;
+        box-sizing: border-box;
+    }
+    
+    /* 검색 버튼 (Primary Action) - list.html의 a.button과 통일된 디자인 */
+    button[type="submit"] {
+        padding: 8px 15px; 
+        border-radius: var(--radius-s);
+        cursor: pointer;
+        font-weight: 700;
+        background: var(--choco-accent); 
+        color: var(--cream-card);
+        border: none;
+        font-size: 14px;
+        transition: background .15s ease;
+    }
+    button[type="submit"]:hover {
+        background: var(--choco-main);
+    }
+
+    table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        margin-top: 20px; 
+        background: var(--cream-card); 
+        border-radius: var(--radius-s); 
+        overflow: hidden; 
+        border: 1px solid var(--border-light);
+    }
+    th, td { 
+        border: none; 
+        border-bottom: 1px solid var(--border-light); /* list.html의 border 스타일 */
+        padding: 12px 10px; /* list.html의 padding */
+        text-align: center; 
+        font-size: 14px; 
+        vertical-align: middle;
+    }
+    th { 
+        background-color: var(--choco-accent); /* list.html의 테이블 헤더 배경색 */
+        color: var(--cream-card); /* list.html의 테이블 헤더 폰트색 */
+        font-weight: 700; 
+    }
+    /* list.html의 테이블 zebra & hover 효과 */
+    tr:nth-child(even) { background-color: #fcfcf9; } 
+    tr:hover { background-color: var(--cream-dark); } 
+    
+    /* 테이블 내부 예약하기 버튼 (Primary Action) - list.html의 td a.btn-sm과 통일 */
+    td a {
+        padding: 6px 10px;
+        border-radius: 4px;
+        background: var(--choco-main); 
+        color: var(--cream-card);
+        font-weight: 600; /* list.html과 통일 */
+        font-size: 13px; /* list.html과 통일 */
+        display: inline-block;
+        transition: background .15s ease;
+        text-decoration: none;
+    }
+    td a:hover {
+        background: var(--choco-dark); /* list.html과 통일 */
+        text-decoration: none;
+    }
+</style>
+<body>
+
+    <div th:replace="~{common/header :: headerFragment}"></div>
+
+<div class="wrap-container">
+    <h1>예약할 매장을 선택하세요</h1>
+    <form th:action="@{/reservation/storeSelect}" method="get">
+        <input type="text" name="keyword" placeholder="매장 이름 검색"
+               th:value="${keyword}">
+        <button type="submit">검색</button>
+    </form>
+    
+    <hr style="border: none; border-top: 1px dashed var(--border-light); margin: 20px 0;">
+
+    <table>
+        <thead>
+        <tr>
+            <th>매장명</th>
+            <th>주소</th>
+            <th>예약</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(stores)}">
+            <td colspan="3">등록된 매장이 없습니다.</td>
+        </tr>
+        <tr th:each="s : ${stores}">
+            <td th:text="${s.name}">매장이름</td>
+            <td th:text="${s.address}">주소</td>
+            <td>
+                <a th:href="@{|/reservation/form?seqStore=${s.seqStore}|}">
+                    예약하기
+                </a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    
+    <a th:href="@{/reservation/main}" style="display: block; text-align: right; margin-top: 20px;">
+        ← 예약 메인으로
+    </a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>내 활동 | YamiPick</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/chatbot.css}">
+
+    <style>
+        body {
+            font-family: "Noto Sans KR", sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-top: 70px;
+        }
+
+        .container {
+            width: 1200px;
+            margin: 40px auto;
+            display: flex;
+            gap: 20px;
+        }
+
+        /* 메인/사이드 */
+        .main { width: 75%; }
+        .side { width: 25%; }
+        
+        .section h2 { margin-top: 0; margin-bottom: 15px; font-size: 20px; }
+
+        /* 박스 */
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #e3d8c8;
+            margin-bottom: 25px;
+        }
+
+        /* 탭 */
+        .tabs {
+            display: flex;
+            gap: 25px;
+            border-bottom: 2px solid #E5D8C8;
+            padding-bottom: 12px;
+            margin-bottom: 30px;
+        }
+
+        .tabs a {
+            font-size: 17px;
+            color: #6A5847;
+            padding: 6px 4px;
+            text-decoration: none;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .tabs a.active {
+            color: #4A2D1A;
+            font-weight: 700;
+        }
+
+        .tabs a.active::after {
+            content: "";
+            position: absolute;
+            bottom: -14px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #4A2D1A;
+            border-radius: 3px;
+        }
+
+        /* 테이블 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th {
+            background: #F4E9D3;
+            color: #4A2D1A;
+            font-weight: 600;
+            padding: 14px;
+            border-bottom: 2px solid #E3D8C8;
+        }
+
+        table td {
+            padding: 14px;
+            border-bottom: 1px solid #EDE3D6;
+            color: #4A2D1A;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 35px 0;
+            color: #7a6a58;
+            font-size: 15px;
+        }
+        
+        /* 리뷰 쓰기 버튼 */
+        .activity-write-wrap {
+            margin-top: -10px;    /* 박스와 살짝 붙게 조정 */
+            margin-bottom: 25px; /* 아래 여백 */
+            text-align: right;
+        }
+
+        .activity-write-btn {
+            padding: 7.5px 10.5px;
+            border-radius: 6px;
+            border: none;
+            background: #4A2D1A;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .activity-write-btn:hover {
+            background: #3A2315;
+        }
+
+        /* 사이드 공통 */
+        .list-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .popular-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        
+        .tab-btn {
+            padding: 6px 12px;
+            border: 1px solid #4A2D1A;
+            background: #F4E9D3;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .tab-btn.active {
+            background: #4A2D1A;
+            color: white;
+        }
+        
+        table th:nth-child(1), table td:nth-child(1) {
+		    width: 60%;
+		}
+		table th:nth-child(2), table td:nth-child(2) {
+			text-align: center;
+		    width: 25%;
+		}
+		table th:nth-child(3), table td:nth-child(3) {
+		    width: 15%;
+		    text-align: right;
+		}
+        
+    </style>
+</head>
+<body>
+
+	<div th:replace="common/header :: headerFragment"></div>
+
+	<div class="container">
+	
+	    <!-- 메인 영역: 내 활동 -->
+	    <div class="main">
+	        <div class="section">
+	
+	            <!-- 탭 -->
+	            <div class="tabs">
+	                <a th:href="@{/review/activity(tab='review')}"
+	                   th:classappend="${tab=='review'} ? 'active'">작성글</a>
+	
+	                <a th:href="@{/review/activity(tab='comment')}"
+	                   th:classappend="${tab=='comment'} ? 'active'">작성댓글</a>
+	
+	                <a th:href="@{/review/activity(tab='favorite')}"
+	                   th:classappend="${tab=='favorite'} ? 'active'">좋아요한 글</a>
+	
+	                <a th:href="@{/review/activity(tab='scrap')}"
+	                   th:classappend="${tab=='scrap'} ? 'active'">즐겨찾기한 글</a>
+	            </div>
+	
+	            <!-- 작성글 -->
+	            <div th:if="${tab=='review'}">
+	                <table>
+	                    <thead>
+	                    <tr>
+	                        <th>제목</th>
+	                        <th>작성일</th>
+	                        <th>조회수</th>
+	                    </tr>
+	                    </thead>
+	                    <tbody>
+	                    <tr th:each="r : ${list}">
+	                        <td>
+							  <a th:href="@{/review/reviewview(seqReview=${r.seqReview})}"
+							     th:text="${r.title}"></a>
+							</td>
+	                        <td th:text="${#dates.format(r.regdate, 'yyyy-MM-dd')}"></td>
+	                        <td th:text="${r.readCount}"></td>
+	                    </tr>
+	                    <tr th:if="${#lists.isEmpty(list)}">
+	                        <td colspan="3" class="empty">작성한 글이 없습니다.</td>
+	                    </tr>
+	                    </tbody>
+	                </table>
+	            </div>
+	
+	            <!-- 댓글 -->
+	            <div th:if="${tab=='comment'}">
+	                <table>
+	                    <thead>
+	                    <tr>
+	                        <th>내용</th>
+	                        <th>작성일</th>
+	                    </tr>
+	                    </thead>
+	                    <tbody>
+	                    <tr th:each="c : ${list}">
+						    <td>
+						        <div th:text="${c.content}"></div>
+						
+						        <!-- 리뷰 정보 -->
+						        <div style="margin-top:6px; font-size:13px; color:#7a6a58;">
+						            <span th:if="${c.reviewState == 'ACTIVE'}">
+						                └
+						                <a th:href="@{/review/reviewview(seqReview=${c.seqReview})}"
+						                   th:text="${c.reviewTitle}"></a>
+						            </span>
+						
+						            <span th:if="${c.reviewState != 'ACTIVE'}">
+						                └ 삭제된 리뷰
+						            </span>
+						        </div>
+						    </td>
+						
+						    <td th:text="${c.regdate}"></td>
+						</tr>
+	                    <tr th:if="${#lists.isEmpty(list)}">
+	                        <td colspan="2" class="empty">작성한 댓글이 없습니다.</td>
+	                    </tr>
+	                    </tbody>
+	                </table>
+	            </div>
+	
+	            <!-- 좋아요 -->
+	            <div th:if="${tab=='favorite'}">
+				    <table>
+				        <thead>
+				        <tr>
+				            <th>제목</th>
+				            <th>작성일</th>
+				        </tr>
+				        </thead>
+				        <tbody>
+				        <tr th:each="r : ${list}">
+				            <td>
+				                <a th:href="@{/review/reviewview(seqReview=${r.seqReview})}"
+				                   th:text="${r.title}"></a>
+				            </td>
+				            <td th:text="${r.displayDate}"></td>
+				        </tr>
+				
+				        <tr th:if="${#lists.isEmpty(list)}">
+				            <td colspan="2" class="empty">좋아요한 리뷰가 없습니다.</td>
+				        </tr>
+				        </tbody>
+				    </table>
+				</div>
+	
+	            <!-- 스크랩 -->
+	            <div th:if="${tab=='scrap'}">
+	                <table>
+	                    <thead>
+	                    <tr>
+	                        <th>제목</th>
+	                        <th>작성일</th>
+	                    </tr>
+	                    </thead>
+	                    <tbody>
+	                    <tr th:each="s : ${list}">
+							<td>
+				                <a th:href="@{/review/reviewview(seqReview=${s.seqReview})}"
+				                   th:text="${s.title}"></a>
+				            </td>
+	                        <td th:text="${s.displayDate}"></td>
+	                    </tr>
+	                    <tr th:if="${#lists.isEmpty(list)}">
+	                        <td colspan="2" class="empty">스크랩한 리뷰가 없습니다.</td>
+	                    </tr>
+	                    </tbody>
+	                </table>
+	            </div>
+	
+	        </div>
+	
+	        <!-- 🔻 메인 박스 바깥, 아래쪽 오른쪽 정렬 버튼 -->
+	        <div class="activity-write-wrap">
+	            <button type="button" class="activity-write-btn"
+	                    onclick="location.href='/review/reviewadd'">
+	                리뷰 쓰기
+	            </button>
+	        </div>
+	    </div>
+	
+	    <!-- 사이드바 -->
+	    <div class="side">
+	    
+	        <!-- 추천 게시글 -->
+	        <div class="section">
+                <h2>⭐ 추천 게시글</h2>
+                
+                <div class="list-item" th:each="r : ${recommendReviews}"><a th:href="@{/review/reviewview(seqReview=${r.seqReview})}" th:text="${r.title}">제목</a></div>
+            </div>
+	
+	        <!-- 최근 본 리뷰 -->
+	        <div class="section">
+			    <h2>최근 본 리뷰</h2>
+			    <div class="list-item"
+			         th:each="r : ${recentReviews}">
+			        <a th:href="@{/review/reviewview(seqReview=${r.seqReview})}"
+			           th:text="${r.title}">제목</a>
+			    </div>
+			</div>
+	
+	        <!-- 인기 리뷰 (일간/주간 탭) -->
+			<div class="section">
+			
+				<!-- 탭 버튼 -->
+				<div class="popular-tabs">
+			        <button class="tab-btn active" onclick="showPopular('daily', event)">일간</button>
+			        <button class="tab-btn" onclick="showPopular('weekly', event)">주간</button>
+			    </div>
+			
+			    <!-- 일간 인기 리뷰 -->
+				<div id="popular-daily" class="popular-list">
+					<div class="list-item"
+						th:each="r : ${popularDaily}">
+						🔥
+						<a th:href="@{/review/reviewview(seqReview=${r.seqReview})}"
+						th:text="${r.title}">제목</a>
+					</div>
+				</div>
+			
+				<!-- 주간 인기 리뷰 -->
+			 	<div id="popular-weekly" class="popular-list" style="display:none;">
+					<div class="list-item"
+						th:each="r : ${popularWeekly}">
+						📈
+						<a th:href="@{/review/reviewview(seqReview=${r.seqReview})}"
+						th:text="${r.title}">제목</a>
+					</div>
+				</div>
+			</div>
+	
+	    </div>
+	
+	</div>
+
+<script>
+    function showPopular(type) {
+        document.getElementById("popular-daily").style.display = (type === 'daily') ? 'block' : 'none';
+        document.getElementById("popular-weekly").style.display = (type === 'weekly') ? 'block' : 'none';
+
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    // 탭 뒤로가기 히스토리 제거
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".tabs a").forEach(a => {
+            a.addEventListener("click", function(e) {
+                e.preventDefault();
+                history.replaceState({}, '', this.href);
+                window.location.href = this.href;
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

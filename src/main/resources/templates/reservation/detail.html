@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>예약 상세</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+<style>
+    /* -------------------------------------------------------
+       Warm Choco & Cream Theme Variables (list.html과 통일)
+    ------------------------------------------------------- */
+    :root {
+        --choco-dark: #3E2723;
+        --choco-main: #6D4C41;
+        --choco-accent: #A1887F;
+        --cream-light: #FFFCF5;
+        --cream-card: #fff;
+        --cream-dark: #EFEBE9;
+        --border-light: #D7CCC8;
+        --shadow: 0 4px 15px rgba(109, 76, 65, 0.08);
+        --danger-color: #B71C1C;
+        --radius-l: 18px;
+        --radius-s: 8px;
+    }
+
+    /* -------------------------------------------------------
+       기본 스타일 및 레이아웃 (Theme Variables를 사용하도록 정리)
+    ------------------------------------------------------- */
+    body { 
+        font-family: 'Pretendard', 'Malgun Gothic', sans-serif; 
+        background-color: var(--cream-light); 
+        color: var(--choco-dark); 
+        padding-top: 60px; 
+        margin: 0;
+    }
+    .wrap-container { 
+        max-width: 800px;
+        margin: 40px auto; 
+        padding: 30px; 
+        background: var(--cream-card); 
+        border-radius: var(--radius-l); 
+        box-shadow: var(--shadow); 
+    }
+    
+    h1 { 
+        color: var(--choco-dark); 
+        border-bottom: 3px solid var(--choco-accent); 
+        padding-bottom: 10px; 
+        margin-bottom: 25px; 
+        font-weight: 900; 
+        font-size: 26px;
+    }
+    a { 
+        text-decoration: none; 
+        color: var(--choco-main); 
+        transition: color .15s ease; 
+    }
+    a:hover { 
+        color: var(--choco-dark); 
+        text-decoration: underline; 
+    }
+
+    /* -------------------------------------------------------
+       Table Style (list.html 기준 통일)
+    ------------------------------------------------------- */
+    table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        margin-top: 10px; 
+        background: var(--cream-card); 
+        border-radius: var(--radius-s); 
+        overflow: hidden; 
+        /* list.html 기준으로 변경: 전체 border 적용 */
+        border: 1px solid var(--border-light);
+    }
+    th, td { 
+        /* list.html 기준으로 변경: border-bottom만 사용 */
+        border: none; 
+        border-bottom: 1px solid var(--border-light); 
+        padding: 12px 10px; /* list.html의 padding */
+        font-size: 14px; 
+        vertical-align: middle;
+        text-align: left; /* 상세 테이블은 좌측 정렬 유지 */
+    }
+    /* 마지막 행의 border-bottom 제거 */
+    tr:last-child th, tr:last-child td {
+        border-bottom: none;
+    }
+    th { 
+        width: 30%;
+        /* list.html의 테이블 헤더 배경색으로 변경 */
+        background-color: var(--choco-accent); 
+        /* list.html의 테이블 헤더 글자색으로 변경 */
+        color: var(--cream-card); 
+        font-weight: 700;
+        text-align: left;
+    }
+    td {
+        width: 70%;
+        background-color: var(--cream-card);
+    }
+    /* list.html의 테이블 zebra & hover 효과 추가 */
+    tr:nth-child(even) { background-color: #fcfcf9; }
+    tr:hover { background-color: var(--cream-dark); }
+    
+    /* -------------------------------------------------------
+       Form Style
+    ------------------------------------------------------- */
+    textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-s);
+        background-color: var(--cream-dark); /* 입력 필드 배경색 */
+        color: var(--choco-dark);
+        margin-top: 5px;
+    }
+    
+    /* -------------------------------------------------------
+       Button Style (Cancel Button - Danger)
+    ------------------------------------------------------- */
+    button[type="submit"] {
+        padding: 10px 20px; 
+        border-radius: var(--radius-s);
+        cursor: pointer;
+        font-weight: 700;
+        transition: all .15s ease;
+        display: inline-block;
+        line-height: 1.2;
+        font-size: 16px;
+        border: none;
+        margin-top: 15px;
+    }
+    
+    /* 예약 취소 버튼 (Danger Color) */
+    button[type="submit"] { 
+        background: var(--danger-color);
+        color: var(--cream-card);
+    }
+    button[type="submit"]:hover {
+        background: #800000;
+    }
+</style>
+</head>
+<body>
+
+    <div th:replace="~{common/header :: headerFragment}"></div>
+
+<div class="wrap-container">
+    <h1>예약 상세</h1>
+    <a th:href="@{/reservation/list}" style="margin-bottom: 15px; display: block;">
+        ← 내 예약 목록으로
+    </a>
+
+    <table>
+        <tr>
+            <th>예약일</th>
+            <td th:text="${reservation.reserveDate}"></td>
+        </tr>
+        <tr>
+            <th>시간</th>
+            <td th:text="${reservation.reserveTime}"></td>
+        </tr>
+        <tr>
+            <th>매장</th>
+            <td th:text="${reservation.storeName}"></td>
+        </tr>
+        <tr>
+            <th>테이블 타입</th>
+            <td th:text="${reservation.tableTypeName}"></td>
+        </tr>
+        <tr>
+            <th>인원</th>
+            <td th:text="${reservation.peopleCount}"></td>
+        </tr>
+        <tr>
+            <th>예약 상태</th>
+            <td th:text="${reservation.status}"></td>
+        </tr>
+        
+        <tr th:if="${reservation.status == '취소' or reservation.status == '반려'}">
+            <th>취소 사유</th>
+            <td th:text="${reservation.cancelReason != null ? reservation.cancelReason : '사유 없음'}"></td>
+        </tr>
+    </table>
+
+    <hr style="border: none; border-top: 1px dashed var(--border-light); margin: 25px 0;"/>
+
+    <form th:if="${reservation.status == '대기'}"
+          th:action="@{/reservation/cancel/{seqReservation}(seqReservation=${reservation.seqReservation})}"
+          method="post"
+          onsubmit="return confirm('정말 취소하시겠습니까?');">
+
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <label for="cancelReason" style="font-weight: bold;">취소 사유</label><br>
+            <textarea id="cancelReason"
+                      name="reason"
+                      rows="3"
+                      cols="40"
+                      placeholder="예: 일정 변경으로 인해 방문이 어렵습니다."
+                      required></textarea>
+        </div>
+
+        <button type="submit">예약 취소</button>
+    </form>
+
+    <div th:if="${reservation.status == '취소'}" style="color: var(--danger-color); margin-top: 15px; font-weight: 600;">
+        이 예약은 이미 취소된 상태입니다.
+    </div>
+
+    <div th:if="${reservation.status == '완료'}" style="color: var(--choco-main); margin-top: 15px; font-weight: 600;">
+        이미 이용이 완료된 예약입니다.
+    </div>
+    <div th:if="${reservation.status == '노쇼'}" style="color: var(--choco-dark); margin-top: 15px; font-weight: 600;">
+        노쇼 처리된 예약입니다.
+    </div>
+</div>
+</body>
+</html>

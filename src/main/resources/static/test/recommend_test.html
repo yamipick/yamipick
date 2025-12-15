@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <title>태그 기반 메뉴 추천 테스트</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; }
+        .tag-btn {
+            display: inline-block;
+            padding: 8px 14px;
+            margin: 4px;
+            border-radius: 20px;
+            border: 1px solid #aaa;
+            cursor: pointer;
+            background: #fff;
+            transition: 0.2s;
+        }
+        .tag-btn.selected {
+            background: #ffe5d0;
+            border-color: #ff8a42;
+        }
+        button {
+            margin-top: 20px; padding: 10px 20px; cursor: pointer;
+        }
+        #result {
+            margin-top: 25px; padding: 15px;
+            background: #f5f5f5; border-radius: 6px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+
+<h2>태그 기반 메뉴 추천 테스트</h2>
+
+<h3>맛 태그 선택 (다중 선택 가능)</h3>
+
+<div id="tagContainer">
+
+    <div class="tag-btn" onclick="toggleTag(this, 'spicy')">🌶 spicy</div>
+    <div class="tag-btn" onclick="toggleTag(this, 'sweet')">🍯 sweet</div>
+    <div class="tag-btn" onclick="toggleTag(this, 'salty')">🧂 salty</div>
+    <div class="tag-btn" onclick="toggleTag(this, 'meat')">🥩 meat</div>
+    <div class="tag-btn" onclick="toggleTag(this, 'seafood')">🦐 seafood</div>
+    <div class="tag-btn" onclick="toggleTag(this, 'soup')">🍲 soup</div>
+    <div class="tag-btn" onclick="toggleTag(this, 'noodle')">🍜 noodle</div>
+    <div class="tag-btn" onclick="toggleTag(this, 'oily')">🍟 oily</div>
+    <div class="tag-btn" onclick="toggleTag(this, 'healthy')">🥗 healthy</div>
+
+</div>
+
+<br/>
+<button onclick="sendRecommend()">추천 요청 보내기</button>
+
+<h3>API 결과:</h3>
+<div id="result"></div>
+
+<script>
+    let selectedTags = [];
+
+    function toggleTag(element, tag) {
+        if (selectedTags.includes(tag)) {
+            selectedTags = selectedTags.filter(t => t !== tag);
+            element.classList.remove("selected");
+        } else {
+            selectedTags.push(tag);
+            element.classList.add("selected");
+        }
+        console.log("선택된 태그:", selectedTags);
+    }
+
+    function sendRecommend() {
+        const body = {
+            tags: selectedTags,
+            userInput: null,
+            seqSession: null
+        };
+
+        fetch("/api/recommend/menu", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(body)
+        })
+        .then(res => res.json())
+        .then(data => {
+			let html = "";
+
+			data.forEach((item, index) => {
+			    html += `<div>
+			        <h4>추천 ${index + 1}: ${item.menuName}</h4>
+			        <p><strong>매칭 태그:</strong> ${item.matchedTags.join(", ")}</p>
+			        <p><strong>점수:</strong> ${item.score}</p>
+			        ${item.reason ? `<p style="color:#d14;"><strong>추천 이유:</strong> ${item.reason}</p>` : ""}
+			        <hr>
+			    </div>`;
+			});
+
+			document.getElementById("result").innerHTML = html;
+        })
+        .catch(err => {
+            document.getElementById("result").textContent = "오류 발생: " + err;
+        });
+    }
+</script>
+
+</body>
+</html>

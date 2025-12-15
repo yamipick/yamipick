@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>매장 웨이팅 기록</title>
+        <link rel="stylesheet" th:href="@{/css/waiting.css}">
+                      <link rel="stylesheet" th:href="@{/css/common.css}">
+        
+
+</head>
+<body>
+    <div th:replace="~{common/header :: headerFragment}"></div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>📅 일별 운영 기록</h2>
+            <button onclick="location.href='/waitingstore'" style="padding:8px 15px; cursor:pointer; background:#fff; border:1px solid #ddd; border-radius:5px;">🏠 매장 관리로</button>
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <label>날짜 선택: </label>
+            <input type="date" id="date-picker" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            <button onclick="loadDailyLog()" style="padding: 8px 15px; background: #2d3436; color: white; border: none; border-radius: 4px; cursor: pointer;">조회</button>
+        </div>
+
+        <div class="stat-box">
+            <div class="stat-item bg-green">입장 완료 <span id="s-enter" class="stat-num">0</span></div>
+            <div class="stat-item bg-blue">호출 횟수 <span id="s-call" class="stat-num">0</span></div>
+            <div class="stat-item bg-red">취소/거절 <span id="s-cancel" class="stat-num">0</span></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>📜 상세 활동 로그</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th width="20%">시간</th>
+                    <th width="10%">인원</th> <th width="15%">구분</th>
+                    <th>내용</th>
+                </tr>
+            </thead>
+            <tbody id="log-body">
+                <tr><td colspan="4" style="text-align:center;">날짜를 선택하고 조회하세요.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+		<script th:inline="javascript">
+		    // ★ [핵심] 컨트롤러에서 넘겨준 storeId 받기
+		    const myStoreId = /*[[${storeId}]]*/ null;
+		    document.getElementById('date-picker').valueAsDate = new Date();
+
+		    window.onload = function() {
+		        if (!myStoreId) {
+		            alert("가게 권한이 없거나 로그인이 필요합니다.");
+		            location.href = "/login";
+		            return;
+		        }
+		        loadDailyLog();
+		    };
+        function loadDailyLog() {
+            if (!myStoreId) return;
+
+            const date = document.getElementById('date-picker').value;
+
+            // API 호출 시 myStoreId 사용 (하드코딩 제거됨)
+            fetch(`/waiting/logs/daily?storeId=${myStoreId}&date=${date}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('s-enter').innerText = data.stats.enters;
+                    document.getElementById('s-call').innerText = data.stats.calls;
+                    document.getElementById('s-cancel').innerText = data.stats.cancels;
+
+                    const tbody = document.getElementById('log-body');
+                    tbody.innerHTML = "";
+                    
+                    if (data.logs.length === 0) {
+                        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; padding: 20px;'>기록이 없습니다.</td></tr>";
+                        return;
+                    }
+
+                    data.logs.forEach(log => {
+                        let badgeColor = '#b2bec3';
+                        if(log.actionType === 'ENTER') badgeColor = '#00b894';
+                        else if(log.actionType === 'CALL') badgeColor = '#0984e3';
+                        else if(log.actionType === 'CANCEL') badgeColor = '#d63031';
+                        else if(log.actionType === 'TOGGLE') badgeColor = '#fdcb6e';
+                        
+                        const timeStr = log.regDate ? log.regDate.replace('T', ' ').substring(11, 19) : '-';
+                        const sizeStr = log.teamSize > 0 ? `<b>${log.teamSize}</b>명` : '<span style="color:#ccc">-</span>';
+
+                        const row = `
+                            <tr>
+                                <td>${timeStr}</td>
+                                <td>${sizeStr}</td>
+                                <td><span class="badge" style="background-color: ${badgeColor}">${log.actionType}</span></td>
+                                <td>${log.logMessage}</td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    });
+                })
+                .catch(err => {
+                    console.error("로그 로딩 실패:", err);
+                    alert("로그를 불러오는데 실패했습니다.");
+                });
+        }
+    </script>
+</body>
+</html>

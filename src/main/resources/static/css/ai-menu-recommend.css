@@ -1,0 +1,253 @@
+/* ===========================
+   전체 레이아웃
+=========================== */
+body {
+    background: #faf5ee; /* 크림톤 */
+    margin: 0;
+    font-family: "Noto Sans KR", sans-serif;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+
+
+/* ===========================
+   태그 버튼 UI
+=========================== */
+
+
+.tag-btn:hover {
+    background: #f3ebe1;
+}
+
+
+
+/* ===========================
+   추천 메뉴 타이틀
+=========================== */
+.result-title {
+    font-size: 22px;
+    margin-bottom: 25px;
+    margin-top: 20px;
+    color: #4a332a;
+    font-weight: 700;
+}
+
+/* ===========================
+   메뉴 카드 레이아웃
+=========================== */
+.menu-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 30px;
+    justify-content: center;
+    padding: 10px;
+}
+
+/* ===========================
+   메뉴 카드
+=========================== */
+.menu-card {
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    padding-bottom: 18px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    transition: 0.25s;
+}
+
+.menu-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+}
+
+.menu-card img {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+    background: #f2f2f2;
+}
+
+/* ===========================
+   메뉴 정보
+=========================== */
+.menu-info {
+    padding: 12px 18px 0 18px;
+    text-align: left;
+}
+
+.menu-info h3 {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #4a332a;
+}
+
+/* ===========================
+   태그 뱃지 (메뉴 전체 태그)
+=========================== */
+.tag-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tag-badge {
+    background: #f7efe6;
+    color: #5a3b2e;
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 12px;
+    border: 1px solid #decfbe;
+}
+
+/* ===========================
+   배너 전체 (스타일③ 기반)
+=========================== */
+.recommend-banner {
+    width: 100%;
+    padding: 40px 0 50px;
+    background: linear-gradient(135deg, #f7eee3, #f2e6d8);
+    border-radius: 0 0 28px 28px;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.08);
+    margin-bottom: 50px;
+}
+
+/* ===========================
+   내부 박스 (스타일① 기반)
+=========================== */
+.recommend-box {
+    background: #ffffff;
+    width: 85%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 45px 45px;
+    border-radius: 22px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+/* ===========================
+   타이틀 텍스트
+=========================== */
+.section-title {
+    font-size: 30px;
+    font-weight: 700;
+    color: #5a3b2e;
+    margin-bottom: 10px;
+}
+
+.section-subtitle {
+    font-size: 15px;
+    color: #8d7f74;
+    margin-bottom: 25px;
+}
+
+/* ===========================
+   구분선
+=========================== */
+.section-divider {
+    width: 65%;
+    height: 1.5px;
+    background: #e6d8c8;
+    margin: 0 auto 28px auto;
+}
+
+/* ===========================
+   태그 영역 (말랑 버블)
+=========================== */
+.tag-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.tag-row {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+}
+
+.tag-btn {
+    padding: 12px 22px;
+    border-radius: 30px;
+    font-size: 15px;
+    background: #ffffff;
+    border: 1.8px solid #d9c8b7;
+    color: #5a3b2e;
+    cursor: pointer;
+    transition: 0.25s ease;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.06);
+}
+
+/* hover → 말랑하게 위로 */
+.tag-btn:hover {
+    transform: translateY(-3px);
+    background: #f9f2e8;
+} 
+
+/* 선택됨 */
+.tag-btn.selected {
+    background: #5a3b2e;
+    color: #fff;
+    border-color: #5a3b2e;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* 이미지 영역 전체 */
+.menu-image {
+    position: relative;
+    width: 100%;
+    height: 170px;
+    overflow: hidden;
+}
+
+/* 원래 이미지 */
+.menu-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: 0.3s ease;
+}
+
+/* 설명 오버레이 */
+.menu-hover-desc {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    
+    background: rgba(120, 85, 60, 0.45);
+    color: #fff;
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+	padding: 16px;
+
+    box-sizing: border-box;
+    
+    opacity: 0;
+	backdrop-filter: blur(2px);
+    transition: opacity 0.25s ease;
+    
+    text-align: center;
+}
+
+/* 🔥 마우스 올릴 때 효과 */
+.menu-image:hover img {
+    opacity: 0.35;
+    transform: scale(1.05);
+}
+
+.menu-image:hover .menu-hover-desc {
+    opacity: 1;
+}
+
+

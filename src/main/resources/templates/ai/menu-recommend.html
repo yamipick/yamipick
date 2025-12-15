@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>메뉴 추천 | YamiPick</title>
+    <link rel="stylesheet" href="/css/ai-menu-recommend.css">
+	<link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+
+<body>
+<div th:replace="common/header :: headerFragment"></div>
+
+<div class="container">
+
+	<div class="recommend-banner">
+	    <div class="recommend-box">
+
+	        <h1 class="section-title">🍽 오늘 뭐 먹을까?</h1>
+	        <p class="section-subtitle">원하는 맛 태그를 선택하면 AI가 메뉴를 추천해드릴게요!</p>
+
+	        <div class="section-divider"></div>
+
+	        <div class="tag-area" id="tagArea"></div>
+
+	    </div>
+	</div>
+
+    <!-- 추천 결과 -->
+    <div id="resultArea" class="result-area"></div>
+
+</div>
+
+<script src="/js/ai-menu-recommend.js"></script>
+
+</body>
+</html>

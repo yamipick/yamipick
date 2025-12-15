@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>매장등록</title>
+	<link rel="stylesheet" th:href="@{/css/common.css}">
+	
+	<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=7ef5d0a137417135a1ff1e08560fcc98&libraries=services"></script>
+    <style>
+        /* YamiPick Admin 공통 스타일 */
+        :root {
+            --color-primary: #ff3b1a;
+            --color-accent: #6D4C41;
+            --color-border: #eee;
+            --color-shadow: 0 4px 12px rgba(0,0,0,.06);
+            --border-radius: 12px;
+        }
+        body { font-family: 'Malgun Gothic', 'Dotum', sans-serif; background-color: #f8f8f8; color: #333; }
+        .wrap-container { max-width: 700px; margin: 40px auto; padding: 30px; background: #fff; border-radius: 18px; box-shadow: var(--color-shadow); }
+        h1 { color: var(--color-accent); border-bottom: 3px solid var(--color-primary); padding-bottom: 10px; margin-bottom: 25px; font-weight: 900; }
+        h3 { color: #444; margin: 30px 0 15px; font-weight: 800; }
+
+        /* Form/Input/Label 스타일 */
+        form > div, .search-area { margin-bottom: 15px; padding: 5px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 14px; }
+        
+        input[type="text"], input[type="number"], input[type="date"], select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            width: 100%; /* 기본적으로 100% 사용 */
+            box-sizing: border-box;
+            transition: border-color .15s ease;
+        }
+        select { width: auto; min-width: 150px; }
+        input[readonly] { background-color: #f5f5f5; color: #777; }
+        
+        /* 매장 검색 영역 */
+        .search-area { display: flex; gap: 10px; margin-bottom: 20px; }
+        .search-area input { flex: 1; }
+        .search-area button { 
+            width: 80px; 
+            background: var(--color-primary);
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .search-area button:hover { background: #e63617; }
+
+        /* 검색 결과 리스트 */
+        #search-result { list-style: none; padding: 0; border: 1px solid #ddd; border-radius: 8px; margin-top: 15px; max-height: 200px; overflow-y: auto; }
+        #search-result li { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 14px; }
+        #search-result li:hover { background-color: #fffaf8; color: var(--color-primary); }
+        #search-result li:last-child { border-bottom: none; }
+        
+        /* 지도 */
+        #map { width: 100% !important; height: 300px !important; margin-top: 20px; border-radius: 8px; }
+
+        /* 주 버튼 (등록/저장) */
+        button[type="submit"] {
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all .15s ease;
+            margin-top: 20px;
+            background: var(--color-primary);
+            color: #fff;
+            border: none;
+            width: 100%;
+        }
+        button[type="submit"]:hover {
+            background: #e63617;
+        }
+        
+        /* 테이블 타입 프리셋 */
+        #tableTypePreset {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        #tableTypePreset label { margin-bottom: 0; font-weight: 500; }
+
+        #selectedTableTypes > div {
+            border: 1px dashed #ddd;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        #selectedTableTypes input[type="number"] { width: 60px; padding: 5px; }
+        #selectedTableTypes button { 
+            padding: 4px 8px; 
+            font-size: 12px; 
+            font-weight: 500;
+            background: #eee;
+            border: 1px solid #ccc;
+            color: #555;
+            border-radius: 4px;
+        }
+        #selectedTableTypes button:hover { background: #e0e0e0; }
+        
+    </style>
+</head>
+<body>
+<div th:replace="~{common/header :: headerFragment}"></div>
+
+<div class="wrap-container">
+
+<h1>매장 등록</h1>
+
+<div class="search-area">
+    <input type="text" id="keyword" placeholder="매장 이름 또는 주소를 입력하세요">
+    <button type="button" onclick="searchPlaces()">검색</button>
+</div>
+
+<div id="map"></div>
+
+<ul id="search-result"></ul>
+
+<hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+
+<form th:action="@{/store/register}" method="post">
+
+    <div>
+        <label>장소 ID</label>
+        <input type="text" id="kakaoPlaceId" name="kakaoPlaceId" readonly required>
+    </div>
+
+    <div>
+        <label>매장 이름</label>
+        <input type="text" id="storeName" name="name" readonly required>
+    </div>
+
+    <div>
+        <label>주소</label>
+        <input type="text" id="storeAddress" name="address" readonly required>
+    </div>
+
+    <div>
+        <label>전화번호</label>
+        <input type="text" id="storePhone" name="phone">
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+
+    <h3>영업 시간 설정</h3>
+
+<div>
+    <label>영업 시작 시간</label>
+    <select name="openTime">
+        <option th:each="h : ${#numbers.sequence(0,23)}"
+                th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
+        </option>
+    </select>
+</div>
+
+<div>
+    <label>영업 종료 시간</label>
+    <select name="closeTime">
+        <option th:each="h : ${#numbers.sequence(0,23)}"
+                th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
+        </option>
+    </select>
+</div>
+
+<div style="margin-top: 25px;">
+    <label>브레이크 시작 시간</label>
+    <select name="breakStart">
+        <option value="">— 없음 —</option>
+        <option th:each="h : ${#numbers.sequence(0,23)}"
+                th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
+        </option>
+    </select>
+</div>
+
+<div>
+    <label>브레이크 종료 시간</label>
+    <select name="breakEnd">
+        <option value="">— 없음 —</option>
+        <option th:each="h : ${#numbers.sequence(0,23)}"
+                th:value="${(h < 10 ? '0' + h : '' + h) + ':00'}"
+                th:text="${(h < 10 ? '0' + h : '' + h) + ':00'}">
+        </option>
+    </select>
+</div>
+
+<hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+
+<h3>테이블 타입 설정</h3>
+
+<div id="tableTypePreset">
+    <label><input type="checkbox" value="홀" onchange="toggleTableType(this)"> 홀</label>
+    <label><input type="checkbox" value="바" onchange="toggleTableType(this)"> 바</label>
+    <label><input type="checkbox" value="룸" onchange="toggleTableType(this)"> 룸</label>
+    <label><input type="checkbox" value="테라스" onchange="toggleTableType(this)"> 테라스</label>
+    <label><input type="checkbox" value="창가" onchange="toggleTableType(this)"> 창가</label>
+</div>
+
+<br>
+
+<div id="selectedTableTypes"></div>
+	
+	<div th:if="${errorMessage}" style="color:red; margin-top: 15px; font-weight: 600;">
+	    [[${errorMessage}]]
+	</div>
+	
+    <button type="submit">매장 등록</button>
+</form>
+
+</div> <script>
+    let map;
+    let markers = [];
+    let ps; // Places 서비스
+
+    window.onload = function() {
+        const container = document.getElementById('map');
+        const options = {
+            center: new kakao.maps.LatLng(37.5665, 126.9780), // 기본: 서울 시청 근처
+            level: 5
+        };
+        map = new kakao.maps.Map(container, options);
+
+        ps = new kakao.maps.services.Places();
+    };
+
+    function searchPlaces() {
+        const keyword = document.getElementById('keyword').value.trim();
+        if (!keyword) {
+            alert('검색어를 입력하세요.');
+            return;
+        }
+
+        fetch('/api/store/search?q=' + encodeURIComponent(keyword))
+            .then(res => res.json())
+            .then(data => {
+                displayPlaces(data);
+            })
+            .catch(err => {
+                console.error(err);
+                alert('검색 중 오류가 발생했습니다.');
+            });
+    }
+
+    function displayPlaces(places) {
+        markers.forEach(m => m.setMap(null));
+        markers = [];
+
+        const listEl = document.getElementById('search-result');
+        listEl.innerHTML = '';
+
+        if (!places || places.length === 0) {
+            listEl.innerHTML = '<li style="cursor: default;">검색 결과가 없습니다.</li>';
+            return;
+        }
+
+        const bounds = new kakao.maps.LatLngBounds();
+
+        places.forEach((p, idx) => {
+            const lat = parseFloat(p.y);
+            const lng = parseFloat(p.x);
+            const position = new kakao.maps.LatLng(lat, lng);
+
+            const marker = new kakao.maps.Marker({
+                map: map,
+                position: position
+            });
+            markers.push(marker);
+            bounds.extend(position);
+
+            const li = document.createElement('li');
+            li.style.cursor = 'pointer';
+            li.innerText = `${p.name} / ${p.address} ${p.phone ? ' / ' + p.phone : ''}`;
+
+            const clickHandler = function() {
+                selectPlace(p);
+                map.panTo(position);
+            };
+
+            kakao.maps.event.addListener(marker, 'click', clickHandler);
+            li.addEventListener('click', clickHandler);
+
+            listEl.appendChild(li);
+        });
+
+        map.setBounds(bounds);
+    }
+
+    function selectPlace(p) {
+        document.getElementById('kakaoPlaceId').value = p.id;
+        document.getElementById('storeName').value = p.name;
+        document.getElementById('storeAddress').value = p.address;
+        document.getElementById('storePhone').value = p.phone || '';
+
+        alert('매장을 선택했습니다: ' + p.name);
+    }
+</script>
+<script>
+	document.querySelector("form").addEventListener("submit", function (e) {
+	    const openTime = document.querySelector("select[name='openTime']").value;
+	    const closeTime = document.querySelector("select[name='closeTime']").value;
+	    const breakStart = document.querySelector("select[name='breakStart']").value;
+	    const breakEnd = document.querySelector("select[name='breakEnd']").value;
+	
+	    if (!openTime || !closeTime) {
+	        alert("영업 시작 / 종료 시간은 반드시 설정해야 합니다.");
+	        e.preventDefault();
+	        return;
+	    }
+	
+	    if ((breakStart && !breakEnd) || (!breakStart && breakEnd)) {
+	        alert("브레이크 타임은 시작과 종료를 모두 입력해야 합니다.");
+	        e.preventDefault();
+	        return;
+	    }
+	});
+</script>
+<script>
+function toggleTableType(checkbox) {
+    const typeName = checkbox.value;
+    const container = document.getElementById("selectedTableTypes");
+    const rowId = "table-type-" + typeName;
+
+    if (checkbox.checked) {
+        if (document.getElementById(rowId)) return;
+
+        const div = document.createElement("div");
+        div.id = rowId;
+
+        div.innerHTML = `
+            <strong>${typeName}</strong>
+            <input type="hidden" name="tableTypeName" value="${typeName}">
+
+            <label> 테이블 최대 인원</label>
+            <input type="number" name="tableCapacity" min="1" required style="width:80px;" value="2">
+
+            <label> 테이블 개수</label>
+            <input type="number" name="tableQuantity" min="1" required style="width:80px;" value="1">
+
+            <button type="button" onclick="removeTableType('${typeName}')">삭제</button>
+        `;
+
+        container.appendChild(div);
+    } else {
+        removeTableType(typeName);
+    }
+}
+
+function removeTableType(typeName) {
+    const row = document.getElementById("table-type-" + typeName);
+    if (row) row.remove();
+
+    const checkbox = document.querySelector(
+        `#tableTypePreset input[value="${typeName}"]`
+    );
+    if (checkbox) checkbox.checked = false;
+}
+
+document.querySelector("form").addEventListener("submit", function (e) {
+    const count = document.querySelectorAll(
+        "#selectedTableTypes input[name='tableTypeName']"
+    ).length;
+
+    if (count === 0) {
+        alert("테이블 타입을 최소 1개 이상 선택해주세요.");
+        e.preventDefault();
+    }
+});
+</script>
+
+</body>
+</html>
