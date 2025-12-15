@@ -35,7 +35,10 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> auth
             .requestMatchers("/css/**", "/js/**", "/img/**", "/upload/**").permitAll()
             .requestMatchers("/", "/login", "/join", "/joinok").permitAll()
+            .requestMatchers("/reservation/**").authenticated()
             .requestMatchers("/api/log/**").permitAll()
+            .requestMatchers("/ai/recommend", "/api/ai/recommend/**").permitAll()
+            .requestMatchers("/ai/chatbot", "/api/chat/send").authenticated()
             .requestMatchers("/admin/**").hasRole("ADMIN")
             .anyRequest().permitAll() // 개발 끝나면 authenticated()로 변경!
         );

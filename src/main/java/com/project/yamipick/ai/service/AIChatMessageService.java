@@ -1,0 +1,72 @@
+package com.project.yamipick.ai.service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import com.project.yamipick.ai.dto.AIChatMessageDTO;
+import com.project.yamipick.ai.dto.AIChatMessageDTO.SenderType;
+import com.project.yamipick.ai.entity.AIChatMessage;
+import com.project.yamipick.ai.repository.AIChatMessageRepository;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class AIChatMessageService {
+
+    private final AIChatMessageRepository messageRepository;
+
+    // 메시지 저장
+    public AIChatMessageDTO saveMessage(AIChatMessageDTO dto) {
+
+        AIChatMessage entity = AIChatMessage.builder()
+                .seqMessage(dto.getSeqMessage())
+                .seqSession(dto.getSeqSession())
+                .senderType(
+                        dto.getSenderType() != null
+                                ? dto.getSenderType().name() // enum -> String 변환
+                                : null
+                )
+                .messageText(dto.getMessageText())
+                .messageCreatedAt(
+                        dto.getMessageCreatedAt() != null ? dto.getMessageCreatedAt() : LocalDateTime.now()
+                )
+                .build();
+
+        AIChatMessage saved = messageRepository.save(entity);
+
+        return AIChatMessageDTO.builder()
+                .seqMessage(saved.getSeqMessage())
+                .seqSession(saved.getSeqSession())
+                .senderType(
+                        saved.getSenderType() != null
+                                ? SenderType.valueOf(saved.getSenderType()) // String → enum
+                                : null
+                )
+                .messageText(saved.getMessageText())
+                .messageCreatedAt(saved.getMessageCreatedAt())
+                .build();
+    }
+
+    // 해당 세션의 메시지 목록 조회
+    public List<AIChatMessageDTO> getMessagesBySession(Long seqSession) {
+        return messageRepository.findBySeqSessionOrderByMessageCreatedAtAsc(seqSession)
+                .stream()
+                .map(m -> AIChatMessageDTO.builder()
+                        .seqMessage(m.getSeqMessage())
+                        .seqSession(m.getSeqSession())
+                        .senderType(
+                            m.getSenderType() != null
+                                    ? SenderType.valueOf(m.getSenderType())  // String → enum
+                                    : null
+                        )
+                        .messageText(m.getMessageText())
+                        .messageCreatedAt(m.getMessageCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+}
