@@ -32,7 +32,6 @@ public class GeminiService {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    /** 🔥 핵심: 오직 Gemini 응답 문자열만 반환한다 */
     public Mono<String> call(String prompt) {
     	
     	try {
