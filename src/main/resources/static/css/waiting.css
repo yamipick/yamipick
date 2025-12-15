@@ -439,3 +439,25 @@ td { border-bottom: 1px solid #EFEBE9; padding: 12px 5px; text-align: center; co
            display: none !important;
        }
    }
+   
+   
+   .n-title { 
+    font-weight: bold; 
+    display: block; 
+    margin-bottom: 5px; 
+    color: var(--text-main); 
+}
+
+.n-content { 
+    font-size: 0.95em; 
+    color: #5D4037; 
+    white-space: pre-wrap; /* 줄바꿈 유지 */
+    line-height: 1.5; 
+}
+
+.n-date { 
+    font-size: 0.8em; 
+    color: #A1887F; 
+    margin-top: 8px; 
+    text-align: right; 
+}

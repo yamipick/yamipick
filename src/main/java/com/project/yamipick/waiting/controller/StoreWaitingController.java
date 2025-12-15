@@ -185,17 +185,21 @@ public class StoreWaitingController {
     }
 
     @GetMapping("/waiting/schedule/all")
-    public List<StoreScheduleDTO> getAllSchedules(HttpSession session, Authentication auth) {
-        Long storeId = getStoreId(session, auth);
-        return waitingService.getAllSchedules(storeId);
+    public List<StoreScheduleDTO> getAllSchedules(
+            @RequestParam(value = "storeId", required = false) Long storeIdParam,
+            HttpSession session, Authentication auth
+    ) {
+        Long targetId = (storeIdParam != null) ? storeIdParam : getStoreId(session, auth);
+        return waitingService.getAllSchedules(targetId);
     }
 
     @GetMapping("/waiting/schedule/info")
     public ResponseEntity<StoreScheduleDTO> getScheduleInfo(
+            @RequestParam(value = "storeId", required = false) Long storeIdParam,
             @RequestParam("day") int day,
             HttpSession session, Authentication auth
     ) {
-        Long storeId = getStoreId(session, auth);
-        return ResponseEntity.ok(waitingService.getScheduleInfo(storeId, day));
+        Long targetId = (storeIdParam != null) ? storeIdParam : getStoreId(session, auth);
+        return ResponseEntity.ok(waitingService.getScheduleInfo(targetId, day));
     }
 }

@@ -228,9 +228,15 @@ public class WaitingService {
         }
     }
 
-    public void postpone(Long waitingId) {
+    @Transactional
+    public void postpone(Long waitingId, Long userId) {
         Waiting waiting = waitingRepository.findById(waitingId)
-                .orElseThrow(() -> new IllegalArgumentException("정보 없음"));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 웨이팅입니다."));
+
+        // ★ [핵심] 본인 확인 로직
+        if (!waiting.getUser().getSeqUser().equals(userId)) {
+            throw new IllegalStateException("본인의 웨이팅만 미룰 수 있습니다.");
+        }
         
         String currentStatus = waiting.getWaitingStatus().getStatusName();
         if ("ENTERED".equals(currentStatus) || "CANCELED".equals(currentStatus)) {
@@ -253,6 +259,22 @@ public class WaitingService {
 
     public void notice(String content) {
         webSocketHandler.broadcast(content);
+    }
+    
+    
+    @Transactional
+    public void cancelByUser(Long waitingId, Long userId) {
+        Waiting waiting = waitingRepository.findById(waitingId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 웨이팅입니다."));
+
+        // ★ [핵심] 본인 확인 로직
+        if (!waiting.getUser().getSeqUser().equals(userId)) {
+            throw new IllegalStateException("본인의 웨이팅만 취소할 수 있습니다.");
+        }
+
+        // 검증 통과하면 기존 취소 로직 재사용 (또는 상태 변경 코드 직접 작성)
+        // 여기서는 기존에 있던 cancel(id, isStoreAction)을 재활용한다고 가정
+        cancel(waitingId, false); 
     }
 
     // ================================================================================

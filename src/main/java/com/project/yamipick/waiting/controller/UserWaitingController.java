@@ -70,9 +70,20 @@ public class UserWaitingController {
 
     // 3. 취소
     @PostMapping("/waiting/cancel/{id}")
-    public String cancel(@PathVariable("id") Long id) {
-        waitingService.cancel(id, false);
-        return "ok";
+    public ResponseEntity<?> cancel(@PathVariable("id") Long id, Authentication auth) {
+        // 1. 내 ID 가져오기
+        Long userId = getCurrentUserId(auth);
+        
+        // 2. 서비스에 내 ID도 같이 전달 (검증용)
+        // 기존: waitingService.cancel(id, false);
+        // 변경: cancelByUser라는 메서드를 새로 만들거나, 파라미터를 추가합니다.
+        // 여기서는 편의상 서비스에 'cancelByUser'를 만든다고 가정합니다.
+        try {
+            waitingService.cancelByUser(id, userId); 
+            return ResponseEntity.ok("ok");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // 4. 내 히스토리 조회
@@ -99,9 +110,14 @@ public class UserWaitingController {
 
     // 7. 순서 미루기
     @PostMapping("/waiting/postpone/{id}")
-    public ResponseEntity<?> postpone(@PathVariable("id") Long id) {
+    public ResponseEntity<?> postpone(@PathVariable("id") Long id, Authentication auth) {
         try {
-            waitingService.postpone(id);
+            Long userId = getCurrentUserId(auth); // 내 ID 가져오기
+            
+            // 기존: waitingService.postpone(id);
+            // 변경: userId 추가 전달
+            waitingService.postpone(id, userId);
+            
             return ResponseEntity.ok("ok");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
