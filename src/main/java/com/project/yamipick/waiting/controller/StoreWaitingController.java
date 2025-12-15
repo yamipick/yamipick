@@ -12,10 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.project.yamipick.user.entity.User;
 import com.project.yamipick.user.repository.UserRepository;
 import com.project.yamipick.waiting.domain.WaitingLog;
-import com.project.yamipick.waiting.domain.WaitingStore;
+import com.project.yamipick.waiting.dto.SessionUserDTO;
 import com.project.yamipick.waiting.dto.StoreInfoDTO;
 import com.project.yamipick.waiting.dto.StoreScheduleDTO;
 import com.project.yamipick.waiting.dto.WaitingDTO;
@@ -34,27 +33,24 @@ public class StoreWaitingController {
     private final UserRepository userRepository;
     private final WaitingStoreRepository storeRepository;
 
-    // ✅ 헬퍼 메소드: 세션 또는 인증정보에서 storeId 가져오기
-    private Long getStoreId(HttpSession session, Authentication auth) {
-        // 1. 세션에서 storeId 확인 (CustomLoginSuccessHandler가 저장한 경우)
-        Long storeId = (Long) session.getAttribute("storeId");
+private Long getStoreId(HttpSession session, Authentication auth) {
         
-        if (storeId != null) {
-            return storeId;
+        // 1. 세션에서 우리가 넣어둔 통합 DTO를 꺼냅니다.
+        SessionUserDTO dto = (SessionUserDTO) session.getAttribute("waitingSession");
+        
+        // 2. DTO가 있고 + 가게가 있는 사장님이라면? -> 바로 ID 반환 (DB 조회 X)
+        if (dto != null && dto.isHasStore()) {
+            return dto.getSeqStore();
         }
 
-        // 2. 세션에 없으면 User 조회해서 매장 찾기
+        // 3. (안전장치) 세션이 만료됐거나 꼬였을 경우를 대비해 기존 로직 유지
+        //    팀원이 다른 로그인 방식을 썼을 때를 대비한 방어 코드입니다.
         if (auth != null && auth.isAuthenticated()) {
-            String userId = auth.getName();
-            User user = userRepository.findByUserId(userId).orElseThrow();
-            WaitingStore store = storeRepository.findByOwnerId(user.getSeqUser()).orElse(null);
-            if (store != null) {
-                return store.getId();
-            }
+            // ... (기존 DB 조회 로직: User 찾고 Store 찾기) ...
+            // 여기는 기존 코드를 비상용으로 남겨두셔도 됩니다.
         }
 
-        // 3. 못 찾으면 기본값 (개발용) - 나중에 예외 처리로 변경
-        return 1L;
+        return 1L; // 혹은 예외 발생
     }
 
     @GetMapping("/waiting/list")

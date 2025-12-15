@@ -25,7 +25,7 @@
 
 	<script th:inline="javascript">
 	        // ★ 수정: 세션값 사용
-	        const currentUserId = /*[[${session.userId}]]*/ null;
+	        const currentUserId = /*[[${session.waitingSession != null ? session.waitingSession.seqUser : null}]]*/ null;
 
 	        window.onload = function() {
 	            if (!currentUserId) {

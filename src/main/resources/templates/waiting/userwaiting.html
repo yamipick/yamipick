@@ -87,8 +87,7 @@
         // -----------------------------------------------------------
         // 1. ★ 수정: 전역 변수 설정 (세션에서 userId 바로 가져옴)
         // -----------------------------------------------------------
-        const currentUserId = /*[[${session.userId}]]*/ null;
-        let myId = null;
+		const currentUserId = /*[[${session.waitingSession != null ? session.waitingSession.seqUser : null}]]*/ null;        let myId = null;
         let socket = null;
         let pollingInterval = null;
 

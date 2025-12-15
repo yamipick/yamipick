@@ -1,4 +1,4 @@
-package com.project.yamipick.security.dto;
+package com.project.yamipick.waiting.dto;
 
 import com.project.yamipick.user.entity.User;
 import com.project.yamipick.waiting.domain.WaitingStore;
