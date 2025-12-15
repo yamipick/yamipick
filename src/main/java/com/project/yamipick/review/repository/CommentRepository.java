@@ -15,8 +15,8 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     
     int countByReviewSeqReviewAndState(Long seqReview, String string);
     
-    long countByUserAndState(User user, String state);
+    long countByUser_UserIdAndState(String username, String state);
     
-    List<Comment> findByUser_SeqUserAndStateOrderByRegdateDesc(Long seqUser, String state);
+    List<Comment> findByUser_UserIdAndStateOrderByRegdateDesc(String username, String state);
 
 }

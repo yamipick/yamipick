@@ -37,11 +37,11 @@ public class ReviewController {
 	private final ReviewStoreService reviewStoreService;
 	
 	//임시 로그인
-	private Long getLoginUserId(Principal principal) {
+	private String getLoginUsername(Principal principal) {
 	    if (principal == null) {
-	        return 1L;
+	        return null;
 	    }
-	    return Long.parseLong(principal.getName());
+	    return principal.getName(); // ex) testUser
 	}
 	
 	@GetMapping("/review/reviewmain")
@@ -57,31 +57,27 @@ public class ReviewController {
 	            }
 	        }
 	    }
+	    
+	    // 로그인 사용자 ID (없으면 null)
+	    String username = getLoginUsername(principal);
+	    model.addAttribute("loginUsername", username);
+
+	    if (username != null) {
+	        model.addAttribute("activity",
+	            reviewService.getMyActivitySummary(username));
+	    }
 
 	    model.addAttribute("recentReviews", recentReviews);
 		
-		model.addAttribute("activity", reviewService.getMyActivitySummary(getLoginUserId(null)));
-		
-		model.addAttribute("recommendReviews",
-	            reviewService.getRecommendReviews());
+		model.addAttribute("recommendReviews", reviewService.getRecommendReviews());
 
-	    model.addAttribute("photoReviews",
-	            reviewService.getPhotoReviews());
+	    model.addAttribute("photoReviews", reviewService.getPhotoReviews());
 
-	    model.addAttribute("nearReviews",
-	            reviewService.getNearReviews(/* lat, lng */));
+	    model.addAttribute("nearReviews", reviewService.getNearReviews(/* lat, lng */));
 
-	    model.addAttribute("popularDaily",
-	            reviewService.getPopularDaily());
+	    model.addAttribute("popularDaily", reviewService.getPopularDaily());
 
-	    model.addAttribute("popularWeekly",
-	            reviewService.getPopularWeekly());
-
-	    if (principal != null) {
-	        Long userId = getLoginUserId(principal);
-	        model.addAttribute("activity",
-	                reviewService.getMyActivitySummary(userId));
-	    }
+	    model.addAttribute("popularWeekly", reviewService.getPopularWeekly());
 
 	    return "review/reviewmain";
 	}
@@ -105,6 +101,15 @@ public class ReviewController {
 	            }
 	        }
 	    }
+	    
+	    // 로그인 사용자 ID (없으면 null)
+	    String username = getLoginUsername(principal);
+	    model.addAttribute("loginUsername", username);
+
+	    if (username != null) {
+	        model.addAttribute("activity",
+	            reviewService.getMyActivitySummary(username));
+	    }
 
 	    model.addAttribute("recentReviews", recentReviews);
 
@@ -112,16 +117,7 @@ public class ReviewController {
 	    model.addAttribute("keyword", keyword);
 	    model.addAttribute("sort", sort);
 
-	    // 로그인 사용자 활동
-	    if (principal != null) {
-	        Long userId = getLoginUserId(principal);
-	        model.addAttribute("activity",
-	                reviewService.getMyActivitySummary(userId));
-	    }
-
 	    // 사이드바
-	    
-	    model.addAttribute("activity", reviewService.getMyActivitySummary(getLoginUserId(null)));
 	    
 	    model.addAttribute("recommendReviews",
 	            reviewService.getRecommendReviews());
@@ -155,28 +151,27 @@ public class ReviewController {
 
 	    model.addAttribute("recentReviews", recentReviews);
 		
-		//String seqUser = principal.getName();
-	    //Long id = Long.parseLong(seqUser);
-		
-		//임시 로그인
-		Long id = getLoginUserId(principal);
+	    String username = getLoginUsername(principal);
+	    if (username == null) {
+	        return "redirect:/user/login";
+	    }
 	    
 
 	    switch (tab) {
 	        case "review":
-	            model.addAttribute("list", reviewService.getMyReviews(id));
+	            model.addAttribute("list", reviewService.getMyReviews(username));
 	            break;
 
 	        case "comment":
-	            model.addAttribute("list", reviewService.getMyComments(id));
+	            model.addAttribute("list", reviewService.getMyComments(username));
 	            break;
 
 	        case "favorite":
-	            model.addAttribute("list", reviewService.getMyFavorites(id));
+	            model.addAttribute("list", reviewService.getMyFavorites(username));
 	            break;
 
 	        case "scrap":
-	            model.addAttribute("list", reviewService.getMyScraps(id));
+	            model.addAttribute("list", reviewService.getMyScraps(username));
 	            break;
 	    }
 	    
@@ -197,8 +192,8 @@ public class ReviewController {
 	@PostMapping("/review/reviewaddok")
 	public String reviewaddok(BoardReviewDTO dto, Principal principal, Model model) {
 
-		Long id = getLoginUserId(principal);
-	    dto.setSeqUser(id);
+		String username = getLoginUsername(principal);
+		dto.setUserId(username); // DTO에 String userId 필드 있어야 함
 
 	    MultipartFile file = dto.getFile(); // ✅ MultipartFile로 받아야 함
 
@@ -235,10 +230,8 @@ public class ReviewController {
 	public String reviewview(BoardReviewDTO rdto, @RequestParam("seqReview") Long seqReview, Principal principal, Model model, HttpServletRequest request,
             HttpServletResponse response) {
 
-		Long id = getLoginUserId(principal);
-	    rdto.setSeqUser(id);
-	    
-	    model.addAttribute("loginUserSeq", id);
+		String username = getLoginUsername(principal);
+		model.addAttribute("loginUsername", username);
 	    
 	    saveRecentReview(seqReview, request, response);
 		
@@ -282,8 +275,8 @@ public class ReviewController {
 	    model.addAttribute("comments", comments);
 	    model.addAttribute("commentCount",
 	            reviewService.getCommentCount(seqReview));
-	    model.addAttribute("isFavorite", reviewService.isFavorite(seqReview, id));
-	    model.addAttribute("isScrap", reviewService.isScrap(seqReview, id));
+	    model.addAttribute("isFavorite", reviewService.isFavorite(seqReview, username));
+	    model.addAttribute("isScrap", reviewService.isScrap(seqReview, username));
 
 
 	    return "review/reviewview";
@@ -341,8 +334,8 @@ public class ReviewController {
 	@ResponseBody
 	public CommentDTO addComment(CommentDTO dto, Principal principal) {
 
-		Long id = getLoginUserId(principal);
-	    dto.setSeqUser(id);
+		String username = getLoginUsername(principal);
+		dto.setUserId(username);
 
 	    return reviewService.addComment(dto);
 	}
@@ -351,9 +344,9 @@ public class ReviewController {
 	@ResponseBody
 	public Map<String, Object> toggleFavorite(@RequestParam("seqReview") Long seqReview, Principal principal) {
 
-		Long id = getLoginUserId(principal);
+		String username = getLoginUsername(principal);
 
-	    boolean isFavorite = reviewService.toggleFavorite(seqReview, id);
+	    boolean isFavorite = reviewService.toggleFavorite(seqReview, username);
 
 	    Map<String, Object> res = new HashMap<>();
 	    res.put("favorite", isFavorite);
@@ -366,9 +359,9 @@ public class ReviewController {
 	@ResponseBody
 	public Map<String, Object> toggleScrap(@RequestParam("seqReview") Long seqReview, Principal principal) {
 
-		Long id = getLoginUserId(principal);
+		String username = getLoginUsername(principal);
 
-	    boolean isScrap = reviewService.toggleScrap(seqReview, id);
+	    boolean isScrap = reviewService.toggleScrap(seqReview, username);
 
 	    Map<String, Object> res = new HashMap<>();
 	    res.put("scrap", isScrap);
@@ -390,8 +383,8 @@ public class ReviewController {
 	@PostMapping("/review/revieweditok")
 	public String reviewEditOk(BoardReviewDTO dto, Principal principal) {
 
-		Long id = getLoginUserId(principal);
-	    dto.setSeqUser(id);
+		String username = getLoginUsername(principal);
+		dto.setUserId(username);
 
 	    reviewService.edit(dto);
 	    return "redirect:/review/reviewview?seqReview=" + dto.getSeqReview();
@@ -402,9 +395,9 @@ public class ReviewController {
 	        @RequestParam("seqReview") Long seqReview,
 	        Principal principal) {
 		
-		Long id = getLoginUserId(principal);
+		String username = getLoginUsername(principal);
 
-	    reviewService.deleteReview(seqReview, id);
+	    reviewService.deleteReview(seqReview, username);
 
 	    return "redirect:/review/reviewlist";
 	}
@@ -416,9 +409,9 @@ public class ReviewController {
 	        @RequestParam("content") String content,
 	        Principal principal) {
 
-		Long id = getLoginUserId(principal);
+		String username = getLoginUsername(principal);
 
-	    CommentDTO updated = reviewService.editComment(seqComment, id, content);
+	    CommentDTO updated = reviewService.editComment(seqComment, username, content);
 
 	    Map<String, Object> res = new HashMap<>();
 	    res.put("content", updated.getContent());
@@ -433,9 +426,9 @@ public class ReviewController {
 	        @RequestParam("seqComment") Long seqComment,
 	        Principal principal) {
 
-		Long id = getLoginUserId(principal);
+		String username = getLoginUsername(principal);
 
-	    boolean success = reviewService.deleteComment(seqComment, id);
+	    boolean success = reviewService.deleteComment(seqComment, username);
 
 	    Map<String, Object> res = new HashMap<>();
 	    res.put("success", success);

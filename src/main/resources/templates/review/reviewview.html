@@ -551,7 +551,7 @@ h2 {
 				    <div class="reply-btn" th:onclick="'toggleReplyForm(' + ${c.seqComment} + ')'">댓글쓰기</div>
 				
 				    <!-- 삭제 | 수정 버튼 -->
-				    <div class="comment-action-right" th:if="${loginUserSeq == c.seqUser}">
+				    <div class="comment-action-right" th:if="${loginUserId == review.userId}">
 				    	<button class="comment-action-btn"
 				                th:onclick="'editComment(' + ${c.seqComment} + ')'">수정</button>
 				        <span class="comment-action-divider">|</span>
@@ -580,16 +580,14 @@ h2 {
 		</div>
 
 		<!-- 댓글 작성 -->
+		<!-- form 제거 -->
 		<div class="comment-write-box-inside">
-			<form id="commentForm" th:action="@{/review/comment/add}"
-				method="post">
-				<input type="hidden" name="seqReview" th:value="${review.seqReview}">
-				<textarea name="content" class="comment-input"
-					placeholder="댓글을 입력하세요" required></textarea>
-				<div class="comment-btn-right">
-					<button type="submit" class="comment-btn">댓글 작성</button>
-				</div>
-			</form>
+		    <input type="hidden" id="seqReview" th:value="${review.seqReview}">
+		    <textarea id="commentContent" class="comment-input"
+		        placeholder="댓글을 입력하세요"></textarea>
+		    <div class="comment-btn-right">
+		        <button type="button" class="comment-btn" onclick="addComment()">댓글 작성</button>
+		    </div>
 		</div>
 
 	</div>
@@ -600,7 +598,7 @@ h2 {
 			<a th:href="@{/review/reviewlist}" class="btn">목록</a>
 			<a th:href="@{/review/reviewadd}" class="btn">글쓰기</a>
 		</div>
-		<div class="right-btns" th:if="${loginUserSeq == review.seqUser}">
+		<div class="right-btns" th:if="${loginUserId == review.userId}">
 			<a th:href="@{/review/reviewedit(seqReview=${review.seqReview})}"
 				class="btn btn-gray">수정</a>
 			<form th:action="@{/review/reviewdeleteok}" method="post" class="inline-form" onsubmit="return confirmDelete();">
@@ -659,29 +657,27 @@ h2 {
 	});
 	
 	
-	document.getElementById("commentForm").addEventListener("submit", async function(e) {
-	    e.preventDefault(); // 리로드 막기
+	async function addComment() {
 	
-	    const form = e.target;
-	    const formData = new FormData(form);
+	    const contentEl = document.getElementById("commentContent");
+	    const content = contentEl.value.trim();
+	    if (!content) return;
 	
-	    const response = await fetch('/review/comment/add', {
-		    method: "POST",
-		    body: formData
-		});
+	    const formData = new FormData();
+	    formData.append("seqReview", seqReview);
+	    formData.append("content", content);
 	
-	    // 서버에서 댓글 JSON 반환한다고 가정
+	    const response = await fetch("/review/comment/add", {
+	        method: "POST",
+	        body: formData
+	    });
+	
 	    const result = await response.json();
 	
-	    // 새 댓글 DOM에 추가
 	    const commentList = document.getElementById("commentList");
-	    
-	    const oldLast = commentList.querySelector(".comment-item.last");
-    	if (oldLast) oldLast.classList.remove("last");
 	
 	    const newComment = document.createElement("div");
-	    newComment.classList.add("comment-item", "last");
-	    
+	    newComment.classList.add("comment-item");
 	    newComment.setAttribute("data-id", result.seqComment);
 	
 	    newComment.innerHTML = `
@@ -720,9 +716,8 @@ h2 {
 	
 	    commentList.appendChild(newComment);
 	
-	    // 입력창 초기화
-	    form.querySelector("textarea").value = "";
-	});
+	    contentEl.value = "";
+	}
 	
 	
 	function toggleReplyForm(id) {

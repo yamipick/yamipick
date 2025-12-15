@@ -116,24 +116,21 @@ public class ReviewServiceImpl implements ReviewService {
     }
     
     @Override
-    public Map<String, Long> getMyActivitySummary(Long seqUser) {
-
-        User user = userRepository.findById(seqUser)
-                .orElseThrow(() -> new IllegalArgumentException("유저 없음"));
+    public Map<String, Long> getMyActivitySummary(String username) {
 
         Map<String, Long> map = new HashMap<>();
 
         map.put("review",
-                boardReviewRepository.countByUserAndState(user, "ACTIVE"));
+                boardReviewRepository.countByUser_UserIdAndState(username, "ACTIVE"));
 
         map.put("comment",
-                commentRepository.countByUserAndState(user, "ACTIVE"));
+                commentRepository.countByUser_UserIdAndState(username, "ACTIVE"));
 
         map.put("favorite",
-                favoriteReviewRepository.countByUser(user));
+                favoriteReviewRepository.countByUser_UserId(username));
 
         map.put("scrap",
-                scrapReviewRepository.countByUser(user));
+                scrapReviewRepository.countByUser_UserId(username));
 
         return map;
     }
@@ -195,7 +192,7 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         // 1. 작성자 조회 (orElseGet 안 씀)
-        User user = userRepository.findById(dto.getSeqUser())
+        User user = userRepository.findByUserId(dto.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
 
         // 2. 리뷰 엔티티 생성 (Store는 지금 단계에서 안 건드림)
@@ -333,13 +330,13 @@ public class ReviewServiceImpl implements ReviewService {
     
     @Override
     @Transactional
-    public void deleteReview(Long seqReview, Long seqUser) {
+    public void deleteReview(Long seqReview, String username) {
 
         BoardReview review = boardReviewRepository.findById(seqReview)
                 .orElseThrow(() -> new IllegalArgumentException("리뷰 없음"));
 
         // 작성자 체크
-        if (!review.getUser().getSeqUser().equals(seqUser)) {
+        if (!review.getUser().getSeqUser().equals(username)) {
             throw new RuntimeException("권한 없음");
         }
 
@@ -426,8 +423,9 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional
     public CommentDTO addComment(CommentDTO dto) {
 
-        User user = userRepository.findById(dto.getSeqUser())
-                .orElseThrow();
+    	User user = userRepository.findByUserId(dto.getUserId())
+    	        .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
+    	
         BoardReview review = boardReviewRepository.findById(dto.getSeqReview())
                 .orElseThrow();
         
@@ -463,17 +461,17 @@ public class ReviewServiceImpl implements ReviewService {
     
     @Override
     @Transactional
-    public boolean toggleFavorite(Long seqReview, Long seqUser) {
+    public boolean toggleFavorite(Long seqReview, String username) {
 
         Optional<FavoriteReview> existing = favoriteReviewRepository
-                .findByUserSeqUserAndReviewSeqReview(seqUser, seqReview);
+                .findByUser_UserIdAndReviewSeqReview(username, seqReview);
 
         if (existing.isPresent()) {
             favoriteReviewRepository.delete(existing.get());
             return false; // 취소됨
         } else {
             FavoriteReview fav = FavoriteReview.builder()
-                    .user(userRepository.findById(seqUser).orElseThrow())
+                    .user(userRepository.findByUserId(username).orElseThrow())
                     .review(boardReviewRepository.findById(seqReview).orElseThrow())
                     .regdate(Timestamp.valueOf(LocalDateTime.now()))
                     .build();
@@ -484,17 +482,17 @@ public class ReviewServiceImpl implements ReviewService {
     
     @Override
     @Transactional
-    public boolean toggleScrap(Long seqReview, Long seqUser) {
+    public boolean toggleScrap(Long seqReview, String username) {
 
         Optional<ScrapReview> existing = scrapReviewRepository
-                .findByUserSeqUserAndReviewSeqReview(seqUser, seqReview);
+                .findByUser_UserIdAndReviewSeqReview(username, seqReview);
 
         if (existing.isPresent()) {
             scrapReviewRepository.delete(existing.get());
             return false;
         } else {
             ScrapReview scrap = ScrapReview.builder()
-                    .user(userRepository.findById(seqUser).orElseThrow())
+                    .user(userRepository.findByUserId(username).orElseThrow())
                     .review(boardReviewRepository.findById(seqReview).orElseThrow())
                     .regdate(Timestamp.valueOf(LocalDateTime.now()))
                     .build();
@@ -504,15 +502,15 @@ public class ReviewServiceImpl implements ReviewService {
     }
     
     @Override
-    public boolean isFavorite(Long seqReview, Long seqUser) {
+    public boolean isFavorite(Long seqReview, String username) {
         return favoriteReviewRepository
-                .existsByUserSeqUserAndReviewSeqReview(seqUser, seqReview);
+                .existsByUserUserIdAndReviewSeqReview(username, seqReview);
     }
 
     @Override
-    public boolean isScrap(Long seqReview, Long seqUser) {
+    public boolean isScrap(Long seqReview, String username) {
         return scrapReviewRepository
-                .existsByUserSeqUserAndReviewSeqReview(seqUser, seqReview);
+                .existsByUser_UserIdAndReviewSeqReview(username, seqReview);
     }
     
     @Override
@@ -526,12 +524,12 @@ public class ReviewServiceImpl implements ReviewService {
     }
     
     @Override
-    public CommentDTO editComment(Long seqComment, Long seqUser, String content) {
+    public CommentDTO editComment(Long seqComment, String username, String content) {
 
         Comment entity = commentRepository.findById(seqComment).orElseThrow();
 
         // 본인 댓글인지 체크(선택)
-        if (!entity.getUser().getSeqUser().equals(seqUser)) {
+        if (!entity.getUser().getSeqUser().equals(username)) {
             throw new RuntimeException("권한 없음");
         }
 
@@ -552,10 +550,10 @@ public class ReviewServiceImpl implements ReviewService {
     }
     
     @Override
-    public boolean deleteComment(Long seqComment, Long seqUser) {
+    public boolean deleteComment(Long seqComment, String username) {
         Comment comment = commentRepository.findById(seqComment).orElseThrow();
 
-        if (!comment.getUser().getSeqUser().equals(seqUser)) {
+        if (!comment.getUser().getSeqUser().equals(username)) {
             return false; // 작성자만 삭제 가능
         }
 
@@ -567,28 +565,28 @@ public class ReviewServiceImpl implements ReviewService {
     }
 	
     @Override
-    public List<BoardReviewDTO> getMyReviews(Long userId) {
-        return boardReviewRepository.findByUser_SeqUserAndStateOrderByRegdateDesc(userId, "ACTIVE")
+    public List<BoardReviewDTO> getMyReviews(String username) {
+        return boardReviewRepository.findByUser_UserIdAndStateOrderByRegdateDesc(username, "ACTIVE")
                 .stream()
                 .map(BoardReview::toDTO)
                 .toList();
     }
 
     @Override
-    public List<CommentDTO> getMyComments(Long userId) {
+    public List<CommentDTO> getMyComments(String username) {
         return commentRepository
-                .findByUser_SeqUserAndStateOrderByRegdateDesc(userId, "ACTIVE")
+                .findByUser_UserIdAndStateOrderByRegdateDesc(username, "ACTIVE")
                 .stream()
                 .map(Comment::toDTO)
                 .toList();
     }
 
     @Override
-    public List<BoardReviewDTO> getMyFavorites(Long seqUser) {
+    public List<BoardReviewDTO> getMyFavorites(String username) {
 
         return favoriteReviewRepository
-                .findByUser_SeqUserAndReview_StateOrderByRegdateDesc(
-                        seqUser, "ACTIVE"
+                .findByUser_UserIdAndReview_StateOrderByRegdateDesc(
+                		username, "ACTIVE"
                 )
                 .stream()
                 .map(fr -> fr.getReview().toDTO())
@@ -596,11 +594,11 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
 	@Override
-	public List<BoardReviewDTO> getMyScraps(Long seqUser) {
+	public List<BoardReviewDTO> getMyScraps(String username) {
 		
 		return scrapReviewRepository
-                .findByUser_SeqUserAndReview_StateOrderByRegdateDesc(
-                        seqUser, "ACTIVE"
+                .findByUser_UserIdAndReview_StateOrderByRegdateDesc(
+                		username, "ACTIVE"
                 )
                 .stream()
                 .map(fr -> fr.getReview().toDTO())

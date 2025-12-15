@@ -13,17 +13,17 @@ public interface FavoriteReviewRepository extends JpaRepository<FavoriteReview, 
 	
 	int countByReviewSeqReview(Long seqReview);
 
-	Optional<FavoriteReview> findByUserSeqUserAndReviewSeqReview(Long seqUser, Long seqReview);
+	Optional<FavoriteReview> findByUser_UserIdAndReviewSeqReview(String username, Long seqReview);
 
-	boolean existsByUserSeqUserAndReviewSeqReview(Long seqUser, Long seqReview);
+	boolean existsByUserUserIdAndReviewSeqReview(String username, Long seqReview);
 
 	void deleteByReview(BoardReview review);
 
-	long countByUser(User user);
+	long countByUser_UserId(String username);
 	
 	List<FavoriteReview>
-    findByUser_SeqUserAndReview_StateOrderByRegdateDesc(
-            Long seqUser,
+	findByUser_UserIdAndReview_StateOrderByRegdateDesc(
+            String username,
             String state
     );
 

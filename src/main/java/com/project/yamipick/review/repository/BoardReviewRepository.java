@@ -48,7 +48,7 @@ public interface BoardReviewRepository extends JpaRepository<BoardReview, Long> 
     List<BoardReview> findLatestReviews(Pageable pageable);
 
     // 내가 쓴 리뷰 수
-    long countByUserAndState(User user, String state);
+    long countByUser_UserIdAndState(String username, String state);
 
 	List<BoardReview> findByState(String string, Pageable pageable);
 
@@ -76,6 +76,6 @@ public interface BoardReviewRepository extends JpaRepository<BoardReview, Long> 
 
 	List<BoardReview> findBySeqReviewIn(List<Long> seqReviews);
 	
-	List<BoardReview> findByUser_SeqUserAndStateOrderByRegdateDesc(Long seqUser, String state);
+	List<BoardReview> findByUser_UserIdAndStateOrderByRegdateDesc(String username, String state);
 	
 }

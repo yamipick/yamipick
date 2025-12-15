@@ -10,13 +10,13 @@ import com.project.yamipick.review.dto.ScrapReviewDTO;
 
 public interface ReviewService {
 	
-	List<BoardReviewDTO> getMyReviews(Long userId);
+	List<BoardReviewDTO> getMyReviews(String username);
 
-    List<CommentDTO> getMyComments(Long userId);
+    List<CommentDTO> getMyComments(String username);
 
-    List<BoardReviewDTO> getMyFavorites(Long seqUser);
+    List<BoardReviewDTO> getMyFavorites(String username);
 
-    List<BoardReviewDTO> getMyScraps(Long seqUser);
+    List<BoardReviewDTO> getMyScraps(String username);
 
 	Long add(BoardReviewDTO dto);
 
@@ -26,19 +26,19 @@ public interface ReviewService {
 
 	CommentDTO addComment(CommentDTO dto);
 	
-	boolean toggleFavorite(Long seqReview, Long seqUser);
+	boolean toggleFavorite(Long seqReview, String username);
 	
-	boolean toggleScrap(Long seqReview, Long seqUser);
+	boolean toggleScrap(Long seqReview, String username);
 	
-	boolean isFavorite(Long seqReview, Long seqUser);
+	boolean isFavorite(Long seqReview, String username);
 
-	boolean isScrap(Long seqReview, Long seqUser);
+	boolean isScrap(Long seqReview, String username);
 	
 	int getFavoriteCount(Long seqReview);
 
-	CommentDTO editComment(Long seqComment, Long seqUser, String content);
+	CommentDTO editComment(Long seqComment, String username, String content);
 
-	boolean deleteComment(Long seqComment, Long seqUser);
+	boolean deleteComment(Long seqComment, String username);
 
 	int getCommentCount(Long seqReview);
 
@@ -46,7 +46,7 @@ public interface ReviewService {
 
 	void edit(BoardReviewDTO dto);
 
-	void deleteReview(Long seqReview, Long seqUser);
+	void deleteReview(Long seqReview, String username);
 
 	List<BoardReviewDTO> getPopularDaily();
 
@@ -58,7 +58,7 @@ public interface ReviewService {
 
 	List<BoardReviewDTO> getNearReviews(); // 위치는 나중에 확장
 
-	Map<String, Long> getMyActivitySummary(Long seqUser);
+	Map<String, Long> getMyActivitySummary(String username);
 
 	List<BoardReviewDTO> findAll();
 

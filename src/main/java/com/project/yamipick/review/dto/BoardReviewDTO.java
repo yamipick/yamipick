@@ -46,6 +46,7 @@ public class BoardReviewDTO {
 	private List<String> tagList;
 	private String existingAttach;
 	private String displayDate;
+	private String userId;
 	
 	public BoardReview toEntity(User user) {
 		
