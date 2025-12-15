@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -136,6 +137,26 @@ public class ReviewServiceImpl implements ReviewService {
 
         return map;
     }
+    
+    @Override
+    public List<BoardReviewDTO> getReviewsByIds(String[] ids) {
+
+        if (ids == null || ids.length == 0) return List.of();
+
+        List<Long> reviewIds = Arrays.stream(ids)
+        		.flatMap(s -> Arrays.stream(s.split("\\|")))
+                .filter(v -> !v.isBlank())
+                .map(Long::parseLong)
+                .toList();
+
+        List<BoardReview> entities =
+                boardReviewRepository.findBySeqReviewIn(reviewIds);
+
+        return entities.stream()
+                .map(BoardReview::toDTO)
+                .toList();
+    }
+
 
     @Override
     public List<BoardReviewDTO> getPhotoReviews() {

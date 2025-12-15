@@ -74,6 +74,6 @@ public interface BoardReviewRepository extends JpaRepository<BoardReview, Long> 
 		)
 		List<BoardReview> search(@Param("keyword") String keyword, Pageable pageable);
 
-	
+	List<BoardReview> findBySeqReviewIn(List<Long> seqReviews);
 	
 }

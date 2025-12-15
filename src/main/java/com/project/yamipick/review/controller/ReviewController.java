@@ -2,6 +2,7 @@ package com.project.yamipick.review.controller;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,9 @@ import com.project.yamipick.review.dto.CommentDTO;
 import com.project.yamipick.review.service.ReviewService;
 import com.project.yamipick.store.service.ReviewStoreService;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -41,7 +45,20 @@ public class ReviewController {
 	}
 	
 	@GetMapping("/review/reviewmain")
-	public String reviewmain(Model model, Principal principal) {
+	public String reviewmain(HttpServletRequest request, Model model, Principal principal) {
+		
+		List<BoardReviewDTO> recentReviews = new ArrayList<>();
+
+	    if (request.getCookies() != null) {
+	        for (Cookie c : request.getCookies()) {
+	            if ("recentReviews".equals(c.getName())) {
+	                String[] ids = c.getValue().split(",");
+	                recentReviews = reviewService.getReviewsByIds(ids);
+	            }
+	        }
+	    }
+
+	    model.addAttribute("recentReviews", recentReviews);
 		
 		model.addAttribute("activity", reviewService.getMyActivitySummary(getLoginUserId(null)));
 		
@@ -73,10 +90,23 @@ public class ReviewController {
 	public String reviewlist(@RequestParam(name="keyword", required=false) String keyword,
             				 @RequestParam(name="sort", defaultValue="latest") String sort,
             				 @RequestParam(name="page", defaultValue="0") int page,
-							 Model model, Principal principal) {
+							 Model model, Principal principal, HttpServletRequest request) {
 		
 		// 목록 조회 (검색/정렬/페이징 통합)
 	    List<BoardReviewDTO> list = reviewService.getList(keyword, sort, page);
+	    
+	    List<BoardReviewDTO> recentReviews = new ArrayList<>();
+
+	    if (request.getCookies() != null) {
+	        for (Cookie c : request.getCookies()) {
+	            if ("recentReviews".equals(c.getName())) {
+	                String[] ids = c.getValue().split(",");
+	                recentReviews = reviewService.getReviewsByIds(ids);
+	            }
+	        }
+	    }
+
+	    model.addAttribute("recentReviews", recentReviews);
 
 	    model.addAttribute("list", list);
 	    model.addAttribute("keyword", keyword);
@@ -90,6 +120,9 @@ public class ReviewController {
 	    }
 
 	    // 사이드바
+	    
+	    model.addAttribute("activity", reviewService.getMyActivitySummary(getLoginUserId(null)));
+	    
 	    model.addAttribute("recommendReviews",
 	            reviewService.getRecommendReviews());
 
@@ -107,8 +140,21 @@ public class ReviewController {
 	
 	@GetMapping("/review/activity")
 	public String activity(@RequestParam(name="tab", defaultValue = "review") String tab,
-	                       Model model, Principal principal) {
+	                       Model model, Principal principal, HttpServletRequest request) {
 
+		List<BoardReviewDTO> recentReviews = new ArrayList<>();
+
+	    if (request.getCookies() != null) {
+	        for (Cookie c : request.getCookies()) {
+	            if ("recentReviews".equals(c.getName())) {
+	                String[] ids = c.getValue().split(",");
+	                recentReviews = reviewService.getReviewsByIds(ids);
+	            }
+	        }
+	    }
+
+	    model.addAttribute("recentReviews", recentReviews);
+		
 		//String seqUser = principal.getName();
 	    //Long id = Long.parseLong(seqUser);
 		
@@ -133,6 +179,15 @@ public class ReviewController {
 	            model.addAttribute("list", reviewService.getMyScraps(id));
 	            break;
 	    }
+	    
+	    model.addAttribute("recommendReviews",
+	            reviewService.getRecommendReviews());
+
+	    model.addAttribute("popularDaily",
+	            reviewService.getPopularDaily());
+
+	    model.addAttribute("popularWeekly",
+	            reviewService.getPopularWeekly());
 
 	    model.addAttribute("tab", tab);
 
@@ -177,10 +232,15 @@ public class ReviewController {
 	}
 	
 	@GetMapping("/review/reviewview")
-	public String reviewview(BoardReviewDTO rdto, @RequestParam("seqReview") Long seqReview, Principal principal, Model model) {
+	public String reviewview(BoardReviewDTO rdto, @RequestParam("seqReview") Long seqReview, Principal principal, Model model, HttpServletRequest request,
+            HttpServletResponse response) {
 
 		Long id = getLoginUserId(principal);
 	    rdto.setSeqUser(id);
+	    
+	    model.addAttribute("loginUserSeq", id);
+	    
+	    saveRecentReview(seqReview, request, response);
 		
 	    BoardReviewDTO dto = reviewService.getReview(seqReview);
 	    model.addAttribute("review", dto);
@@ -229,6 +289,43 @@ public class ReviewController {
 	    return "review/reviewview";
 	}
 	
+	private void saveRecentReview(Long seqReview,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+		String cookieName = "recentReviews";
+		String value = "";
+		
+		if (request.getCookies() != null) {
+			for (Cookie c : request.getCookies()) {
+				if (cookieName.equals(c.getName())) {
+					value = c.getValue();
+				}
+			}
+		}
+		
+		List<String> list = new ArrayList<>();
+		
+		if (!value.isEmpty()) {
+			list.addAll(Arrays.asList(value.split("\\|")));
+		}
+		
+		// 중복 제거
+		list.remove(seqReview.toString());
+		// 앞에 추가
+		list.add(0, seqReview.toString());
+		
+		// 최대 5개
+		if (list.size() > 5) {
+			list = list.subList(0, 5);
+		}
+		
+		Cookie cookie = new Cookie(cookieName, String.join("|", list));
+		cookie.setPath("/");
+		cookie.setMaxAge(60 * 60 * 24 * 7); // 7일
+		response.addCookie(cookie);
+	}
+
 	@Value("${kakao.api.key}")
 	private String kakaoAppKey;
 

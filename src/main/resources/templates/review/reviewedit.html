@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>YamiPick - 리뷰 수정</title>
+    <meta charset="UTF-8" />
+    <title>리뷰 수정 | YamiPick</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/chatbot.css}">
     <style>
         body {
             font-family: "Noto Sans KR", sans-serif;
-            background: #FAF4E8;
             margin: 0;
             padding: 0;
+            padding-top: 70px;
         }
 
         .container {
@@ -297,96 +299,98 @@
 </head>
 <body>
 
-<div class="container">
-    <h2>리뷰 수정</h2>
+	<div th:replace="common/header :: headerFragment"></div>
 
-    <form th:action="@{/review/revieweditok}" method="post" enctype="multipart/form-data">
-    
-    	<input type="hidden" name="seqReview" th:value="${review.seqReview}">
-    	<input type="hidden" name="existingAttach" th:value="${review.attach}">
-		
-        <!-- 제목 -->
-        <div class="row">
-            <label>제목 <span class="req">*</span></label>
-            <input type="text" name="title" th:value="${review.title}" required>
-        </div>
-        
-        <!-- 내용 -->
-        <div class="row">
-            <label>내용 <span class="req">*</span></label>
-            <textarea name="reviewContent" th:text="${review.reviewContent}" required></textarea>
-        </div>
-
-        <!-- 첨부파일 -->
-        <div class="filebox">
-		    <label>이미지 첨부</label>
-		
-		    <!-- 커스텀 업로드 버튼 -->
-		    <label for="fileInput" class="upload-btn">사진 선택</label>
-		
-		    <!-- 실제 파일 input -->
-		    <input type="file" id="fileInput" name="file" accept="image/*" multiple onchange="showFileName()">
-		
-		    <!-- 선택된 파일명 표시 -->
-		    <input type="hidden" id="fileNameHidden" name="fileNameHidden">
-		    <!-- 기존 이미지 -->
-			<div class="preview-area" id="existingPreview"
-			     th:if="${review.attach != null and review.attach != ''}">
-			    <div class="preview-item">
-			        <img th:src="${review.attach}">
-			        <button type="button"
-			                class="delete-btn"
-			                onclick="removeExistingImage()">✕</button>
+	<div class="container">
+	    <h2>리뷰 수정</h2>
+	
+	    <form th:action="@{/review/revieweditok}" method="post" enctype="multipart/form-data">
+	    
+	    	<input type="hidden" name="seqReview" th:value="${review.seqReview}">
+	    	<input type="hidden" name="existingAttach" th:value="${review.attach}">
+			
+	        <!-- 제목 -->
+	        <div class="row">
+	            <label>제목 <span class="req">*</span></label>
+	            <input type="text" name="title" th:value="${review.title}" required spellcheck="false">
+	        </div>
+	        
+	        <!-- 내용 -->
+	        <div class="row">
+	            <label>내용 <span class="req">*</span></label>
+	            <textarea name="reviewContent" th:text="${review.reviewContent}" required spellcheck="false"></textarea>
+	        </div>
+	
+	        <!-- 첨부파일 -->
+	        <div class="filebox">
+			    <label>이미지 첨부</label>
+			
+			    <!-- 커스텀 업로드 버튼 -->
+			    <label for="fileInput" class="upload-btn">사진 선택</label>
+			
+			    <!-- 실제 파일 input -->
+			    <input type="file" id="fileInput" name="file" accept="image/*" multiple onchange="showFileName()">
+			
+			    <!-- 선택된 파일명 표시 -->
+			    <input type="hidden" id="fileNameHidden" name="fileNameHidden">
+			    <!-- 기존 이미지 -->
+				<div class="preview-area" id="existingPreview"
+				     th:if="${review.attach != null and review.attach != ''}">
+				    <div class="preview-item">
+				        <img th:src="${review.attach}">
+				        <button type="button"
+				                class="delete-btn"
+				                onclick="removeExistingImage()">✕</button>
+				    </div>
+				</div>
+				
+				<!-- 기존 이미지 삭제 여부 -->
+				<input type="hidden" name="deleteExisting" id="deleteExisting" value="false">
+				
+				<!-- 새 이미지 미리보기 -->
+				<div class="preview-area" id="previewArea"></div>
+	
+			</div>
+	        
+	        <!-- 주소 검색 -->
+	        <div class="row">
+			    <label>주소 직접 입력</label>
+			    <div style="display:flex; gap:10px;">
+			        <input type="text" id="addressInput" placeholder="주소를 입력하거나 붙여넣으세요">
+			        <button type="button" class="btn" onclick="searchPlace()">검색</button>
 			    </div>
 			</div>
-			
-			<!-- 기존 이미지 삭제 여부 -->
-			<input type="hidden" name="deleteExisting" id="deleteExisting" value="false">
-			
-			<!-- 새 이미지 미리보기 -->
-			<div class="preview-area" id="previewArea"></div>
-
-		</div>
-        
-        <!-- 주소 검색 -->
-        <div class="row">
-		    <label>주소 직접 입력</label>
-		    <div style="display:flex; gap:10px;">
-		        <input type="text" id="addressInput" placeholder="주소를 입력하거나 붙여넣으세요">
-		        <button type="button" class="btn" onclick="searchPlace()">검색</button>
-		    </div>
-		</div>
-
-        <!-- 카카오 지도 -->
-        <div class="row">
-            <label>위치 선택</label>
-            <div class="map-notice">지도를 클릭하면 위치가 자동으로 저장됩니다.</div>
-			<div id="map"></div>
-			<input type="hidden" name="place" id="place" th:value="${review.place}">
-        </div>
-
-        <!-- 태그 -->
-        <div class="row">
-            <label>태그</label>
-            <div class="tag-box">
-			    <div id="tagList" class="tag-list"></div>
-			    <span class="tag-prefix">#</span>
-			    <input type="text" id="tagText" placeholder="태그 입력" >
-			</div>
-			<input type="hidden" name="tags" id="tagsHidden">
-        </div>
-
-        <!-- 비밀글 -->
-        <div class="secret-box">
-        	<input type="hidden" name="contentState" value="일반글">
-            <input type="checkbox" name="contentState" value="비밀글" th:checked="${review.contentState == '비밀글'}">
-            <label>비밀글</label>
-        </div>
-
-        <!-- 제출 버튼 -->
-        <button type="submit" class="write-btn">수정하기</button>
-    </form>
-</div>
+	
+	        <!-- 카카오 지도 -->
+	        <div class="row">
+	            <label>위치 선택</label>
+	            <div class="map-notice">지도를 클릭하면 위치가 자동으로 저장됩니다.</div>
+				<div id="map"></div>
+				<input type="hidden" name="place" id="place" th:value="${review.place}">
+	        </div>
+	
+	        <!-- 태그 -->
+	        <div class="row">
+	            <label>태그</label>
+	            <div class="tag-box">
+				    <div id="tagList" class="tag-list"></div>
+				    <span class="tag-prefix">#</span>
+				    <input type="text" id="tagText" placeholder="태그 입력" >
+				</div>
+				<input type="hidden" name="tags" id="tagsHidden">
+	        </div>
+	
+	        <!-- 비밀글 -->
+	        <div class="secret-box">
+	        	<input type="hidden" name="contentState" value="일반글">
+	            <input type="checkbox" name="contentState" value="비밀글" th:checked="${review.contentState == '비밀글'}">
+	            <label>비밀글</label>
+	        </div>
+	
+	        <!-- 제출 버튼 -->
+	        <button type="submit" class="write-btn">수정하기</button>
+	    </form>
+	</div>
 
 
 <script type="text/javascript"

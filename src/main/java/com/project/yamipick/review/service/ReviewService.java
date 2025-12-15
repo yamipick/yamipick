@@ -64,4 +64,6 @@ public interface ReviewService {
 
 	List<BoardReviewDTO> getList(String keyword, String sort, int page);
 
+	List<BoardReviewDTO> getReviewsByIds(String[] ids);
+
 }

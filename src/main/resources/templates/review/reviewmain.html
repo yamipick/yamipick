@@ -1,9 +1,15 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta charset="UTF-8">
-	<title>YamiPick</title>
+    <meta charset="UTF-8" />
+    <title>리뷰 게시판 | YamiPick</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/chatbot.css}">
 <style>
+
+	body {
+	    background: white !important;
+	}
 
 	.section { box-sizing: border-box; }
 	.container { width: 1200px; margin: 0 auto; display: flex; gap: 20px; }
@@ -58,7 +64,7 @@
 	.main { width: 75%; }
 	.side { width: 25%; }
 
-	.section { margin-bottom: 40px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+	.section { margin-bottom: 40px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;  background: white;}
 	.section h2 { margin-top: 0; margin-bottom: 15px; font-size: 20px; }
 
 	/* 사진 리뷰 갤러리 */
@@ -93,7 +99,7 @@
 		
 	/* 내 활동 강조 */
 	.section.activity {
-	    background: #FAF4E8;        /* 크림 베이지 */
+	    background: #FAF4E8;
 	    border: 1px solid #4A2D1A;  /* 초코 브라운 */
 	}
 	.section.activity h2 {
@@ -163,6 +169,16 @@
 	a:hover {
 	  text-decoration: none;
 	}
+	
+	/* 크롬 자동완성 배경 제거 */
+	input:-webkit-autofill,
+	input:-webkit-autofill:hover,
+	input:-webkit-autofill:focus,
+	textarea:-webkit-autofill {
+	    -webkit-box-shadow: 0 0 0 1000px white inset !important;
+	    box-shadow: 0 0 0 1000px white inset !important;
+	    -webkit-text-fill-color: #000 !important;
+	}
 		
 	
 </style>
@@ -182,6 +198,7 @@
 	6. 주간 인기 리뷰
 	7. 추천 리뷰(선호 태그)
 	-->
+	<div th:replace="common/header :: headerFragment"></div>
 	
 	<!-- 검색창 -->
 	<div class="container" style="margin-top:40px;">
@@ -201,9 +218,9 @@
 
             <!-- 인기 게시글 -->
             <div class="section">
-                <h2>추천 게시글</h2>
+                <h2>⭐ 추천 게시글</h2>
                 
-                <div class="list-item" th:each="r : ${recommendReviews}">⭐ <a th:href="@{/review/reviewview(seqReview=${r.seqReview})}" th:text="${r.title}">제목</a></div>
+                <div class="list-item" th:each="r : ${recommendReviews}"><a th:href="@{/review/reviewview(seqReview=${r.seqReview})}" th:text="${r.title}">제목</a></div>
             </div>
 
             <!-- 사진 리뷰 갤러리 -->
@@ -221,9 +238,9 @@
 
             <!-- 사용자 위치 근처 맛집 리뷰 -->
             <div class="section">
-                <h2>내 근처 맛집 리뷰</h2>
+                <h2>📍 내 근처 맛집 리뷰</h2>
 
-                <div class="list-item" th:each="r : ${nearReviews}">📍 <a th:href="@{/review/reviewview(seqReview=${r.seqReview})}" th:text="${r.title}">제목</a></div>
+                <div class="list-item" th:each="r : ${nearReviews}"><a th:href="@{/review/reviewview(seqReview=${r.seqReview})}" th:text="${r.title}">제목</a></div>
             </div>
 
         </div>
@@ -260,10 +277,13 @@
 
             <!-- 최근 본 리뷰 -->
             <div class="section">
-                <h2>최근 본 리뷰</h2>
-                <div class="list-item">👁 최근 본 리뷰 1</div>
-                <div class="list-item">👁 최근 본 리뷰 2</div>
-            </div>
+			    <h2>최근 본 리뷰</h2>
+			    <div class="list-item"
+			         th:each="r : ${recentReviews}">
+			        <a th:href="@{/review/reviewview(seqReview=${r.seqReview})}"
+			           th:text="${r.title}">제목</a>
+			    </div>
+			</div>
 
             <!-- 인기 리뷰 (일간/주간 탭) -->
 		    <div class="section">

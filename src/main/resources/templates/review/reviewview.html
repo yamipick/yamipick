@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8">
-<title>YamiPick - 리뷰 상세보기</title>
+<meta charset="UTF-8" />
+    <title>리뷰 보기 | YamiPick</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/chatbot.css}">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet"
 	href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
@@ -10,9 +12,9 @@
 <style>
 body {
 	font-family: "Noto Sans KR", sans-serif;
-	background-color: #FAF4E8;
 	margin: 0;
 	padding: 0;
+	padding-top: 70px;
 	color: #4A2D1A;
 }
 
@@ -416,6 +418,8 @@ h2 {
 </script>
 <body>
 
+	<div th:replace="common/header :: headerFragment"></div>
+	
 	<div class="container">
 
 		<!-- 제목 -->
@@ -547,7 +551,7 @@ h2 {
 				    <div class="reply-btn" th:onclick="'toggleReplyForm(' + ${c.seqComment} + ')'">댓글쓰기</div>
 				
 				    <!-- 삭제 | 수정 버튼 -->
-				    <div class="comment-action-right">
+				    <div class="comment-action-right" th:if="${loginUserSeq == c.seqUser}">
 				    	<button class="comment-action-btn"
 				                th:onclick="'editComment(' + ${c.seqComment} + ')'">수정</button>
 				        <span class="comment-action-divider">|</span>
@@ -596,7 +600,7 @@ h2 {
 			<a th:href="@{/review/reviewlist}" class="btn">목록</a>
 			<a th:href="@{/review/reviewadd}" class="btn">글쓰기</a>
 		</div>
-		<div class="right-btns">
+		<div class="right-btns" th:if="${loginUserSeq == review.seqUser}">
 			<a th:href="@{/review/reviewedit(seqReview=${review.seqReview})}"
 				class="btn btn-gray">수정</a>
 			<form th:action="@{/review/reviewdeleteok}" method="post" class="inline-form" onsubmit="return confirmDelete();">
