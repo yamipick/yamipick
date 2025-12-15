@@ -1,5 +1,6 @@
 package com.project.yamipick.review.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,5 +20,11 @@ public interface FavoriteReviewRepository extends JpaRepository<FavoriteReview, 
 	void deleteByReview(BoardReview review);
 
 	long countByUser(User user);
+	
+	List<FavoriteReview>
+    findByUser_SeqUserAndReview_StateOrderByRegdateDesc(
+            Long seqUser,
+            String state
+    );
 
 }

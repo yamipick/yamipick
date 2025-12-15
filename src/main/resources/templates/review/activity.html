@@ -137,6 +137,19 @@
             background: #4A2D1A;
             color: white;
         }
+        
+        table th:nth-child(1), table td:nth-child(1) {
+		    width: 60%;
+		}
+		table th:nth-child(2), table td:nth-child(2) {
+			text-align: center;
+		    width: 25%;
+		}
+		table th:nth-child(3), table td:nth-child(3) {
+		    width: 15%;
+		    text-align: right;
+		}
+        
     </style>
 </head>
 <body>
@@ -158,10 +171,10 @@
 	                   th:classappend="${tab=='comment'} ? 'active'">작성댓글</a>
 	
 	                <a th:href="@{/review/activity(tab='favorite')}"
-	                   th:classappend="${tab=='favorite'} ? 'active'">좋아요</a>
+	                   th:classappend="${tab=='favorite'} ? 'active'">좋아요한 글</a>
 	
 	                <a th:href="@{/review/activity(tab='scrap')}"
-	                   th:classappend="${tab=='scrap'} ? 'active'">즐겨찾기</a>
+	                   th:classappend="${tab=='scrap'} ? 'active'">즐겨찾기한 글</a>
 	            </div>
 	
 	            <!-- 작성글 -->
@@ -176,8 +189,11 @@
 	                    </thead>
 	                    <tbody>
 	                    <tr th:each="r : ${list}">
-	                        <td th:text="${r.title}"></td>
-	                        <td th:text="${r.regdate}"></td>
+	                        <td>
+							  <a th:href="@{/review/reviewview(seqReview=${r.seqReview})}"
+							     th:text="${r.title}"></a>
+							</td>
+	                        <td th:text="${#dates.format(r.regdate, 'yyyy-MM-dd')}"></td>
 	                        <td th:text="${r.readCount}"></td>
 	                    </tr>
 	                    <tr th:if="${#lists.isEmpty(list)}">
@@ -198,9 +214,25 @@
 	                    </thead>
 	                    <tbody>
 	                    <tr th:each="c : ${list}">
-	                        <td th:text="${c.content}"></td>
-	                        <td th:text="${c.regdate}"></td>
-	                    </tr>
+						    <td>
+						        <div th:text="${c.content}"></div>
+						
+						        <!-- 리뷰 정보 -->
+						        <div style="margin-top:6px; font-size:13px; color:#7a6a58;">
+						            <span th:if="${c.reviewState == 'ACTIVE'}">
+						                └
+						                <a th:href="@{/review/reviewview(seqReview=${c.seqReview})}"
+						                   th:text="${c.reviewTitle}"></a>
+						            </span>
+						
+						            <span th:if="${c.reviewState != 'ACTIVE'}">
+						                └ 삭제된 리뷰
+						            </span>
+						        </div>
+						    </td>
+						
+						    <td th:text="${c.regdate}"></td>
+						</tr>
 	                    <tr th:if="${#lists.isEmpty(list)}">
 	                        <td colspan="2" class="empty">작성한 댓글이 없습니다.</td>
 	                    </tr>
@@ -210,38 +242,45 @@
 	
 	            <!-- 좋아요 -->
 	            <div th:if="${tab=='favorite'}">
-	                <table>
-	                    <thead>
-	                    <tr>
-	                        <th>리뷰 번호</th>
-	                        <th>좋아요 날짜</th>
-	                    </tr>
-	                    </thead>
-	                    <tbody>
-	                    <tr th:each="l : ${list}">
-	                        <td th:text="${l.seqReview}"></td>
-	                        <td th:text="${l.regdate}"></td>
-	                    </tr>
-	                    <tr th:if="${#lists.isEmpty(list)}">
-	                        <td colspan="2" class="empty">좋아요한 리뷰가 없습니다.</td>
-	                    </tr>
-	                    </tbody>
-	                </table>
-	            </div>
+				    <table>
+				        <thead>
+				        <tr>
+				            <th>제목</th>
+				            <th>작성일</th>
+				        </tr>
+				        </thead>
+				        <tbody>
+				        <tr th:each="r : ${list}">
+				            <td>
+				                <a th:href="@{/review/reviewview(seqReview=${r.seqReview})}"
+				                   th:text="${r.title}"></a>
+				            </td>
+				            <td th:text="${r.displayDate}"></td>
+				        </tr>
+				
+				        <tr th:if="${#lists.isEmpty(list)}">
+				            <td colspan="2" class="empty">좋아요한 리뷰가 없습니다.</td>
+				        </tr>
+				        </tbody>
+				    </table>
+				</div>
 	
 	            <!-- 스크랩 -->
 	            <div th:if="${tab=='scrap'}">
 	                <table>
 	                    <thead>
 	                    <tr>
-	                        <th>리뷰 번호</th>
-	                        <th>스크랩 날짜</th>
+	                        <th>제목</th>
+	                        <th>작성일</th>
 	                    </tr>
 	                    </thead>
 	                    <tbody>
 	                    <tr th:each="s : ${list}">
-	                        <td th:text="${s.seqReview}"></td>
-	                        <td th:text="${s.regdate}"></td>
+							<td>
+				                <a th:href="@{/review/reviewview(seqReview=${s.seqReview})}"
+				                   th:text="${s.title}"></a>
+				            </td>
+	                        <td th:text="${s.displayDate}"></td>
 	                    </tr>
 	                    <tr th:if="${#lists.isEmpty(list)}">
 	                        <td colspan="2" class="empty">스크랩한 리뷰가 없습니다.</td>

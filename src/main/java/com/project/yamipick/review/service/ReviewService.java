@@ -10,13 +10,13 @@ import com.project.yamipick.review.dto.ScrapReviewDTO;
 
 public interface ReviewService {
 	
-	List<BoardReviewDTO> getMyReviews(Long seqUser);
+	List<BoardReviewDTO> getMyReviews(Long userId);
 
-    List<CommentDTO> getMyComments(Long seqUser);
+    List<CommentDTO> getMyComments(Long userId);
 
-    List<FavoriteReviewDTO> getMyFavorites(Long seqUser);
+    List<BoardReviewDTO> getMyFavorites(Long seqUser);
 
-    List<ScrapReviewDTO> getMyScraps(Long seqUser);
+    List<BoardReviewDTO> getMyScraps(Long seqUser);
 
 	Long add(BoardReviewDTO dto);
 
@@ -65,5 +65,6 @@ public interface ReviewService {
 	List<BoardReviewDTO> getList(String keyword, String sort, int page);
 
 	List<BoardReviewDTO> getReviewsByIds(String[] ids);
+
 
 }

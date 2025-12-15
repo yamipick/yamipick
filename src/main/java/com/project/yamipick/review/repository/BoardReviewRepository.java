@@ -76,4 +76,6 @@ public interface BoardReviewRepository extends JpaRepository<BoardReview, Long> 
 
 	List<BoardReview> findBySeqReviewIn(List<Long> seqReviews);
 	
+	List<BoardReview> findByUser_SeqUserAndStateOrderByRegdateDesc(Long seqUser, String state);
+	
 }

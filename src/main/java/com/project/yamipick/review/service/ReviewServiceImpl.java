@@ -566,28 +566,45 @@ public class ReviewServiceImpl implements ReviewService {
         return true;
     }
 	
-	@Override
-	public List<BoardReviewDTO> getMyReviews(Long userSeq) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public List<BoardReviewDTO> getMyReviews(Long userId) {
+        return boardReviewRepository.findByUser_SeqUserAndStateOrderByRegdateDesc(userId, "ACTIVE")
+                .stream()
+                .map(BoardReview::toDTO)
+                .toList();
+    }
+
+    @Override
+    public List<CommentDTO> getMyComments(Long userId) {
+        return commentRepository
+                .findByUser_SeqUserAndStateOrderByRegdateDesc(userId, "ACTIVE")
+                .stream()
+                .map(Comment::toDTO)
+                .toList();
+    }
+
+    @Override
+    public List<BoardReviewDTO> getMyFavorites(Long seqUser) {
+
+        return favoriteReviewRepository
+                .findByUser_SeqUserAndReview_StateOrderByRegdateDesc(
+                        seqUser, "ACTIVE"
+                )
+                .stream()
+                .map(fr -> fr.getReview().toDTO())
+                .toList();
+    }
 
 	@Override
-	public List<CommentDTO> getMyComments(Long userSeq) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<FavoriteReviewDTO> getMyFavorites(Long userSeq) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<ScrapReviewDTO> getMyScraps(Long userSeq) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<BoardReviewDTO> getMyScraps(Long seqUser) {
+		
+		return scrapReviewRepository
+                .findByUser_SeqUserAndReview_StateOrderByRegdateDesc(
+                        seqUser, "ACTIVE"
+                )
+                .stream()
+                .map(fr -> fr.getReview().toDTO())
+                .toList();
 	}
 
 	@Override

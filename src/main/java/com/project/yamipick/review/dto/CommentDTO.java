@@ -31,6 +31,8 @@ public class CommentDTO {
 	
 	private String nickname;
 	private int depth = 0;
+	private String reviewTitle;
+	private String reviewState;
 	
 	public Comment toEntity(BoardReview review, User user, Comment parent) {
 		

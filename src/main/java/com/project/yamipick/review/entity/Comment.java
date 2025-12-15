@@ -68,6 +68,8 @@ public class Comment {
 						.regdate(this.regdate)
 						.state(this.state)
 						.nickname(this.user.getNickname())
+						.reviewTitle(this.review.getTitle())
+			            .reviewState(this.review.getState())
 						.build();
 		
 	}
