@@ -248,14 +248,17 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional
     public void edit(BoardReviewDTO dto) {
 
-        BoardReview review = boardReviewRepository
-            .findById(dto.getSeqReview())
-            .orElseThrow();
+    	BoardReview review = boardReviewRepository
+    	    .findById(dto.getSeqReview())
+    	    .orElseThrow(() -> new RuntimeException("글 없음"));
 
-        // 작성자 체크
-        if (!review.getUser().getSeqUser().equals(dto.getSeqUser())) {
-            throw new RuntimeException("권한 없음");
-        }
+    	// ✅ 작성자 체크 (username 기준)
+    	String writerUserId = review.getUser().getUserId();   // DB에 저장된 작성자
+    	String loginUserId  = dto.getUserId();                // 로그인한 사용자
+
+    	if (!writerUserId.equals(loginUserId)) {
+    	    throw new RuntimeException("권한 없음");
+    	}
 
         review.setTitle(dto.getTitle());
         review.setReviewContent(dto.getReviewContent());
