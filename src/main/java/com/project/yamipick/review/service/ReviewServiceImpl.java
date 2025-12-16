@@ -339,7 +339,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new IllegalArgumentException("리뷰 없음"));
 
         // 작성자 체크
-        if (!review.getUser().getSeqUser().equals(username)) {
+        if (!review.getUser().getUserId().equals(username)) {
             throw new RuntimeException("권한 없음");
         }
 
@@ -532,7 +532,7 @@ public class ReviewServiceImpl implements ReviewService {
         Comment entity = commentRepository.findById(seqComment).orElseThrow();
 
         // 본인 댓글인지 체크(선택)
-        if (!entity.getUser().getSeqUser().equals(username)) {
+        if (!entity.getUser().getUserId().equals(username)) {
             throw new RuntimeException("권한 없음");
         }
 
@@ -544,7 +544,7 @@ public class ReviewServiceImpl implements ReviewService {
         // DTO 변환
         CommentDTO dto = new CommentDTO();
         dto.setSeqComment(entity.getSeqComment());
-        dto.setSeqUser(entity.getUser().getSeqUser());
+        dto.setUserId(entity.getUser().getUserId());
         dto.setNickname(entity.getUser().getNickname());
         dto.setContent(entity.getContent());
         dto.setRegdate(entity.getRegdate());
@@ -556,8 +556,8 @@ public class ReviewServiceImpl implements ReviewService {
     public boolean deleteComment(Long seqComment, String username) {
         Comment comment = commentRepository.findById(seqComment).orElseThrow();
 
-        if (!comment.getUser().getSeqUser().equals(username)) {
-            return false; // 작성자만 삭제 가능
+        if (!comment.getUser().getUserId().equals(username)) {
+            return false;
         }
 
         comment.setState("DELETED");
